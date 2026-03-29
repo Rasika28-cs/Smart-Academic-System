@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Scholar — Academic Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Epilogue:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════
+   CSS VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --bg:        #f5f3ee;
+  --paper:     #fdfcf9;
+  --surface:   #ffffff;
+  --border:    #e4e0d7;
+  --border2:   #d4cfc4;
+  --navy:      #1a1f36;
+  --navy2:     #2d3354;
+  --text:      #2a2e44;
+  --muted:     #7e7e8f;
+  --coral:     #e05c3a;
+  --amber:     #d4860a;
+  --teal:      #1a8c7a;
+  --sky:       #2a6fc9;
+  --violet:    #6b3fa0;
+  --success:   #1a8c7a;
+  --warn:      #d4860a;
+  --danger:    #c0392b;
+  --radius:    14px;
+  --radius-sm: 8px;
+  --shadow:    0 2px 16px rgba(26,31,54,.08);
+  --shadow-lg: 0 8px 40px rgba(26,31,54,.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Epilogue', sans-serif;
+  font-size: 14.5px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Grid texture on background */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(26,31,54,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,31,54,.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+header {
+  position: relative; z-index: 2;
+  background: var(--navy);
+  color: #fff;
+  padding: 44px 24px 36px;
+  text-align: center;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 15% 50%, rgba(224,92,58,.18) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 85% 50%, rgba(42,111,201,.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+.header-tag {
+  display: inline-block;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.8);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 100px;
+  margin-bottom: 16px;
+}
+header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 800; line-height: 1.05;
+  letter-spacing: -.02em; position: relative;
+}
+header h1 em { color: #f4a76f; font-style: normal; }
+header p {
+  color: rgba(255,255,255,.55);
+  font-size: 14px; font-weight: 300;
+  margin-top: 8px; position: relative;
+}
+
+/* ═══════════════════════════════════════════════
+   TAB NAVIGATION
+═══════════════════════════════════════════════ */
+.nav-wrap {
+  background: var(--navy2);
+  position: sticky; top: 0; z-index: 100;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.nav-wrap::-webkit-scrollbar { display: none; }
+
+.tabs {
+  display: flex;
+  min-width: max-content;
+  padding: 0 20px;
+}
+.tab-btn {
+  background: none; border: none;
+  color: rgba(255,255,255,.45);
+  font-family: 'Epilogue', sans-serif;
+  font-size: 12.5px; font-weight: 600;
+  letter-spacing: .04em;
+  padding: 14px 20px;
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  transition: all .22s;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 7px;
+}
+.tab-btn .num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .22s;
+}
+.tab-btn:hover { color: rgba(255,255,255,.75); }
+.tab-btn.active {
+  color: #fff;
+  border-bottom-color: #f4a76f;
+}
+.tab-btn.active .num { background: #f4a76f; color: var(--navy); }
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 36px 20px 80px;
+  position: relative; z-index: 1;
+}
+
+.module { display: none; }
+.module.active { display: block; animation: slideIn .3s ease; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION HEADING
+═══════════════════════════════════════════════ */
+.mod-heading {
+  display: flex; align-items: flex-start; gap: 14px;
+  margin-bottom: 24px;
+}
+.mod-icon {
+  width: 46px; height: 46px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.ic-coral  { background: rgba(224,92,58,.12); }
+.ic-sky    { background: rgba(42,111,201,.12); }
+.ic-teal   { background: rgba(26,140,122,.12); }
+.ic-violet { background: rgba(107,63,160,.12); }
+.ic-amber  { background: rgba(212,134,10,.12); }
+
+.mod-heading h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem; font-weight: 700;
+  line-height: 1.2; color: var(--navy);
+}
+.mod-heading p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+/* ═══════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title::before {
+  content: '';
+  width: 3px; height: 14px; border-radius: 2px;
+}
+.ct-coral::before  { background: var(--coral); }
+.ct-sky::before    { background: var(--sky); }
+.ct-teal::before   { background: var(--teal); }
+.ct-violet::before { background: var(--violet); }
+.ct-amber::before  { background: var(--amber); }
+
+/* ═══════════════════════════════════════════════
+   OPTION TOGGLE
+═══════════════════════════════════════════════ */
+.toggle-wrap {
+  display: inline-flex;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 3px; margin-bottom: 22px;
+}
+.toggle-btn {
+  padding: 7px 18px; border-radius: 6px;
+  border: none; background: none;
+  font-family: 'Epilogue', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  transition: all .2s;
+}
+.toggle-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 6px rgba(26,31,54,.1);
+}
+
+/* ═══════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════ */
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+@media(max-width:560px){
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: 11.5px; font-weight: 600;
+  color: var(--muted); letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.field input, .field select {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Epilogue', sans-serif;
+  font-size: 14.5px; font-weight: 500;
+  padding: 9px 13px;
+  outline: none; transition: all .18s; width: 100%;
+}
+.field input:focus, .field select:focus {
+  background: var(--surface);
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px rgba(224,92,58,.1);
+}
+.field input.err { border-color: var(--danger); background: #fff5f5; }
+.field select option { background: #fff; }
+
+.sec-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin: 18px 0 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sec-label::after { content:''; flex:1; height:1px; background: var(--border); }
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+.btn {
+  padding: 10px 22px; border-radius: var(--radius-sm);
+  font-family: 'Epilogue', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: .03em; cursor: pointer;
+  border: none; transition: all .2s;
+}
+.btn-coral {
+  background: var(--coral); color: #fff;
+}
+.btn-coral:hover { background: #c94f2f; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(224,92,58,.35); }
+
+.btn-sky {
+  background: var(--sky); color: #fff;
+}
+.btn-sky:hover { background: #1f5fb5; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(42,111,201,.35); }
+
+.btn-teal {
+  background: var(--teal); color: #fff;
+}
+.btn-teal:hover { background: #147062; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,140,122,.35); }
+
+.btn-violet {
+  background: var(--violet); color: #fff;
+}
+.btn-violet:hover { background: #5a3488; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(107,63,160,.35); }
+
+.btn-amber {
+  background: var(--amber); color: #fff;
+}
+.btn-amber:hover { background: #b8720a; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,134,10,.35); }
+
+.btn-ghost {
+  background: transparent; color: var(--muted);
+  border: 1.5px solid var(--border2);
+}
+.btn-ghost:hover { border-color: var(--navy2); color: var(--text); }
+
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-danger-ghost {
+  background: transparent; color: var(--danger);
+  border: 1.5px solid rgba(192,57,43,.25); font-size: 12px;
+}
+.btn-danger-ghost:hover { background: rgba(192,57,43,.06); }
+
+/* ═══════════════════════════════════════════════
+   RESULT BOX
+═══════════════════════════════════════════════ */
+.result-box {
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-top: 20px;
+  display: none; animation: slideIn .3s ease;
+  border: 1.5px solid;
+}
+.result-box.show { display: block; }
+
+.rb-success { background: #f0faf7; border-color: rgba(26,140,122,.3); }
+.rb-info    { background: #f0f5ff; border-color: rgba(42,111,201,.3); }
+.rb-warn    { background: #fdf7ed; border-color: rgba(212,134,10,.3); }
+.rb-danger  { background: #fdf2f0; border-color: rgba(192,57,43,.3); }
+
+.rb-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+}
+.rb-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem; font-weight: 700;
+  line-height: 1; margin-bottom: 6px;
+}
+.rb-success .rb-value { color: var(--teal); }
+.rb-info    .rb-value { color: var(--sky); }
+.rb-warn    .rb-value { color: var(--amber); }
+.rb-danger  .rb-value { color: var(--danger); }
+
+.rb-msg { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* Progress bar */
+.prog-wrap { margin-top: 12px; }
+.prog-meta { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin-bottom: 5px; }
+.prog-track { height: 5px; border-radius: 100px; background: rgba(26,31,54,.08); overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 100px; transition: width .7s cubic-bezier(.4,0,.2,1); }
+.pf-coral  { background: linear-gradient(90deg, var(--coral), #f4856a); }
+.pf-sky    { background: linear-gradient(90deg, var(--sky), #5a9df0); }
+.pf-teal   { background: linear-gradient(90deg, var(--teal), #34b39e); }
+.pf-amber  { background: linear-gradient(90deg, var(--amber), #e8a82a); }
+
+/* Error text */
+.err-txt { font-size: 12px; color: var(--danger); margin-top: 6px; display: none; }
+.err-txt.show { display: block; }
+
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* Info pill */
+.info-pill {
+  background: #f0f5ff;
+  border: 1px solid rgba(42,111,201,.18);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px; color: var(--sky);
+  margin-bottom: 18px;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════
+   GRADE TABLE (Module 4)
+═══════════════════════════════════════════════ */
+.grade-table-wrap { overflow-x: auto; margin-top: 20px; display: none; }
+.grade-table-wrap.show { display: block; animation: slideIn .3s ease; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead tr {
+  background: var(--navy);
+  color: rgba(255,255,255,.85);
+}
+th {
+  font-family: 'Epilogue', sans-serif;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 11px 16px; text-align: left;
+}
+td { padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg); }
+
+.grade-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 28px; border-radius: 6px;
+  font-family: 'Playfair Display', serif;
+  font-size: 14px; font-weight: 700;
+}
+.gc-O      { background: rgba(26,140,122,.12); color: var(--teal); }
+.gc-Ap     { background: rgba(42,111,201,.12); color: var(--sky); }
+.gc-A      { background: rgba(26,140,122,.1);  color: #1a6e60; }
+.gc-Bp     { background: rgba(107,63,160,.1);  color: var(--violet); }
+.gc-B      { background: rgba(212,134,10,.1);  color: var(--amber); }
+.gc-C      { background: rgba(224,92,58,.1);   color: var(--coral); }
+.gc-U      { background: rgba(192,57,43,.1);   color: var(--danger); }
+
+.status-chip {
+  display: inline-block;
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 12px; font-weight: 600;
+}
+.sc-achieved { background: rgba(26,140,122,.1); color: var(--teal); }
+.sc-possible { background: rgba(26,31,54,.06);  color: var(--text); }
+.sc-not      { background: rgba(192,57,43,.1);  color: var(--danger); }
+.sc-best     { background: rgba(212,134,10,.15); color: var(--amber); border: 1px solid rgba(212,134,10,.3); }
+
+/* Highlight best achievable */
+.best-row { background: #fffbf0 !important; }
+.best-row td { font-weight: 500; }
+
+/* ═══════════════════════════════════════════════
+   GPA MODULE
+═══════════════════════════════════════════════ */
+.sem-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  background: var(--paper);
+}
+.sem-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+}
+.sem-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px; font-weight: 700; color: var(--amber);
+}
+
+.sub-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 120px 36px;
+  gap: 10px; align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  transition: border-color .18s;
+}
+.sub-row:hover { border-color: var(--border2); }
+@media(max-width:540px){
+  .sub-row { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+  .sub-row .del-btn { grid-column: span 2; justify-self: end; }
+}
+
+.del-btn {
+  width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(192,57,43,.07);
+  border: 1px solid rgba(192,57,43,.2);
+  color: var(--danger); cursor: pointer; font-size: 15px;
+  transition: all .18s; flex-shrink: 0;
+}
+.del-btn:hover { background: rgba(192,57,43,.15); }
+
+.add-sub-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 9px;
+  background: transparent;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--muted); cursor: pointer;
+  font-family: 'Epilogue', sans-serif; font-size: 13px;
+  transition: all .18s;
+}
+.add-sub-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+.add-sem-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 12px;
+  background: transparent;
+  border: 1.5px dashed var(--amber);
+  border-radius: var(--radius);
+  color: var(--amber); cursor: pointer;
+  font-family: 'Epilogue', sans-serif; font-size: 13px; font-weight: 600;
+  transition: all .18s; margin-top: 6px;
+}
+.add-sem-btn:hover { background: rgba(212,134,10,.05); }
+
+/* GPA result grid */
+.gpa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-top: 14px; }
+.gpa-stat {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.gpa-stat .lbl { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.gpa-stat .val {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem; font-weight: 700;
+  color: var(--amber); margin-top: 3px;
+}
+.sem-gpa-table { margin-top: 16px; display: none; }
+.sem-gpa-table.show { display: block; }
+
+/* ═══════════════════════════════════════════════
+   GRADE PREDICTOR RESULT
+═══════════════════════════════════════════════ */
+.pred-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 12px; margin-top: 16px;
+}
+@media(max-width:480px){ .pred-grid { grid-template-columns: 1fr 1fr; } }
+
+.pred-stat {
+  border-radius: var(--radius-sm);
+  padding: 14px 16px; border: 1px solid var(--border);
+}
+.pred-stat .lbl { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.pred-stat .val {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem; font-weight: 700; margin-top: 4px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     HEADER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<header>
+  <div class="header-tag">📐 Academic Tools Suite</div>
+  <h1>Scholar <em>Calc</em></h1>
+  <p>Marks · Exam Planner · Grade Predictor · GPA & CGPA</p>
+</header>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     TAB NAVIGATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="nav-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('internal',this)">
+      <span class="num">1</span> Internal Marks
+    </button>
+    <button class="tab-btn" onclick="showTab('final',this)">
+      <span class="num">2</span> Final Planner
+    </button>
+    <button class="tab-btn" onclick="showTab('predict',this)">
+      <span class="num">3</span> Grade Predictor
+    </button>
+    <button class="tab-btn" onclick="showTab('reverse',this)">
+      <span class="num">4</span> Reverse Grade ⭐
+    </button>
+    <button class="tab-btn" onclick="showTab('gpa',this)">
+      <span class="num">5</span> GPA & CGPA
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ══════════════════════════════════════════════
+     MODULE 1 — INTERNAL MARK CALCULATOR
+══════════════════════════════════════════════ -->
+<div class="module active" id="mod-internal">
+
+  <div class="mod-heading">
+    <div class="mod-icon ic-coral">📝</div>
+    <div>
+      <h2>Internal Mark Calculator</h2>
+      <p>Calculate your internal score from IAT & assignment marks</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title ct-coral">Input Method</div>
+
+    <div class="toggle-wrap">
+      <button class="toggle-btn active" id="optA-btn" onclick="switchOpt('A')">Option A — All Marks</button>
+      <button class="toggle-btn" id="optB-btn" onclick="switchOpt('B')">Option B — Averages</button>
+    </div>
+
+    <!-- OPTION A: Individual marks -->
+    <div id="optA">
+      <div class="sec-label">IAT Scores (out of 100)</div>
+      <div class="grid-3">
+        <div class="field"><label>IAT 1</label>
+          <input type="number" id="iat1" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+        <div class="field"><label>IAT 2</label>
+          <input type="number" id="iat2" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+        <div class="field"><label>IAT 3</label>
+          <input type="number" id="iat3" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+      </div>
+
+      <div class="sec-label">Assignment Scores (out of 100)</div>
+      <div class="grid-3">
+        <div class="field"><label>Assignment 1</label>
+          <input type="number" id="as1" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+        <div class="field"><label>Assignment 2</label>
+          <input type="number" id="as2" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+        <div class="field"><label>Assignment 3</label>
+          <input type="number" id="as3" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+      </div>
+    </div>
+
+    <!-- OPTION B: Averages -->
+    <div id="optB" style="display:none">
+      <div class="grid-2">
+        <div class="field"><label>Average IAT (out of 100)</label>
+          <input type="number" id="avgIAT" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+        <div class="field"><label>Average Assignment (out of 100)</label>
+          <input type="number" id="avgAS" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+      </div>
+    </div>
+
+    <div id="int-err" class="err-txt"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-coral" onclick="calcInternal()">Calculate Internal</button>
+      <button class="btn btn-ghost" onclick="resetInternal()">Reset</button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-box" id="int-res">
+      <div class="rb-label">Internal Mark (out of 40)</div>
+      <div class="rb-value" id="int-val">—</div>
+      <div class="rb-msg" id="int-msg"></div>
+      <div class="prog-wrap">
+        <div class="prog-meta"><span>0</span><span>40</span></div>
+        <div class="prog-track"><div class="prog-fill pf-coral" id="int-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formula reference -->
+  <div class="card" style="background:var(--paper)">
+    <div class="card-title ct-coral">Formula Reference</div>
+    <div style="font-size:13px; color:var(--muted); line-height:1.9">
+      <strong style="color:var(--text)">IAT Average</strong> = (IAT1 + IAT2 + IAT3) ÷ 3<br/>
+      <strong style="color:var(--text)">Assignment Average</strong> = (A1 + A2 + A3) ÷ 3<br/>
+      <strong style="color:var(--text)">Internal (out of 40)</strong> = (IAT avg × 0.75 + Assignment avg × 0.25) × 0.4
+    </div>
+  </div>
+
+</div><!-- /mod-internal -->
+
+<!-- ══════════════════════════════════════════════
+     MODULE 2 — FINAL EXAM PLANNER
+══════════════════════════════════════════════ -->
+<div class="module" id="mod-final">
+
+  <div class="mod-heading">
+    <div class="mod-icon ic-sky">🎯</div>
+    <div>
+      <h2>Final Exam Planner</h2>
+      <p>Find out the minimum marks needed in your final exam</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title ct-sky">Your Internal Score</div>
+
+    <div class="info-pill">
+      ℹ️ Final exam is out of 100 but contributes 60% to your total.
+      Pass condition: Total ≥ 50/100.
+    </div>
+
+    <div class="grid-2">
+      <div class="field"><label>Internal Mark (out of 40)</label>
+        <input type="number" id="fin-int" min="0" max="40" placeholder="0–40" oninput="validateN(this,40)"/></div>
+    </div>
+
+    <div id="fin-err" class="err-txt"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-sky" onclick="calcFinal()">Calculate Required Mark</button>
+      <button class="btn btn-ghost" onclick="resetFinal()">Reset</button>
+    </div>
+
+    <div class="result-box" id="fin-res">
+      <div class="rb-label" id="fin-lbl">Required Final Mark (out of 100)</div>
+      <div class="rb-value" id="fin-val">—</div>
+      <div class="rb-msg" id="fin-msg"></div>
+      <div class="prog-wrap" id="fin-prog">
+        <div class="prog-meta"><span>0</span><span>100</span></div>
+        <div class="prog-track"><div class="prog-fill pf-sky" id="fin-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--paper)">
+    <div class="card-title ct-sky">Formula Reference</div>
+    <div style="font-size:13px; color:var(--muted); line-height:1.9">
+      <strong style="color:var(--text)">Final Contribution</strong> = Final Mark × 0.6<br/>
+      <strong style="color:var(--text)">Total</strong> = Internal + Final Contribution<br/>
+      <strong style="color:var(--text)">Required Final</strong> = (50 − Internal) ÷ 0.6
+    </div>
+  </div>
+
+</div><!-- /mod-final -->
+
+<!-- ══════════════════════════════════════════════
+     MODULE 3 — GRADE PREDICTOR
+══════════════════════════════════════════════ -->
+<div class="module" id="mod-predict">
+
+  <div class="mod-heading">
+    <div class="mod-icon ic-teal">📊</div>
+    <div>
+      <h2>Grade Predictor</h2>
+      <p>Enter your marks to predict your final grade</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title ct-teal">Your Scores</div>
+
+    <div class="grid-2">
+      <div class="field"><label>Internal Mark (out of 40)</label>
+        <input type="number" id="pred-int" min="0" max="40" placeholder="0–40" oninput="validateN(this,40)"/></div>
+      <div class="field"><label>Final Exam Mark (out of 100)</label>
+        <input type="number" id="pred-fin" min="0" max="100" placeholder="0–100" oninput="validateN(this,100)"/></div>
+    </div>
+
+    <div id="pred-err" class="err-txt"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-teal" onclick="calcPredict()">Predict Grade</button>
+      <button class="btn btn-ghost" onclick="resetPredict()">Reset</button>
+    </div>
+
+    <div class="result-box" id="pred-res">
+      <div class="rb-label">Predicted Grade</div>
+      <div class="rb-value" id="pred-grade" style="font-size:3rem">—</div>
+      <div class="pred-grid" id="pred-grid"></div>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--paper)">
+    <div class="card-title ct-teal">Grade Scale</div>
+    <table>
+      <thead><tr><th>Total Marks</th><th>Grade</th><th>Points</th></tr></thead>
+      <tbody>
+        <tr><td>90 – 100</td><td><span class="grade-chip gc-O">O</span></td><td>10</td></tr>
+        <tr><td>80 – 89</td><td><span class="grade-chip gc-Ap">A+</span></td><td>9</td></tr>
+        <tr><td>70 – 79</td><td><span class="grade-chip gc-A">A</span></td><td>8</td></tr>
+        <tr><td>60 – 69</td><td><span class="grade-chip gc-Bp">B+</span></td><td>7</td></tr>
+        <tr><td>50 – 59</td><td><span class="grade-chip gc-B">B</span></td><td>6</td></tr>
+        <tr><td>45 – 49</td><td><span class="grade-chip gc-C">C</span></td><td>5</td></tr>
+        <tr><td>Below 50</td><td><span class="grade-chip gc-U">U</span></td><td>0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /mod-predict -->
+
+<!-- ══════════════════════════════════════════════
+     MODULE 4 — REVERSE GRADE CALCULATOR
+══════════════════════════════════════════════ -->
+<div class="module" id="mod-reverse">
+
+  <div class="mod-heading">
+    <div class="mod-icon ic-violet">🔁</div>
+    <div>
+      <h2>Reverse Grade Calculator</h2>
+      <p>See what final marks you need for every grade target</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title ct-violet">Your Internal Score</div>
+
+    <div class="grid-2">
+      <div class="field"><label>Internal Mark (out of 40)</label>
+        <input type="number" id="rev-int" min="0" max="40" placeholder="0–40" oninput="validateN(this,40)"/></div>
+    </div>
+
+    <div id="rev-err" class="err-txt"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-violet" onclick="calcReverse()">Show Grade Targets</button>
+      <button class="btn btn-ghost" onclick="resetReverse()">Reset</button>
+    </div>
+
+    <div class="grade-table-wrap" id="rev-table-wrap">
+      <div class="divider"></div>
+      <table id="rev-table">
+        <thead>
+          <tr>
+            <th>Grade</th>
+            <th>Min Total</th>
+            <th>Required Final (out of 100)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="rev-tbody"></tbody>
+      </table>
+      <div id="rev-best-msg" style="font-size:13px;color:var(--muted);margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <div class="card" style="background:var(--paper)">
+    <div class="card-title ct-violet">Formula</div>
+    <div style="font-size:13px; color:var(--muted); line-height:1.9">
+      <strong style="color:var(--text)">Required Final</strong> = (Grade Minimum − Internal) ÷ 0.6<br/>
+      Result is out of 100. If ≤ 0 → Already achieved. If > 100 → Not possible.
+    </div>
+  </div>
+
+</div><!-- /mod-reverse -->
+
+<!-- ══════════════════════════════════════════════
+     MODULE 5 — GPA & CGPA
+══════════════════════════════════════════════ -->
+<div class="module" id="mod-gpa">
+
+  <div class="mod-heading">
+    <div class="mod-icon ic-amber">🎓</div>
+    <div>
+      <h2>GPA & CGPA Calculator</h2>
+      <p>Track your performance across subjects and semesters</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title ct-amber">Semesters</div>
+    <div id="sem-container"></div>
+    <button class="add-sem-btn" onclick="addSem()">＋ Add Semester</button>
+
+    <div class="btn-row" style="margin-top:20px">
+      <button class="btn btn-amber" onclick="calcGPA()">Calculate GPA & CGPA</button>
+      <button class="btn btn-ghost" onclick="resetGPA()">Reset All</button>
+    </div>
+
+    <div class="result-box" id="gpa-res">
+      <div class="rb-label">Results</div>
+      <div class="gpa-grid" id="gpa-grid"></div>
+      <div class="sem-gpa-table" id="sem-table-wrap">
+        <div class="divider"></div>
+        <table>
+          <thead><tr><th>Semester</th><th>Total Credits</th><th>GPA</th></tr></thead>
+          <tbody id="sem-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /mod-gpa -->
+
+</div><!-- /page -->
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     JAVASCRIPT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<script>
+/* ─── TAB SWITCHER ─── */
+function showTab(id, btn) {
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mod-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ─── OPTION A / B TOGGLE ─── */
+function switchOpt(opt) {
+  document.getElementById('optA').style.display = opt === 'A' ? '' : 'none';
+  document.getElementById('optB').style.display = opt === 'B' ? '' : 'none';
+  document.getElementById('optA-btn').classList.toggle('active', opt === 'A');
+  document.getElementById('optB-btn').classList.toggle('active', opt === 'B');
+  hideRes('int-res'); hideErr('int-err');
+}
+
+/* ─── VALIDATION HELPERS ─── */
+function validateN(el, max) {
+  const v = parseFloat(el.value);
+  el.classList.toggle('err', el.value !== '' && (isNaN(v) || v < 0 || v > max));
+}
+
+function getN(id) {
+  const el = document.getElementById(id);
+  if (!el || el.value.trim() === '') return null;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+
+function showErrTxt(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.classList.add('show');
+}
+function hideErr(id) {
+  const el = document.getElementById(id);
+  el.textContent = ''; el.classList.remove('show');
+}
+function hideRes(id) { document.getElementById(id).classList.remove('show'); }
+
+/* ─── GRADE FUNCTION ─── */
+function getGrade(total) {
+  if (total >= 90) return 'O';
+  if (total >= 80) return 'A+';
+  if (total >= 70) return 'A';
+  if (total >= 60) return 'B+';
+  if (total >= 50) return 'B';
+  if (total >= 45) return 'C';
+  return 'U';
+}
+function gradeChipClass(g) {
+  return { 'O':'gc-O','A+':'gc-Ap','A':'gc-A','B+':'gc-Bp','B':'gc-B','C':'gc-C','U':'gc-U' }[g] || 'gc-U';
+}
+
+/* ═══════════════════════════════════════════════
+   MODULE 1 — INTERNAL MARK CALCULATOR
+   Formula: Internal = (IATavg × 0.75 + ASavg × 0.25) × 0.4
+═══════════════════════════════════════════════ */
+function calcInternal() {
+  hideErr('int-err');
+  const isA = document.getElementById('optA').style.display !== 'none';
+  let iatAvg, asAvg;
+
+  if (isA) {
+    const marks = ['iat1','iat2','iat3','as1','as2','as3'].map(id => getN(id));
+    if (marks.some(v => v === null)) return showErrTxt('int-err', '⚠ Please fill all 6 mark fields.');
+    if (marks.some(v => v < 0 || v > 100)) return showErrTxt('int-err', '⚠ All marks must be between 0 and 100.');
+    iatAvg = (marks[0] + marks[1] + marks[2]) / 3;
+    asAvg  = (marks[3] + marks[4] + marks[5]) / 3;
+  } else {
+    iatAvg = getN('avgIAT'); asAvg = getN('avgAS');
+    if (iatAvg === null || asAvg === null) return showErrTxt('int-err', '⚠ Please enter both averages.');
+    if (iatAvg < 0 || iatAvg > 100 || asAvg < 0 || asAvg > 100) return showErrTxt('int-err', '⚠ Values must be between 0 and 100.');
+  }
+
+  // Weighted: IAT 75%, Assignment 25%, scaled to 40
+  const internal = ((iatAvg * 0.75) + (asAvg * 0.25)) * 0.4;
+
+  const box = document.getElementById('int-res');
+  document.getElementById('int-val').textContent = internal.toFixed(2);
+  document.getElementById('int-bar').style.width = (internal / 40 * 100) + '%';
+
+  let cls = 'rb-success', msg = '';
+  if (internal >= 32) {
+    msg = `✅ Excellent! IAT avg: ${iatAvg.toFixed(1)} | Assignment avg: ${asAvg.toFixed(1)}<br>You have a strong internal score going into the final.`;
+  } else if (internal >= 20) {
+    cls = 'rb-info';
+    msg = `📚 Good. IAT avg: ${iatAvg.toFixed(1)} | Assignment avg: ${asAvg.toFixed(1)}<br>A solid final exam will help you pass comfortably.`;
+  } else {
+    cls = 'rb-warn';
+    msg = `⚠ Low score. IAT avg: ${iatAvg.toFixed(1)} | Assignment avg: ${asAvg.toFixed(1)}<br>You will need a strong performance in the final exam.`;
+  }
+  document.getElementById('int-msg').innerHTML = msg;
+  box.className = 'result-box show ' + cls;
+}
+
+function resetInternal() {
+  ['iat1','iat2','iat3','as1','as2','as3','avgIAT','avgAS'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('err'); }
+  });
+  hideErr('int-err'); hideRes('int-res');
+  document.getElementById('int-bar').style.width = '0%';
+}
+
+/* ═══════════════════════════════════════════════
+   MODULE 2 — FINAL EXAM PLANNER
+   Required Final = (50 - Internal) / 0.6
+═══════════════════════════════════════════════ */
+function calcFinal() {
+  hideErr('fin-err');
+  const internal = getN('fin-int');
+  if (internal === null) return showErrTxt('fin-err', '⚠ Please enter your internal mark.');
+  if (internal < 0 || internal > 40) return showErrTxt('fin-err', '⚠ Internal mark must be between 0 and 40.');
+
+  const reqFinal = (50 - internal) / 0.6;
+  const box = document.getElementById('fin-res');
+  const prog = document.getElementById('fin-prog');
+
+  document.getElementById('fin-lbl').textContent = 'Required Final Mark (out of 100)';
+
+  if (reqFinal <= 0) {
+    box.className = 'result-box show rb-success';
+    document.getElementById('fin-val').textContent = '🎉 Already Passed';
+    document.getElementById('fin-msg').textContent = `With ${internal}/40 internal, your contribution alone ensures a pass.`;
+    document.getElementById('fin-bar').style.width = '0%';
+  } else if (reqFinal > 100) {
+    box.className = 'result-box show rb-danger';
+    document.getElementById('fin-val').textContent = '❌ Not Possible';
+    document.getElementById('fin-msg').innerHTML = `You would need ${reqFinal.toFixed(1)} in the final — beyond the 100 max. Passing is not achievable with this internal score.`;
+    document.getElementById('fin-bar').style.width = '100%';
+  } else {
+    const pct = reqFinal / 100 * 100;
+    let cls = reqFinal <= 40 ? 'rb-success' : reqFinal <= 70 ? 'rb-info' : 'rb-warn';
+    box.className = 'result-box show ' + cls;
+    document.getElementById('fin-val').textContent = reqFinal.toFixed(1) + ' / 100';
+    let msg = `You need at least <strong>${reqFinal.toFixed(1)} marks</strong> in the final to pass (total: 50/100).`;
+    if (reqFinal <= 40) msg += '<br>✅ You are in a safe zone — well within reach!';
+    else if (reqFinal <= 70) msg += '<br>📚 Manageable. Consistent preparation will get you there.';
+    else msg += '<br>⚠ High requirement — prioritize focused revision.';
+    document.getElementById('fin-msg').innerHTML = msg;
+    document.getElementById('fin-bar').style.width = pct + '%';
+  }
+  prog.style.display = reqFinal <= 0 ? 'none' : '';
+}
+
+function resetFinal() {
+  const el = document.getElementById('fin-int');
+  el.value = ''; el.classList.remove('err');
+  hideErr('fin-err'); hideRes('fin-res');
+  document.getElementById('fin-bar').style.width = '0%';
+  document.getElementById('fin-prog').style.display = '';
+}
+
+/* ═══════════════════════════════════════════════
+   MODULE 3 — GRADE PREDICTOR
+═══════════════════════════════════════════════ */
+function calcPredict() {
+  hideErr('pred-err');
+  const internal = getN('pred-int');
+  const finalMark = getN('pred-fin');
+  if (internal === null || finalMark === null) return showErrTxt('pred-err', '⚠ Please enter both marks.');
+  if (internal < 0 || internal > 40) return showErrTxt('pred-err', '⚠ Internal mark must be 0–40.');
+  if (finalMark < 0 || finalMark > 100) return showErrTxt('pred-err', '⚠ Final mark must be 0–100.');
+
+  const finalContrib = finalMark * 0.6;
+  const total = internal + finalContrib;
+  const grade = getGrade(total);
+  const chipClass = gradeChipClass(grade);
+
+  const gradeEl = document.getElementById('pred-grade');
+  gradeEl.innerHTML = `<span class="grade-chip ${chipClass}" style="width:auto;padding:4px 20px;font-size:2.8rem">${grade}</span>`;
+
+  // Stats grid
+  const colors = { 'O': '#1a8c7a', 'A+': '#2a6fc9', 'A': '#1a6e60', 'B+': '#6b3fa0', 'B': '#d4860a', 'C': '#e05c3a', 'U': '#c0392b' };
+  const col = colors[grade] || '#1a8c7a';
+  document.getElementById('pred-grid').innerHTML = `
+    <div class="pred-stat" style="background:#f0f5ff;border-color:rgba(42,111,201,.2)">
+      <div class="lbl">Final Contribution</div>
+      <div class="val" style="color:var(--sky)">${finalContrib.toFixed(2)}<small style="font-size:1rem">/60</small></div>
+    </div>
+    <div class="pred-stat" style="background:#f0faf7;border-color:rgba(26,140,122,.2)">
+      <div class="lbl">Total Mark</div>
+      <div class="val" style="color:var(--teal)">${total.toFixed(2)}<small style="font-size:1rem">/100</small></div>
+    </div>
+    <div class="pred-stat" style="background:#f9f5ff;border-color:rgba(107,63,160,.2)">
+      <div class="lbl">Grade Points</div>
+      <div class="val" style="color:${col}">${{O:10,'A+':9,A:8,'B+':7,B:6,C:5,U:0}[grade]}</div>
+    </div>
+  `;
+
+  let cls = grade === 'U' ? 'rb-danger' : total >= 70 ? 'rb-success' : total >= 50 ? 'rb-info' : 'rb-warn';
+  document.getElementById('pred-res').className = 'result-box show ' + cls;
+}
+
+function resetPredict() {
+  ['pred-int','pred-fin'].forEach(id => { const el=document.getElementById(id); el.value=''; el.classList.remove('err'); });
+  hideErr('pred-err'); hideRes('pred-res');
+}
+
+/* ═══════════════════════════════════════════════
+   MODULE 4 — REVERSE GRADE CALCULATOR
+   Required Final = (gradeMin - internal) / 0.6
+═══════════════════════════════════════════════ */
+const GRADE_MINS = [
+  { grade: 'O',  min: 90, points: 10 },
+  { grade: 'A+', min: 80, points: 9  },
+  { grade: 'A',  min: 70, points: 8  },
+  { grade: 'B+', min: 60, points: 7  },
+  { grade: 'B',  min: 50, points: 6  },
+  { grade: 'C',  min: 45, points: 5  },
+];
+
+function calcReverse() {
+  hideErr('rev-err');
+  const internal = getN('rev-int');
+  if (internal === null) return showErrTxt('rev-err', '⚠ Please enter your internal mark.');
+  if (internal < 0 || internal > 40) return showErrTxt('rev-err', '⚠ Internal mark must be 0–40.');
+
+  const tbody = document.getElementById('rev-tbody');
+  tbody.innerHTML = '';
+
+  let bestGrade = null;
+  let bestMsg = '';
+
+  GRADE_MINS.forEach(g => {
+    const req = (g.min - internal) / 0.6;
+    const chipClass = gradeChipClass(g.grade);
+
+    let reqDisplay, statusHtml, isBest = false;
+
+    if (req <= 0) {
+      reqDisplay = '—';
+      statusHtml = '<span class="status-chip sc-achieved">✅ Already Achieved</span>';
+      if (!bestGrade) bestGrade = g.grade;
+    } else if (req > 100) {
+      reqDisplay = '—';
+      statusHtml = '<span class="status-chip sc-not">❌ Not Possible</span>';
+    } else {
+      reqDisplay = req.toFixed(1);
+      if (!bestGrade) { bestGrade = g.grade; isBest = true; }
+      statusHtml = `<span class="status-chip sc-possible">${isBest ? '⭐ Best Achievable' : 'Possible'}</span>`;
+    }
+
+    const tr = document.createElement('tr');
+    if (isBest) tr.className = 'best-row';
+    tr.innerHTML = `
+      <td><span class="grade-chip ${chipClass}">${g.grade}</span></td>
+      <td>${g.min}</td>
+      <td>${reqDisplay !== '—' ? `<strong>${reqDisplay}</strong>` : reqDisplay}</td>
+      <td>${statusHtml}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (bestGrade) {
+    bestMsg = `⭐ Best achievable grade with current internal score: <strong>${bestGrade}</strong>. Study smart!`;
+  } else {
+    bestMsg = '⚠ With the current internal score, no passing grade is achievable.';
+  }
+  document.getElementById('rev-best-msg').innerHTML = bestMsg;
+  document.getElementById('rev-table-wrap').classList.add('show');
+}
+
+function resetReverse() {
+  const el = document.getElementById('rev-int'); el.value = ''; el.classList.remove('err');
+  hideErr('rev-err');
+  document.getElementById('rev-table-wrap').classList.remove('show');
+  document.getElementById('rev-tbody').innerHTML = '';
+}
+
+/* ═══════════════════════════════════════════════
+   MODULE 5 — GPA & CGPA CALCULATOR
+═══════════════════════════════════════════════ */
+const GRADE_POINTS = { 'O':10, 'A+':9, 'A':8, 'B+':7, 'B':6, 'C':5, 'U':0, 'F':0 };
+let semCount = 0;
+
+function addSem() {
+  semCount++;
+  const s = semCount;
+  const container = document.getElementById('sem-container');
+  const div = document.createElement('div');
+  div.className = 'sem-card';
+  div.id = 'sem-' + s;
+  div.innerHTML = `
+    <div class="sem-header">
+      <div class="sem-title">Semester ${s}</div>
+      ${s > 1 ? `<button class="btn btn-sm btn-danger-ghost" onclick="removeSem(${s})">Remove</button>` : ''}
+    </div>
+    <div class="sub-list" id="subs-${s}"></div>
+    <button class="add-sub-btn" onclick="addSub(${s})">＋ Add Subject</button>
+  `;
+  container.appendChild(div);
+  addSub(s); addSub(s); // default 2 subjects
+}
+
+function addSub(s) {
+  const list = document.getElementById('subs-' + s);
+  const row = document.createElement('div');
+  row.className = 'sub-row';
+  row.innerHTML = `
+    <div class="field" style="margin:0">
+      <input type="text" placeholder="Subject name (optional)" style="font-size:13.5px"/>
+    </div>
+    <div class="field" style="margin:0">
+      <input type="number" min="1" max="6" placeholder="Credits" oninput="validateN(this,6)" style="font-size:13.5px"/>
+    </div>
+    <div class="field" style="margin:0">
+      <select style="font-size:13.5px">
+        <option value="">Grade</option>
+        ${Object.keys(GRADE_POINTS).map(g => `<option value="${g}">${g} (${GRADE_POINTS[g]})</option>`).join('')}
+      </select>
+    </div>
+    <button class="del-btn" title="Remove" onclick="this.closest('.sub-row').remove()">✕</button>
+  `;
+  list.appendChild(row);
+}
+
+function removeSem(s) { document.getElementById('sem-' + s).remove(); }
+
+function calcGPA() {
+  const semCards = document.querySelectorAll('.sem-card');
+  if (!semCards.length) return;
+
+  let totalW = 0, totalC = 0;
+  const semResults = [];
+
+  semCards.forEach((card, i) => {
+    const rows = card.querySelectorAll('.sub-row');
+    let w = 0, c = 0;
+    rows.forEach(row => {
+      const credEl = row.querySelectorAll('input')[1];
+      const gradeEl = row.querySelector('select');
+      if (!credEl.value || !gradeEl.value) return;
+      const cred = parseFloat(credEl.value);
+      const gp   = GRADE_POINTS[gradeEl.value];
+      if (isNaN(cred) || cred <= 0) return;
+      w += cred * gp; c += cred;
+    });
+    if (c > 0) {
+      const gpa = w / c;
+      semResults.push({ label: `Semester ${i+1}`, credits: c, gpa });
+      totalW += w; totalC += c;
+    }
+  });
+
+  if (!totalC) return;
+
+  const cgpa = totalW / totalC;
+  const box = document.getElementById('gpa-res');
+
+  // Build stat blocks
+  let gridHtml = `
+    <div class="gpa-stat">
+      <div class="lbl">CGPA</div>
+      <div class="val">${cgpa.toFixed(2)}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">${cgpa>=9?'🏅 Outstanding':cgpa>=8?'🌟 Excellent':cgpa>=7?'👍 Good':cgpa>=6?'📚 Average':'⚠ Below Average'}</div>
+    </div>
+    <div class="gpa-stat">
+      <div class="lbl">Total Credits</div>
+      <div class="val" style="color:var(--sky)">${totalC}</div>
+    </div>
+  `;
+  if (semResults.length > 1) {
+    semResults.forEach(sr => {
+      gridHtml += `
+        <div class="gpa-stat">
+          <div class="lbl">${sr.label}</div>
+          <div class="val" style="font-size:1.6rem;color:var(--violet)">${sr.gpa.toFixed(2)}</div>
+          <div style="font-size:12px;color:var(--muted)">${sr.credits} credits</div>
+        </div>
+      `;
+    });
+  }
+  document.getElementById('gpa-grid').innerHTML = gridHtml;
+
+  // Semester table
+  if (semResults.length > 1) {
+    const tbody = document.getElementById('sem-tbody');
+    tbody.innerHTML = semResults.map(sr =>
+      `<tr><td>${sr.label}</td><td>${sr.credits}</td><td style="font-weight:700;color:var(--amber)">${sr.gpa.toFixed(2)}</td></tr>`
+    ).join('');
+    document.getElementById('sem-table-wrap').classList.add('show');
+  } else {
+    document.getElementById('sem-table-wrap').classList.remove('show');
+  }
+
+  box.className = 'result-box show rb-warn';
+  box.style.cssText += ';background:#fffbf0;border-color:rgba(212,134,10,.25)';
+}
+
+function resetGPA() {
+  document.getElementById('sem-container').innerHTML = '';
+  document.getElementById('gpa-grid').innerHTML = '';
+  document.getElementById('sem-tbody').innerHTML = '';
+  document.getElementById('sem-table-wrap').classList.remove('show');
+  hideRes('gpa-res');
+  semCount = 0;
+  addSem();
+}
+
+/* ─── INIT ─── */
+window.onload = () => { addSem(); };
+</script>
+</body>
+</html>

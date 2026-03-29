@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Student Dashboard - Smart Attendance</title>
+  <link rel="icon" type="image/x-icon" href="{% static 'assets/favicon.ico' %}"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet"/>
+  <style>
+    :root{--primary:#1a56db;--primary-dk:#1342b0;--primary-lt:#e8f0fd;--accent:#0ea472;--accent-dk:#0b8a5e;--accent-lt:#e6f7f1;--warning:#d97706;--danger:#dc2626;--surface:#fff;--bg:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--nav-h:64px;--radius:12px;--radius-lg:18px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+    .sa-nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;}
+    .sa-nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--primary);text-decoration:none;}
+    .sa-nav-links{display:flex;gap:4px;margin-left:auto;list-style:none;flex-wrap:wrap;}
+    .sa-nav-links a{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;transition:all .15s;}
+    .sa-nav-links a:hover{background:var(--bg);color:var(--text);}
+    .sa-nav-links a.active{background:var(--primary-lt);color:var(--primary);}
+    .sa-nav-links a.logout{color:var(--danger);}
+    .sa-nav-links a.logout:hover{background:#fee2e2;}
+    .sa-page{flex:1;padding:32px 24px;max-width:1100px;margin:0 auto;width:100%;}
+    /* Welcome Banner */
+    .welcome-banner{background:linear-gradient(135deg,#0f172a 0%,#1e40af 60%,#065f46 100%);border-radius:20px;padding:28px 32px;color:#fff;margin-bottom:28px;position:relative;overflow:hidden;}
+    .welcome-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.05);border-radius:50%;}
+    .welcome-banner h2{font-size:1.4rem;font-weight:700;}
+    .welcome-banner p{color:rgba(255,255,255,.65);font-size:13px;margin-top:5px;}
+    .welcome-banner .meta span{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:3px 12px;font-size:12px;font-weight:600;margin-right:8px;margin-top:10px;}
+    /* Stats */
+    .sa-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;}
+    .sa-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 20px;box-shadow:var(--shadow);}
+    .sa-stat-icon{font-size:1.6rem;margin-bottom:10px;}
+    .sa-stat-val{font-size:2rem;font-weight:700;line-height:1;}
+    .sa-stat-lbl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+    .stat-primary .sa-stat-val{color:var(--primary);}
+    .stat-accent  .sa-stat-val{color:var(--accent);}
+    .stat-warn    .sa-stat-val{color:var(--warning);}
+    .stat-danger  .sa-stat-val{color:var(--danger);}
+    /* Card */
+    .sa-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;margin-bottom:20px;}
+    .sa-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    /* Progress */
+    .progress-wrap{margin-top:6px;}
+    .progress-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .progress-track{height:8px;background:var(--border);border-radius:100px;overflow:hidden;}
+    .progress-fill{height:100%;border-radius:100px;transition:width .7s;}
+    .pf-success{background:linear-gradient(90deg,var(--accent),#34d399);}
+    .pf-danger{background:linear-gradient(90deg,var(--danger),#f87171);}
+    /* Alert */
+    .sa-alert{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;margin-top:14px;}
+    .sa-alert-success{background:var(--accent-lt);color:#065f46;border:1px solid #a7f3d0;}
+    .sa-alert-warning{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
+    /* Tiles */
+    .sa-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
+    .sa-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);text-decoration:none;color:var(--text);font-size:13px;font-weight:600;transition:all .18s;text-align:center;}
+    .sa-tile:hover{border-color:var(--primary);background:var(--primary-lt);color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow);}
+    .sa-tile .tile-icon{font-size:1.8rem;}
+    .sa-footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:16px;font-size:13px;color:var(--muted);}
+  </style>
+</head>
+<body>
+
+<nav class="sa-nav">
+  <a class="sa-nav-brand" href="{% url 'home' %}">
+    <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;color:var(--primary);"></i> Smart Attendance
+  </a>
+  <ul class="sa-nav-links">
+    <li><a href="{% url 'student_dashboard' %}" class="active">Dashboard</a></li>
+    <li><a href="{% url 'apply_page' %}">Apply Leave</a></li>
+    <li><a href="{% url 'leave_status' %}">Leave Status</a></li>
+    <li><a href="{% url 'attendance' %}">Attendance</a></li>
+    <li><a href="{% url 'calculator' %}">Calculator</a></li>
+    <li><a href="{% url 'logout' %}" class="logout">Logout</a></li>
+  </ul>
+</nav>
+
+<div class="sa-page">
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <h2>👋 Welcome, {{ student.name }}!</h2>
+    <div class="meta">
+      <span>Roll No: {{ student.roll_no }}</span>
+      <span>{{ student.role|capfirst }}</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="sa-stats">
+    <div class="sa-stat stat-primary">
+      <div class="sa-stat-icon">📋</div>
+      <div class="sa-stat-val">{{ total_leaves }}</div>
+      <div class="sa-stat-lbl">Total Leaves Applied</div>
+    </div>
+    <div class="sa-stat stat-warn">
+      <div class="sa-stat-icon">⏳</div>
+      <div class="sa-stat-val">{{ pending_leaves }}</div>
+      <div class="sa-stat-lbl">Pending Leaves</div>
+    </div>
+    <div class="sa-stat {% if attendance_percent < 75 %}stat-danger{% else %}stat-accent{% endif %}">
+      <div class="sa-stat-icon">📊</div>
+      <div class="sa-stat-val">{{ attendance_percent }}%</div>
+      <div class="sa-stat-lbl">Attendance</div>
+    </div>
+  </div>
+
+  <!-- Attendance Overview -->
+  <div class="sa-card">
+    <div class="sa-card-title"><i class="bi bi-graph-up-arrow"></i> Attendance Overview</div>
+    <div class="progress-meta">
+      <span>{{ present_classes }} present out of {{ total_classes }} classes</span>
+      <span style="font-weight:600;">{{ attendance_percent }}%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill {% if attendance_percent < 75 %}pf-danger{% else %}pf-success{% endif %}" style="width:{{ attendance_percent }}%;"></div>
+    </div>
+    {% if attendance_percent < 75 %}
+    <div class="sa-alert sa-alert-warning">
+      <i class="bi bi-exclamation-triangle-fill"></i> Your attendance is below 75%. Please attend more classes.
+    </div>
+    {% else %}
+    <div class="sa-alert sa-alert-success">
+      <i class="bi bi-check-circle-fill"></i> Your attendance is above 75%. Keep it up!
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="sa-card">
+    <div class="sa-card-title"><i class="bi bi-lightning-fill"></i> Quick Actions</div>
+    <div class="sa-tiles">
+      <a href="{% url 'apply_page' %}" class="sa-tile"><span class="tile-icon">✍️</span>Apply Leave</a>
+      <a href="{% url 'leave_status' %}" class="sa-tile"><span class="tile-icon">📋</span>Leave Status</a>
+      <a href="{% url 'attendance' %}" class="sa-tile"><span class="tile-icon">📅</span>Attendance</a>
+      <a href="{% url 'calculator' %}" class="sa-tile"><span class="tile-icon">🔢</span>Calculator</a>
+      <a href="{% url 'create_event' %}" class="sa-tile"><span class="tile-icon">📝</span>Apply OD</a>
+      <a href="{% url 'event_list' %}" class="sa-tile"><span class="tile-icon">🎉</span>Events</a>
+    </div>
+  </div>
+
+</div>
+
+<footer class="sa-footer">&copy; 2026 Smart Attendance System</footer>
+</body>
+</html>

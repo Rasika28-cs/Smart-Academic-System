@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Mark Attendance - Smart Attendance</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root{--primary:#1a56db;--primary-dk:#1342b0;--primary-lt:#e8f0fd;--accent:#0ea472;--accent-lt:#e6f7f1;--surface:#fff;--bg:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--danger:#dc2626;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+    .sa-nav{height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;}
+    .sa-nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--primary);text-decoration:none;}
+    .sa-nav-links{display:flex;gap:4px;margin-left:auto;list-style:none;}
+    .sa-nav-links a{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;}
+    .sa-nav-links a.logout{color:var(--danger);}
+    .sa-page{flex:1;padding:32px 24px;max-width:700px;margin:0 auto;width:100%;}
+    .page-header{margin-bottom:24px;}
+    .page-header h1{font-size:1.4rem;font-weight:700;}
+    .page-header p{color:var(--muted);font-size:13px;margin-top:4px;}
+    .sa-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);padding:24px;margin-bottom:20px;}
+    .student-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+    .student-row:last-child{border-bottom:none;}
+    .student-name{font-size:14px;font-weight:600;}
+    .att-select{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--surface);outline:none;cursor:pointer;transition:border-color .15s;}
+    .att-select:focus{border-color:var(--primary);}
+    .sa-btn-primary{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 28px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .18s;}
+    .sa-btn-primary:hover{background:var(--primary-dk);transform:translateY(-1px);}
+    .sa-footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:16px;font-size:13px;color:var(--muted);}
+  </style>
+</head>
+<body>
+
+<nav class="sa-nav">
+  <a class="sa-nav-brand" href="{% url 'teacher_dashboard' %}">
+    <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;"></i> Smart Attendance
+  </a>
+  <ul class="sa-nav-links">
+    <li><a href="{% url 'teacher_dashboard' %}">Dashboard</a></li>
+    <li><a href="{% url 'logout' %}" class="logout">Logout</a></li>
+  </ul>
+</nav>
+
+<div class="sa-page">
+  <div class="page-header">
+    <h1>✅ Mark Attendance</h1>
+    <p>Record attendance for each student below</p>
+  </div>
+
+  <div class="sa-card">
+    <form method="POST">
+      {% csrf_token %}
+      {% for student in students %}
+      <div class="student-row">
+        <span class="student-name">{{ student.name }}</span>
+        <select class="att-select" name="status_{{ student.id }}">
+          <option value="Present">✓ Present</option>
+          <option value="Absent">✗ Absent</option>
+        </select>
+      </div>
+      {% endfor %}
+      <div style="margin-top:20px;">
+        <button type="submit" class="sa-btn-primary">
+          <i class="bi bi-check2-all"></i> Submit Attendance
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="sa-footer">&copy; 2026 Smart Attendance System</footer>
+</body>
+</html>
