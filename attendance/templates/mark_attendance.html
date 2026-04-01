@@ -32,6 +32,8 @@
 </head>
 <body>
 
+
+
 <nav class="sa-nav">
   <a class="sa-nav-brand" href="{% url 'teacher_dashboard' %}">
     <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;"></i> Smart Attendance
@@ -51,15 +53,29 @@
   <div class="sa-card">
     <form method="POST">
       {% csrf_token %}
-      {% for student in students %}
-      <div class="student-row">
-        <span class="student-name">{{ student.name }}</span>
-        <select class="att-select" name="status_{{ student.id }}">
-          <option value="Present">✓ Present</option>
-          <option value="Absent">✗ Absent</option>
-        </select>
-      </div>
-      {% endfor %}
+
+      {% for item in student_data %}
+<div class="student-row">
+  <span class="student-name">{{ item.student.name }}</span>
+
+  <select class="att-select" name="status_{{ item.student.id }}">
+
+    <option value="Present" {% if item.status == "Present" %}selected{% endif %}>
+      ✓ Present
+    </option>
+
+    <option value="Absent" {% if item.status == "Absent" %}selected{% endif %}>
+      ✗ Absent
+    </option>
+
+    <option value="Leave" {% if item.status == "Leave" %}selected{% endif %}>
+      🟡 Leave
+    </option>
+
+  </select>
+</div>
+{% endfor %}
+
       <div style="margin-top:20px;">
         <button type="submit" class="sa-btn-primary">
           <i class="bi bi-check2-all"></i> Submit Attendance

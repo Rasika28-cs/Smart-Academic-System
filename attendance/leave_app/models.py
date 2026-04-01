@@ -41,9 +41,10 @@ class LeaveRequest(models.Model):
 
 class Attendance(models.Model):
     STATUS_CHOICES = [
-        ('Present', 'Present'),
-        ('Absent', 'Absent'),
-    ]
+    ('Present', 'Present'),
+    ('Leave', 'Leave'),
+    ('Absent', 'Absent'),
+]
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     date = models.DateField()

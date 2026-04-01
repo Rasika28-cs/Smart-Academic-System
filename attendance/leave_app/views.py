@@ -176,10 +176,19 @@ def dashboard(request):
     total_leaves = LeaveRequest.objects.filter(student=student).count()
     pending_leaves = LeaveRequest.objects.filter(student=student, status='Pending').count()
 
-    total_classes = Attendance.objects.filter(student=student).count()
-    present_classes = Attendance.objects.filter(student=student, status='Present').count()
+    records = Attendance.objects.filter(student=student)
 
-    attendance_percent = (present_classes / total_classes * 100) if total_classes > 0 else 0
+    present_classes = records.filter(status='Present').count()
+    leave_classes = records.filter(status='Leave').count()
+    absent_classes = records.filter(status='Absent').count()
+
+    total_classes = present_classes + leave_classes + absent_classes
+
+    if total_classes > 0:
+        score = (present_classes * 1) + (leave_classes * 0.99) + (absent_classes * 0.97)
+        attendance_percent = (score / total_classes) * 100
+    else:
+        attendance_percent = 0
 
     return render(request, 'dashboard.html', {
         'total_leaves': total_leaves,
@@ -296,27 +305,48 @@ def view_students(request):
 # MARK ATTENDANCE
 # ─────────────────────────────────────────────
 
+from datetime import date
+
 @login_required
 def mark_attendance(request):
     if not request.user.is_staff:
         return HttpResponse('Only Teachers Allowed', status=403)
 
     students = Student.objects.all()
+    today = date.today()
 
     if request.method == 'POST':
-        today = date.today()
         for student in students:
             status = request.POST.get(f'status_{student.id}')
-            if status and not Attendance.objects.filter(student=student, date=today).exists():
-                Attendance.objects.create(student=student, date=today, status=status)
+            if status:
+                Attendance.objects.update_or_create(
+                    student=student,
+                    date=today,
+                    defaults={'status': status}
+                )
         return redirect('teacher_dashboard')
 
-    return render(request, 'mark_attendance.html', {'students': students})
+    # 🔥 Create list with status (no template filter needed)
+    attendance_records = Attendance.objects.filter(date=today)
+    attendance_map = {att.student_id: att.status for att in attendance_records}
 
+    student_data = []
+    for student in students:
+        status = attendance_map.get(student.id, 'Present')  # default Present
+        student_data.append({
+            'student': student,
+            'status': status
+        })
+
+    return render(request, 'mark_attendance.html', {
+        'student_data': student_data
+    })
 
 # ─────────────────────────────────────────────
 # UPDATE LEAVE STATUS (Teacher action)
 # ─────────────────────────────────────────────
+
+from datetime import timedelta
 
 @login_required
 def update_leave_status(request, leave_id, action):
@@ -327,12 +357,22 @@ def update_leave_status(request, leave_id, action):
 
     if action == 'approve':
         leave.status = 'Approved'
+
+        # 🔥 AUTO MARK ATTENDANCE AS LEAVE
+        current_date = leave.from_date
+        while current_date <= leave.to_date:
+            Attendance.objects.update_or_create(
+                student=leave.student,
+                date=current_date,
+                defaults={'status': 'Leave'}
+            )
+            current_date += timedelta(days=1)
+
     elif action == 'reject':
         leave.status = 'Rejected'
 
     leave.save()
     return redirect('today_leaves')
-
 
 # ─────────────────────────────────────────────
 # TODAY'S LEAVES (Teacher view)
@@ -363,16 +403,29 @@ def hod_dashboard(request):
     selected_date = request.GET.get('date')
 
     student_data = []
+
     for student in students:
-        total = Attendance.objects.filter(student=student).count()
-        present = Attendance.objects.filter(student=student, status='Present').count()
-        percentage = (present / total * 100) if total > 0 else 0
+        records = Attendance.objects.filter(student=student)
+
+        present = records.filter(status='Present').count()
+        leave = records.filter(status='Leave').count()
+        absent = records.filter(status='Absent').count()
+
+        total = present + leave + absent
+
+        if total > 0:
+            score = (present * 1) + (leave * 0.99) + (absent * 0.97)
+            percentage = (score / total) * 100
+        else:
+            percentage = 0
+
         student_data.append({
             'name': student.name,
             'roll_no': student.roll_no,
             'percentage': round(percentage, 2),
         })
 
+    # 🔍 Search
     if search_query:
         student_data = [
             s for s in student_data
@@ -380,12 +433,15 @@ def hod_dashboard(request):
             or search_query.lower() in s['roll_no'].lower()
         ]
 
+    # 🔽 Sort
     if sort_order == 'low':
         student_data = sorted(student_data, key=lambda x: x['percentage'])
 
+    # 📊 Chart
     names = [s['name'] for s in student_data]
     percentages = [s['percentage'] for s in student_data]
 
+    # 📅 Daily report
     daily_records = []
     if selected_date:
         for record in Attendance.objects.filter(date=selected_date):

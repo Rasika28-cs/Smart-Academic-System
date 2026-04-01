@@ -52,7 +52,7 @@
   <div class="sa-card">
     <table class="sa-table">
       <thead>
-        <tr><th>Student</th><th>Email</th></tr>
+        <tr><th>Student</th></tr>
       </thead>
       <tbody>
         {% for student in students %}
@@ -63,7 +63,7 @@
               <strong>{{ student.name }}</strong>
             </div>
           </td>
-          <td style="color:var(--muted);">{{ student.email }}</td>
+          
         </tr>
         {% endfor %}
       </tbody>
