@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'leave_app','od','events',
+    'leave_app','od','events', 'department', 
    
 ]
 

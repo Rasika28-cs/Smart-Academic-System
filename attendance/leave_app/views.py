@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from .models import Student, LeaveRequest, Attendance
-
+from department.models import Staff, Achievement, Winner, Gallery, NewsItem, UpcomingEvent
 
 # ─────────────────────────────────────────────
 # HELPERS
@@ -47,7 +47,25 @@ def _student_required(request):
 # ─────────────────────────────────────────────
 
 def home(request):
-    return render(request, 'index.html')
+    # Redirect authenticated users to their dashboard
+    if request.user.is_authenticated:
+        if request.user.is_staff or request.user.is_superuser:
+            return redirect('hod_dashboard')
+        student = _get_student(request)
+        if student:
+            return redirect('student_dashboard')
+        return redirect('teacher_dashboard')
+
+    # Public view — fetch department + homepage data
+    context = {
+        'staff': Staff.objects.all(),
+        'achievements': Achievement.objects.all(),
+        'winners': Winner.objects.all(),
+        'gallery_images': Gallery.objects.all()[:12],
+        'news_items': NewsItem.objects.filter(is_active=True)[:20],
+        'upcoming_events': UpcomingEvent.objects.filter(is_active=True)[:20],
+    }
+    return render(request, 'index.html', context)
 
 
 # ─────────────────────────────────────────────

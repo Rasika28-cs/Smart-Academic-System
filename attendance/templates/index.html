@@ -4,138 +4,1003 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Smart Attendance</title>
+  <title>Department of CSE – Smart Academic System</title>
   <link rel="icon" type="image/x-icon" href="{% static 'assets/favicon.ico' %}"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
-  <link href="{% static 'css/styles.css' %}" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
   <style>
-    :root{--primary:#1a56db;--primary-dk:#1342b0;--primary-lt:#e8f0fd;--accent:#0ea472;--accent-dk:#0b8a5e;--accent-lt:#e6f7f1;--surface:#ffffff;--bg:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--nav-h:64px;--radius:12px;--radius-lg:18px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);}
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-    /* NAV */
-    .sa-nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;box-shadow:0 1px 0 var(--border);}
-    .sa-nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:var(--primary);text-decoration:none;flex-shrink:0;}
-    .sa-nav-brand .bi{font-size:1.4rem;}
-    .sa-nav-links{display:flex;align-items:center;gap:4px;margin-left:auto;list-style:none;}
-    .sa-nav-links a{padding:6px 14px;border-radius:8px;font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;transition:all .15s;}
-    .sa-nav-links a:hover{background:var(--bg);color:var(--text);}
-    .sa-nav-links a.active{background:var(--primary-lt);color:var(--primary);font-weight:600;}
-    .sa-nav-links .btn-login{background:var(--primary);color:#fff;border-radius:10px;padding:7px 18px;}
-    .sa-nav-links .btn-login:hover{background:var(--primary-dk);}
-    /* HERO */
-    .hero{padding:80px 32px 64px;text-align:center;background:linear-gradient(160deg,#0f172a 0%,#1e3a8a 60%,#065f46 100%);color:#fff;position:relative;overflow:hidden;}
-    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(26,86,219,.35),transparent);pointer-events:none;}
-    .hero-badge{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:5px 16px;border-radius:100px;margin-bottom:24px;}
-    .hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:700;line-height:1.1;margin-bottom:16px;position:relative;}
-    .hero h1 span{background:linear-gradient(90deg,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    .hero p{color:rgba(255,255,255,.65);font-size:16px;max-width:520px;margin:0 auto 36px;position:relative;}
-    .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
-    .btn-hero-primary{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:var(--primary);color:#fff;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;transition:all .18s;}
-    .btn-hero-primary:hover{background:var(--primary-dk);transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,86,219,.4);}
-    .btn-hero-outline{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;transition:all .18s;backdrop-filter:blur(8px);}
-    .btn-hero-outline:hover{background:rgba(255,255,255,.18);}
-    /* FEATURES */
-    .features{padding:64px 32px;max-width:1100px;margin:0 auto;}
-    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:40px;}
-    .feat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;}
-    .feat-card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.1);}
-    .feat-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:16px;}
-    .fi-blue{background:var(--primary-lt);}
-    .fi-green{background:var(--accent-lt);}
-    .fi-amber{background:#fef3c7;}
-    .fi-purple{background:#f5f3ff;}
-    .feat-card h3{font-size:15px;font-weight:700;margin-bottom:8px;}
-    .feat-card p{font-size:13px;color:var(--muted);line-height:1.6;}
-    /* SECTION HEADING */
-    .section-eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);margin-bottom:8px;}
-    .section-title{font-size:1.8rem;font-weight:700;color:var(--text);}
-    .section-desc{font-size:15px;color:var(--muted);margin-top:8px;max-width:500px;}
-    /* ABOUT */
-    .about{background:#0f172a;color:#fff;padding:64px 32px;text-align:center;}
-    .about .section-eyebrow{color:#60a5fa;}
-    .about .section-title{color:#fff;}
-    .about p{color:rgba(255,255,255,.6);font-size:15px;max-width:600px;margin:16px auto 0;line-height:1.8;}
-    .social-row{display:flex;justify-content:center;gap:20px;margin-top:28px;}
-    .social-row a{width:40px;height:40px;background:rgba(255,255,255,.08);border-radius:10px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);text-decoration:none;font-size:1.1rem;transition:all .18s;}
-    .social-row a:hover{background:var(--primary);color:#fff;}
-    /* FOOTER */
-    .sa-footer{background:var(--surface);border-top:1px solid var(--border);padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
-    .sa-footer-links a{font-size:13px;color:var(--muted);text-decoration:none;margin-left:16px;}
-    .sa-footer-links a:hover{color:var(--text);}
+    /* ═══════════════════════════════════════════════════════════════
+       ROOT VARIABLES
+    ══════════════════════════════════════════════════════════════════ */
+    :root {
+      --primary:     #1a3c8f;
+      --primary-dk:  #122b6e;
+      --primary-lt:  #e8eeff;
+      --accent:      #e8a020;
+      --accent-lt:   #fff8e6;
+      --surface:     #ffffff;
+      --bg:          #f4f6fb;
+      --border:      #dde3ef;
+      --text:        #0d1b3e;
+      --muted:       #5a6a8a;
+      --nav-h:       68px;
+      --radius:      10px;
+      --radius-lg:   16px;
+      --shadow-sm:   0 1px 4px rgba(0,0,0,.07);
+      --shadow:      0 4px 20px rgba(0,0,0,.09);
+      --shadow-lg:   0 8px 36px rgba(0,0,0,.13);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NAVBAR
+    ══════════════════════════════════════════════════════════════════ */
+    .nav {
+      position: sticky; top: 0; z-index: 1000;
+      height: var(--nav-h);
+      background: var(--primary);
+      display: flex; align-items: center; padding: 0 40px; gap: 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.25);
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px;
+      color: #fff; font-weight: 800; font-size: 1.1rem;
+      white-space: nowrap;
+    }
+    .nav-brand-icon {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; color: #fff; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .nav-brand-sub { font-size: 11px; font-weight: 400; opacity: .75; letter-spacing: .04em; }
+    .nav-spacer { flex: 1; }
+    .nav-links {
+      display: flex; align-items: center; gap: 2px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,.8);
+      font-size: 13.5px; font-weight: 500;
+      padding: 7px 14px; border-radius: 7px;
+      transition: background .15s, color .15s;
+    }
+    .nav-links a:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .nav-links .nav-login {
+      background: var(--accent); color: #fff;
+      padding: 8px 20px; border-radius: 8px;
+      font-weight: 600; margin-left: 8px;
+    }
+    .nav-links .nav-login:hover { background: #d08e18; }
+    .nav-hamburger {
+      display: none; background: none; border: none;
+      color: #fff; font-size: 1.5rem; cursor: pointer; padding: 4px;
+    }
+    .nav-mobile { display: none; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════════════════════════════ */
+    .hero {
+      background: linear-gradient(135deg, #0a1f5c 0%, #1a3c8f 45%, #0d4a73 100%);
+      color: #fff;
+      padding: 100px 40px 80px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 0%, rgba(232,160,32,.18), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 100%, rgba(26,60,143,.4), transparent);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(232,160,32,.18);
+      border: 1px solid rgba(232,160,32,.4);
+      color: var(--accent); font-size: 11.5px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: 5px 16px; border-radius: 100px; margin-bottom: 24px;
+      position: relative;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+      font-weight: 800; line-height: 1.1; margin-bottom: 10px;
+      position: relative;
+    }
+    .hero h1 .dept { color: var(--accent); }
+    .hero-tagline {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      font-weight: 300; opacity: .8; margin-bottom: 20px;
+      letter-spacing: .02em; position: relative;
+    }
+    .hero-desc {
+      font-size: 15px; color: rgba(255,255,255,.65);
+      max-width: 560px; margin: 0 auto 40px; line-height: 1.7;
+      position: relative;
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
+    .btn-hero {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 30px; border-radius: 10px;
+      font-size: 15px; font-weight: 600; transition: all .2s;
+    }
+    .btn-hero-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 20px rgba(232,160,32,.35); }
+    .btn-hero-primary:hover { background: #d08e18; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,160,32,.45); }
+    .btn-hero-outline {
+      background: rgba(255,255,255,.1); color: #fff;
+      border: 1.5px solid rgba(255,255,255,.3);
+      backdrop-filter: blur(8px);
+    }
+    .btn-hero-outline:hover { background: rgba(255,255,255,.18); transform: translateY(-2px); }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+      margin-top: 60px; padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,.12);
+      position: relative;
+    }
+    .hero-stat-num { font-size: 2rem; font-weight: 800; color: var(--accent); }
+    .hero-stat-label { font-size: 12px; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION HELPERS
+    ══════════════════════════════════════════════════════════════════ */
+    .section { padding: 72px 40px; }
+    .section-inner { max-width: 1160px; margin: 0 auto; }
+    .section-eyebrow {
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: var(--primary); margin-bottom: 6px;
+    }
+    .section-title { font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1.15; }
+    .section-title span { color: var(--primary); }
+    .section-desc { font-size: 15px; color: var(--muted); margin-top: 10px; max-width: 540px; line-height: 1.7; }
+    .section-header { margin-bottom: 44px; }
+    .divider { width: 48px; height: 4px; background: var(--accent); border-radius: 2px; margin-top: 14px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ABOUT
+    ══════════════════════════════════════════════════════════════════ */
+    .about-section { background: var(--surface); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .about-text p { font-size: 15.5px; color: var(--muted); line-height: 1.8; margin-bottom: 14px; }
+    .about-text p:last-child { margin-bottom: 0; }
+    .about-highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .about-highlight {
+      background: var(--primary-lt); border-radius: var(--radius);
+      padding: 18px 20px; border-left: 4px solid var(--primary);
+    }
+    .about-highlight .bi { font-size: 1.3rem; color: var(--primary); margin-bottom: 6px; }
+    .about-highlight h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .about-highlight p { font-size: 13px; color: var(--muted); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       VISION & MISSION
+    ══════════════════════════════════════════════════════════════════ */
+    .vm-section { background: var(--bg); }
+    .vm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .vm-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 36px 32px; box-shadow: var(--shadow);
+      border-top: 5px solid var(--primary);
+    }
+    .vm-card.mission { border-top-color: var(--accent); }
+    .vm-icon {
+      width: 52px; height: 52px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 20px;
+    }
+    .vision .vm-icon { background: var(--primary-lt); color: var(--primary); }
+    .mission .vm-icon { background: var(--accent-lt); color: var(--accent); }
+    .vm-card h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 12px; }
+    .vm-card p { font-size: 15px; color: var(--muted); line-height: 1.75; }
+    .vm-card ul { list-style: none; margin-top: 4px; }
+    .vm-card ul li {
+      font-size: 14.5px; color: var(--muted); line-height: 1.6;
+      padding: 7px 0; border-bottom: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .vm-card ul li:last-child { border-bottom: none; }
+    .vm-card ul li::before {
+      content: '✓'; color: var(--accent);
+      font-weight: 700; flex-shrink: 0; margin-top: 1px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NEWS · GALLERY · EVENTS  (3-column)
+    ══════════════════════════════════════════════════════════════════ */
+    .nge-section { background: var(--primary); padding: 72px 40px; }
+    .nge-section .section-eyebrow { color: rgba(255,255,255,.6); }
+    .nge-section .section-title { color: #fff; }
+    .nge-section .section-desc { color: rgba(255,255,255,.55); }
+    .nge-section .divider { background: var(--accent); }
+    .nge-grid { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 24px; margin-top: 44px; }
+    .nge-col-head {
+      display: flex; align-items: center; gap: 10px;
+      color: #fff; font-size: 1rem; font-weight: 700;
+      margin-bottom: 16px; padding-bottom: 14px;
+      border-bottom: 2px solid rgba(255,255,255,.15);
+    }
+    .nge-col-head .bi { font-size: 1.2rem; color: var(--accent); }
+    .nge-panel {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+    }
+
+    /* Scroll ticker (news / events) */
+    .scroll-box { height: 320px; overflow: hidden; position: relative; }
+    .scroll-track { display: flex; flex-direction: column; gap: 12px; }
+    .scroll-item {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius); padding: 14px 16px;
+      flex-shrink: 0;
+    }
+    .scroll-item-date { font-size: 10.5px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+    .scroll-item-title { font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.45; margin-bottom: 5px; }
+    .scroll-item-desc { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.5; }
+    .scroll-empty { font-size: 13px; color: rgba(255,255,255,.4); text-align: center; padding: 40px 0; }
+
+    /* Gallery carousel */
+    .gallery-carousel { height: 320px; position: relative; border-radius: var(--radius); overflow: hidden; background: rgba(0,0,0,.3); }
+    .gallery-slides { display: flex; width: 100%; height: 100%; transition: transform .6s cubic-bezier(.4,0,.2,1); }
+    .gallery-slide { min-width: 100%; height: 100%; }
+    .gallery-slide img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-slide-placeholder {
+      width: 100%; height: 100%;
+      background: rgba(255,255,255,.06);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: rgba(255,255,255,.3); gap: 12px;
+    }
+    .gallery-slide-placeholder .bi { font-size: 3rem; }
+    .gallery-slide-placeholder p { font-size: 13px; }
+    .gallery-caption {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,.65));
+      padding: 24px 16px 12px;
+      font-size: 12px; color: rgba(255,255,255,.85); font-weight: 500;
+    }
+    .gallery-dots {
+      display: flex; justify-content: center; gap: 6px; margin-top: 12px;
+      min-height: 14px;
+    }
+    .gallery-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,.3); cursor: pointer;
+      transition: background .2s, transform .2s; border: none;
+    }
+    .gallery-dot.active { background: var(--accent); transform: scale(1.3); }
+    .gallery-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: rgba(255,255,255,.3); gap: 10px; }
+    .gallery-empty .bi { font-size: 2.5rem; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FACULTY PREVIEW (separate page link block)
+    ══════════════════════════════════════════════════════════════════ */
+    .faculty-section { background: var(--surface); }
+    .faculty-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .faculty-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden;
+      box-shadow: var(--shadow-sm); text-align: center;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .faculty-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .faculty-img { width: 100%; height: 170px; object-fit: cover; }
+    .faculty-placeholder {
+      width: 100%; height: 170px;
+      background: var(--primary-lt);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem; color: var(--primary);
+    }
+    .faculty-body { padding: 14px; }
+    .faculty-name { font-weight: 700; font-size: 14px; }
+    .faculty-role { font-size: 11px; font-weight: 600; color: var(--primary); margin: 3px 0; text-transform: uppercase; letter-spacing: .04em; }
+    .faculty-qual { font-size: 11.5px; color: var(--muted); }
+    .view-all-wrap { text-align: center; margin-top: 32px; }
+    .btn-view-all {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 28px; border-radius: 9px;
+      background: var(--primary); color: #fff;
+      font-size: 14px; font-weight: 600;
+      transition: background .15s, transform .15s;
+    }
+    .btn-view-all:hover { background: var(--primary-dk); transform: translateY(-2px); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ACHIEVEMENTS STRIP
+    ══════════════════════════════════════════════════════════════════ */
+    .achieve-section { background: #0d1b3e; padding: 72px 40px; }
+    .achieve-section .section-eyebrow { color: rgba(255,255,255,.5); }
+    .achieve-section .section-title { color: #fff; }
+    .achieve-section .section-desc { color: rgba(255,255,255,.5); }
+    .achieve-section .divider { background: var(--accent); }
+    .achieve-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; margin-top: 44px; }
+    .achieve-card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-lg); overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .achieve-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,.3); }
+    .achieve-img { width: 100%; height: 150px; object-fit: cover; }
+    .achieve-placeholder { width: 100%; height: 150px; background: rgba(255,255,255,.07); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
+    .achieve-body { padding: 18px; }
+    .achieve-date { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .achieve-title { font-size: 14.5px; font-weight: 700; color: #fff; margin-bottom: 7px; line-height: 1.4; }
+    .achieve-desc { font-size: 12.5px; color: rgba(255,255,255,.5); line-height: 1.55; }
+    .achieve-view-all { text-align: center; margin-top: 32px; }
+    .btn-achieve-all {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 28px; border-radius: 9px;
+      background: var(--accent); color: #fff;
+      font-size: 14px; font-weight: 600;
+      transition: background .15s, transform .15s;
+    }
+    .btn-achieve-all:hover { background: #d08e18; transform: translateY(-2px); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CONTACT
+    ══════════════════════════════════════════════════════════════════ */
+    .contact-section { background: var(--surface); }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .contact-card {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: var(--bg); border-radius: var(--radius);
+      padding: 20px; margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .contact-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--primary-lt); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .contact-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 3px; }
+    .contact-val { font-size: 14.5px; font-weight: 600; color: var(--text); }
+    .contact-val a { color: var(--primary); }
+    .contact-val a:hover { text-decoration: underline; }
+    .map-placeholder {
+      height: 280px; background: var(--primary-lt);
+      border-radius: var(--radius-lg); border: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--primary); gap: 12px;
+    }
+    .map-placeholder .bi { font-size: 2.5rem; }
+    .map-placeholder p { font-size: 14px; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════════════════════════ */
+    footer {
+      background: var(--primary);
+      color: rgba(255,255,255,.75);
+      padding: 40px 40px 24px;
+      margin-top: auto;
+    }
+    .footer-inner { max-width: 1160px; margin: 0 auto; }
+    .footer-top { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; margin-bottom: 32px; }
+    .footer-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .footer-brand-icon {
+      width: 36px; height: 36px; background: var(--accent);
+      border-radius: 7px; display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; color: #fff; font-weight: 800; flex-shrink: 0;
+    }
+    .footer-brand-name { font-size: 15px; font-weight: 800; color: #fff; }
+    .footer-about { font-size: 13px; line-height: 1.65; }
+    .footer-col h4 { font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 9px; }
+    .footer-col ul li a { font-size: 13px; color: rgba(255,255,255,.65); transition: color .15s; }
+    .footer-col ul li a:hover { color: var(--accent); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.12);
+      padding-top: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12.5px; gap: 12px; flex-wrap: wrap;
+    }
+    .footer-bottom a { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .nge-grid { grid-template-columns: 1fr 1fr; }
+      .nge-grid > .nge-panel:nth-child(2) { grid-column: span 2; order: -1; }
+    }
+    @media (max-width: 768px) {
+      .nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .nav-hamburger { display: block; }
+      .nav-mobile {
+        position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;
+        background: var(--primary-dk); z-index: 999;
+        display: flex; flex-direction: column; padding: 20px;
+        gap: 4px; overflow-y: auto;
+      }
+      .nav-mobile a {
+        color: rgba(255,255,255,.85); font-size: 16px; font-weight: 500;
+        padding: 12px 16px; border-radius: 8px; display: block;
+        transition: background .15s;
+      }
+      .nav-mobile a:hover { background: rgba(255,255,255,.1); }
+      .nav-mobile .nav-login { background: var(--accent); color: #fff; margin-top: 8px; }
+      .hero { padding: 64px 20px 56px; }
+      .hero-stats { gap: 24px; }
+      .section { padding: 56px 20px; }
+      .about-grid { grid-template-columns: 1fr; gap: 32px; }
+      .vm-grid { grid-template-columns: 1fr; }
+      .nge-grid { grid-template-columns: 1fr; }
+      .nge-grid > .nge-panel:nth-child(2) { grid-column: span 1; order: 0; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .footer-top { grid-template-columns: 1fr; }
+      .about-highlights { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 2rem; }
+      .nge-section { padding: 56px 20px; }
+      .achieve-section { padding: 56px 20px; }
+      footer { padding: 32px 20px 16px; }
+    }
   </style>
 </head>
 <body>
 
-<nav class="sa-nav">
-  <a class="sa-nav-brand" href="{% url 'home' %}">
-    <i class="bi bi-mortarboard-fill"></i> Smart Attendance
+<!-- ═══════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════ -->
+<nav class="nav" id="mainNav">
+  <a class="nav-brand" href="{% url 'home' %}">
+    <div class="nav-brand-icon">CSE</div>
+    <div>
+      <div>Department of Computer Science</div>
+      <div class="nav-brand-sub">Smart Academic System</div>
+    </div>
   </a>
-  <ul class="sa-nav-links">
-    <li><a href="{% url 'home' %}" class="active">Home</a></li>
-    <li><a href="{% url 'login_page' %}">Login</a></li>
-    <li><a href="{% url 'signup_page' %}" class="btn-login">Sign Up</a></li>
+  <div class="nav-spacer"></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#faculty">Faculty</a></li>
+    <li><a href="#achievements">Achievements</a></li>
+    <li><a href="#nge">Events</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="{% url 'login_page' %}" class="nav-login"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
   </ul>
+  <button class="nav-hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+  </button>
 </nav>
 
+<!-- Mobile nav drawer -->
+<div class="nav-mobile" id="mobileNav" style="display:none;">
+  <a href="#about" onclick="closeMobile()">About</a>
+  <a href="#faculty" onclick="closeMobile()">Faculty</a>
+  <a href="#achievements" onclick="closeMobile()">Achievements</a>
+  <a href="#nge" onclick="closeMobile()">Events</a>
+  <a href="#contact" onclick="closeMobile()">Contact</a>
+  <a href="{% url 'login_page' %}" class="nav-login"><i class="bi bi-box-arrow-in-right"></i> Login to Portal</a>
+</div>
+
+<!-- ═══════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
 <section class="hero">
-  <div class="hero-badge">Attendance · Leave · Automation</div>
-  <h1>Smart Attendance<br><span>&amp; Leave Portal</span></h1>
-  <p>Manage your attendance system efficiently. Students, teachers, and HODs — all in one place.</p>
+  <div class="hero-badge"><i class="bi bi-stars"></i> Autonomous | NBA Accredited</div>
+  <h1>Department of <span class="dept">Computer Science</span><br>& Engineering</h1>
+  <p class="hero-tagline">Innovating Tomorrow's Technology, Today</p>
+  <p class="hero-desc">
+    Empowering students with cutting-edge knowledge in computing, AI, and software engineering.
+    Our department nurtures problem-solvers and technology leaders for the digital future.
+  </p>
   <div class="hero-actions">
-    <a href="{% url 'login_page' %}" class="btn-hero-primary"><i class="bi bi-box-arrow-in-right"></i> Login</a>
-    <a href="{% url 'signup_page' %}" class="btn-hero-outline"><i class="bi bi-person-plus"></i> Sign Up</a>
+    <a href="{% url 'login_page' %}" class="btn-hero btn-hero-primary">
+      <i class="bi bi-box-arrow-in-right"></i> Access Portal
+    </a>
+    <a href="#about" class="btn-hero btn-hero-outline">
+      <i class="bi bi-info-circle"></i> Learn More
+    </a>
   </div>
-</section>
-
-<section class="features">
-  <div class="section-eyebrow">What We Offer</div>
-  <div class="section-title">Everything you need in one place</div>
-  <div class="section-desc">A complete solution for attendance tracking and leave management.</div>
-  <div class="features-grid">
-    <div class="feat-card">
-      <div class="feat-icon fi-blue"><i class="bi bi-qr-code-scan"></i></div>
-      <h3>QR-Based Attendance</h3>
-      <p>Mark attendance instantly with QR codes. No manual registers, no errors.</p>
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-num">15+</div>
+      <div class="hero-stat-label">Years of Excellence</div>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon fi-green"><i class="bi bi-calendar-check"></i></div>
-      <h3>Leave Management</h3>
-      <p>Apply for leave online. Teachers approve or reject with a single click.</p>
+    <div>
+      <div class="hero-stat-num">500+</div>
+      <div class="hero-stat-label">Alumni Placed</div>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon fi-amber"><i class="bi bi-graph-up"></i></div>
-      <h3>Analytics Dashboard</h3>
-      <p>Real-time attendance percentages, charts, and low-attendance alerts.</p>
+    <div>
+      <div class="hero-stat-num">25+</div>
+      <div class="hero-stat-label">Expert Faculty</div>
     </div>
-    <div class="feat-card">
-      <div class="feat-icon fi-purple"><i class="bi bi-calculator"></i></div>
-      <h3>Academic Calculator</h3>
-      <p>Calculate internal marks, GPA, CGPA, and predict your grades easily.</p>
+    <div>
+      <div class="hero-stat-num">100%</div>
+      <div class="hero-stat-label">Placement Support</div>
     </div>
   </div>
 </section>
 
-<section class="about">
-  <div class="section-eyebrow">About This Project</div>
-  <div class="section-title">Built for Modern Colleges</div>
-  <p>Smart Attendance & Leave Portal eliminates manual tracking and ensures accurate records. Students apply leave online, staff view absentees instantly, and parents get real-time notifications.</p>
-  <div class="social-row">
-    <a href="#"><i class="bi bi-twitter-x"></i></a>
-    <a href="#"><i class="bi bi-linkedin"></i></a>
-    <a href="#"><i class="bi bi-github"></i></a>
+<!-- ═══════════════════════════════════════
+     ABOUT
+══════════════════════════════════════════ -->
+<section class="section about-section" id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-text">
+        <p class="section-eyebrow">About Us</p>
+        <h2 class="section-title">Shaping the <span>Future</span> of Technology</h2>
+        <div class="divider" style="margin-bottom:22px;"></div>
+        <p>
+          The Department of Computer Science and Engineering is one of the flagship departments of our institution,
+          established with a commitment to academic excellence and holistic development of students.
+          We offer state-of-the-art facilities, experienced faculty, and industry-aligned curriculum.
+        </p>
+        <p>
+          Our programs are designed to bridge the gap between academic learning and industry requirements,
+          equipping students with both theoretical knowledge and hands-on experience in modern technologies
+          including Artificial Intelligence, Machine Learning, Cloud Computing, and Cybersecurity.
+        </p>
+      </div>
+      <div class="about-highlights">
+        <div class="about-highlight">
+          <i class="bi bi-mortarboard-fill"></i>
+          <h4>Academic Excellence</h4>
+          <p>Result-oriented curriculum with strong fundamentals</p>
+        </div>
+        <div class="about-highlight">
+          <i class="bi bi-cpu-fill"></i>
+          <h4>Modern Labs</h4>
+          <p>Well-equipped labs with latest hardware & software</p>
+        </div>
+        <div class="about-highlight">
+          <i class="bi bi-people-fill"></i>
+          <h4>Expert Faculty</h4>
+          <p>PhD holders and industry-experienced professors</p>
+        </div>
+        <div class="about-highlight">
+          <i class="bi bi-briefcase-fill"></i>
+          <h4>Industry Connect</h4>
+          <p>Strong MoUs with leading tech companies</p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<footer class="sa-footer">
-  <small style="color:var(--muted);">&copy; 2026 Smart Attendance System</small>
-  <div class="sa-footer-links">
-    <a href="#">Privacy</a>
-    <a href="#">Terms</a>
-    <a href="#">Contact</a>
+<!-- ═══════════════════════════════════════
+     VISION & MISSION
+══════════════════════════════════════════ -->
+<section class="section vm-section">
+  <div class="section-inner">
+    <div class="section-header" style="text-align:center; max-width:600px; margin:0 auto 44px;">
+      <p class="section-eyebrow">Our Pillars</p>
+      <h2 class="section-title">Vision & <span>Mission</span></h2>
+      <div class="divider" style="margin:14px auto 0;"></div>
+    </div>
+    <div class="vm-grid">
+      <div class="vm-card vision">
+        <div class="vm-icon"><i class="bi bi-eye-fill"></i></div>
+        <h3>Our Vision</h3>
+        <p>
+          To be a globally recognized centre of excellence in Computer Science and Engineering education and research,
+          producing highly competent graduates who contribute meaningfully to society and the technology industry.
+          We strive to foster a culture of innovation, ethical practice, and lifelong learning.
+        </p>
+      </div>
+      <div class="vm-card mission">
+        <div class="vm-icon"><i class="bi bi-rocket-takeoff-fill"></i></div>
+        <h3>Our Mission</h3>
+        <ul>
+          <li>Provide quality education through innovative teaching-learning methodologies</li>
+          <li>Foster research, entrepreneurship, and technological innovation among students</li>
+          <li>Build strong industry-academia partnerships for real-world exposure</li>
+          <li>Develop ethical, socially responsible computing professionals</li>
+          <li>Ensure career readiness through holistic personality development</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     NEWS · GALLERY · EVENTS
+══════════════════════════════════════════ -->
+<section class="nge-section" id="nge">
+  <div class="section-inner">
+    <div class="section-header">
+      <p class="section-eyebrow">Stay Updated</p>
+      <h2 class="section-title" style="color:#fff;">News, Gallery &amp; <span style="color:var(--accent);">Events</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="nge-grid">
+
+      <!-- ── NEWS ── -->
+      <div class="nge-panel">
+        <div class="nge-col-head"><i class="bi bi-newspaper"></i> Latest News</div>
+        {% if news_items %}
+          <div class="scroll-box" id="newsBox">
+            <div class="scroll-track" id="newsTrack">
+              {% for item in news_items %}
+              <div class="scroll-item">
+                <div class="scroll-item-date">{{ item.date|date:"d M Y" }}</div>
+                <div class="scroll-item-title">{{ item.title }}</div>
+                <div class="scroll-item-desc">{{ item.description|truncatewords:18 }}</div>
+              </div>
+              {% endfor %}
+              {# duplicate for seamless loop #}
+              {% for item in news_items %}
+              <div class="scroll-item">
+                <div class="scroll-item-date">{{ item.date|date:"d M Y" }}</div>
+                <div class="scroll-item-title">{{ item.title }}</div>
+                <div class="scroll-item-desc">{{ item.description|truncatewords:18 }}</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          <div class="scroll-box">
+            <div class="scroll-empty"><i class="bi bi-newspaper" style="font-size:2rem;margin-bottom:8px;"></i><br>No news items yet.<br>Add them from the admin panel.</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ── GALLERY ── -->
+      <div class="nge-panel">
+        <div class="nge-col-head"><i class="bi bi-images"></i> Photo Gallery</div>
+        {% if gallery_images %}
+          <div class="gallery-carousel" id="galleryCarousel">
+            <div class="gallery-slides" id="gallerySlides">
+              {% for img in gallery_images %}
+              <div class="gallery-slide">
+                <img src="{{ img.image.url }}" alt="{{ img.title|default:'Gallery' }}"/>
+                {% if img.title %}<div class="gallery-caption">{{ img.title }}</div>{% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="gallery-dots" id="galleryDots">
+            {% for img in gallery_images %}
+            <button class="gallery-dot {% if forloop.first %}active{% endif %}" data-idx="{{ forloop.counter0 }}"></button>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="gallery-carousel">
+            <div class="gallery-empty">
+              <i class="bi bi-images"></i>
+              <p>No gallery images yet.<br>Upload from the admin panel.</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ── UPCOMING EVENTS ── -->
+      <div class="nge-panel">
+        <div class="nge-col-head"><i class="bi bi-calendar-event"></i> Upcoming Events</div>
+        {% if upcoming_events %}
+          <div class="scroll-box" id="eventsBox">
+            <div class="scroll-track" id="eventsTrack">
+              {% for event in upcoming_events %}
+              <div class="scroll-item">
+                <div class="scroll-item-date">{{ event.date|date:"d M Y" }}{% if event.venue %} · {{ event.venue }}{% endif %}</div>
+                <div class="scroll-item-title">{{ event.title }}</div>
+                {% if event.description %}<div class="scroll-item-desc">{{ event.description|truncatewords:14 }}</div>{% endif %}
+              </div>
+              {% endfor %}
+              {# duplicate for seamless loop #}
+              {% for event in upcoming_events %}
+              <div class="scroll-item">
+                <div class="scroll-item-date">{{ event.date|date:"d M Y" }}{% if event.venue %} · {{ event.venue }}{% endif %}</div>
+                <div class="scroll-item-title">{{ event.title }}</div>
+                {% if event.description %}<div class="scroll-item-desc">{{ event.description|truncatewords:14 }}</div>{% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          <div class="scroll-box">
+            <div class="scroll-empty"><i class="bi bi-calendar-x" style="font-size:2rem;margin-bottom:8px;"></i><br>No upcoming events.<br>Add them from the admin panel.</div>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     FACULTY PREVIEW
+══════════════════════════════════════════ -->
+<section class="section faculty-section" id="faculty">
+  <div class="section-inner">
+    <div class="section-header">
+      <p class="section-eyebrow">Our Team</p>
+      <h2 class="section-title">Meet Our <span>Faculty</span></h2>
+      <div class="divider"></div>
+      <p class="section-desc">Dedicated educators and researchers committed to shaping the next generation of technologists.</p>
+    </div>
+    {% if staff %}
+      <div class="faculty-preview-grid">
+        {% for member in staff|slice:":8" %}
+        <div class="faculty-card">
+          {% if member.image %}
+            <img class="faculty-img" src="{{ member.image.url }}" alt="{{ member.name }}"/>
+          {% else %}
+            <div class="faculty-placeholder"><i class="bi bi-person-circle"></i></div>
+          {% endif %}
+          <div class="faculty-body">
+            <div class="faculty-name">{{ member.name }}</div>
+            <div class="faculty-role">{{ member.role }}</div>
+            <div class="faculty-qual">{{ member.qualification }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if staff|length > 8 %}
+      <div class="view-all-wrap">
+        <a href="#faculty" class="btn-view-all">
+          View All Faculty <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      {% endif %}
+    {% else %}
+      <p style="text-align:center;color:var(--muted);padding:40px 0;">No faculty data yet. Add from admin panel.</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     ACHIEVEMENTS
+══════════════════════════════════════════ -->
+<section class="achieve-section" id="achievements">
+  <div class="section-inner">
+    <div class="section-header">
+      <p class="section-eyebrow">Recognition</p>
+      <h2 class="section-title" style="color:#fff;">Our <span style="color:var(--accent);">Achievements</span></h2>
+      <div class="divider"></div>
+      <p class="section-desc">Milestones and accomplishments that define our department's journey of excellence.</p>
+    </div>
+    {% if achievements %}
+      <div class="achieve-grid">
+        {% for item in achievements|slice:":6" %}
+        <div class="achieve-card">
+          {% if item.image %}
+            <img class="achieve-img" src="{{ item.image.url }}" alt="{{ item.title }}"/>
+          {% else %}
+            <div class="achieve-placeholder">🏆</div>
+          {% endif %}
+          <div class="achieve-body">
+            <div class="achieve-date">{{ item.date|date:"d M Y" }}</div>
+            <div class="achieve-title">{{ item.title }}</div>
+            <div class="achieve-desc">{{ item.description|truncatewords:20 }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if achievements|length > 6 %}
+      <div class="achieve-view-all">
+        <a href="#achievements" class="btn-achieve-all">View All Achievements <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% endif %}
+    {% else %}
+      <p style="text-align:center;color:rgba(255,255,255,.35);padding:40px 0;">No achievements added yet. Add from admin panel.</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     CONTACT
+══════════════════════════════════════════ -->
+<section class="section contact-section" id="contact">
+  <div class="section-inner">
+    <div class="section-header">
+      <p class="section-eyebrow">Get In Touch</p>
+      <h2 class="section-title">Contact <span>Us</span></h2>
+      <div class="divider"></div>
+    </div>
+    <div class="contact-grid">
+      <div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
+          <div>
+            <div class="contact-label">Email</div>
+            <div class="contact-val"><a href="mailto:cse@college.edu">cse@college.edu</a></div>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
+          <div>
+            <div class="contact-label">Phone</div>
+            <div class="contact-val">+91 99999 88888</div>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="bi bi-geo-alt-fill"></i></div>
+          <div>
+            <div class="contact-label">Address</div>
+            <div class="contact-val">Department of CSE, College Campus,<br>Tamil Nadu – 600001</div>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="bi bi-clock-fill"></i></div>
+          <div>
+            <div class="contact-label">Office Hours</div>
+            <div class="contact-val">Monday – Friday: 9:00 AM – 5:00 PM</div>
+          </div>
+        </div>
+      </div>
+      <div class="map-placeholder">
+        <i class="bi bi-pin-map-fill"></i>
+        <p>Department Location Map</p>
+        <span style="font-size:12px;color:var(--muted);">Embed Google Maps here</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">
+          <div class="footer-brand-icon">CSE</div>
+          <div class="footer-brand-name">Dept. of Computer Science & Engineering</div>
+        </div>
+        <p class="footer-about">
+          Committed to delivering quality computing education, fostering innovation, and building
+          industry-ready professionals for the challenges of tomorrow.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#about">About Department</a></li>
+          <li><a href="#faculty">Faculty</a></li>
+          <li><a href="#achievements">Achievements</a></li>
+          <li><a href="#nge">Events & Gallery</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Student Portal</h4>
+        <ul>
+          <li><a href="{% url 'login_page' %}">Login</a></li>
+          <li><a href="{% url 'signup_page' %}">Register</a></li>
+          <li><a href="{% url 'calculator' %}">Mark Calculator</a></li>
+          <li><a href="{% url 'login_page' %}">Leave System</a></li>
+          <li><a href="/od/">OD System</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Department of CSE. All rights reserved.</span>
+      <span>Built with ❤️ for <a href="{% url 'home' %}">Smart Academic System</a></span>
+    </div>
   </div>
 </footer>
 
-<script src="{% static 'js/scripts.js' %}"></script>
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ── Mobile hamburger ────────────────────────────────────────
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const hamburgerIcon = document.getElementById('hamburgerIcon');
+const mobileNav = document.getElementById('mobileNav');
+let mobileOpen = false;
+
+hamburgerBtn.addEventListener('click', function() {
+  mobileOpen = !mobileOpen;
+  mobileNav.style.display = mobileOpen ? 'flex' : 'none';
+  hamburgerIcon.className = mobileOpen ? 'bi bi-x-lg' : 'bi bi-list';
+});
+
+function closeMobile() {
+  mobileOpen = false;
+  mobileNav.style.display = 'none';
+  hamburgerIcon.className = 'bi bi-list';
+}
+
+// ── Auto-scrolling news ticker ──────────────────────────────
+function initTicker(trackId, boxId) {
+  const track = document.getElementById(trackId);
+  const box   = document.getElementById(boxId);
+  if (!track || !box) return;
+
+  let pos = 0;
+  let paused = false;
+  let raf;
+
+  // We duplicate items in template; scroll until half-way then reset
+  function getHalf() {
+    return track.scrollHeight / 2;
+  }
+
+  function step() {
+    if (!paused) {
+      pos += 0.5;
+      if (pos >= getHalf()) pos = 0;
+      track.style.transform = `translateY(-${pos}px)`;
+    }
+    raf = requestAnimationFrame(step);
+  }
+
+  box.addEventListener('mouseenter', () => paused = true);
+  box.addEventListener('mouseleave', () => paused = false);
+
+  raf = requestAnimationFrame(step);
+}
+
+initTicker('newsTrack', 'newsBox');
+initTicker('eventsTrack', 'eventsBox');
+
+// ── Gallery carousel ────────────────────────────────────────
+(function() {
+  const slides = document.getElementById('gallerySlides');
+  const dotBtns = document.querySelectorAll('.gallery-dot');
+  if (!slides || dotBtns.length === 0) return;
+
+  const total = dotBtns.length;
+  let current = 0;
+  let timer;
+
+  function goTo(idx) {
+    current = (idx + total) % total;
+    slides.style.transform = `translateX(-${current * 100}%)`;
+    dotBtns.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  dotBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      goTo(parseInt(btn.dataset.idx));
+      resetTimer();
+    });
+  });
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => goTo(current + 1), 3500);
+  }
+
+  const carousel = document.getElementById('galleryCarousel');
+  if (carousel) {
+    carousel.addEventListener('mouseenter', () => clearInterval(timer));
+    carousel.addEventListener('mouseleave', resetTimer);
+  }
+
+  resetTimer();
+})();
+
+// ── Smooth scroll for nav anchors ───────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
 </body>
 </html>
