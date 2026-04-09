@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'leave_app','od','events',
+    'leave_app.apps.LeaveAppConfig', 
+    'od','events', 'department', 
    
 ]
 
@@ -134,3 +135,6 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

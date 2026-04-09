@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from .models import Student, LeaveRequest, Attendance
-
+from department.models import Staff, Achievement, Winner, Gallery, NewsItem, UpcomingEvent
 
 # ─────────────────────────────────────────────
 # HELPERS
@@ -47,7 +47,25 @@ def _student_required(request):
 # ─────────────────────────────────────────────
 
 def home(request):
-    return render(request, 'index.html')
+    # Redirect authenticated users to their dashboard
+    if request.user.is_authenticated:
+        if request.user.is_staff or request.user.is_superuser:
+            return redirect('hod_dashboard')
+        student = _get_student(request)
+        if student:
+            return redirect('student_dashboard')
+        return redirect('teacher_dashboard')
+
+    # Public view — fetch department + homepage data
+    context = {
+        'staff': Staff.objects.all(),
+        'achievements': Achievement.objects.all(),
+        'winners': Winner.objects.all(),
+        'gallery_images': Gallery.objects.all()[:12],
+        'news_items': NewsItem.objects.filter(is_active=True)[:20],
+        'upcoming_events': UpcomingEvent.objects.filter(is_active=True)[:20],
+    }
+    return render(request, 'index.html', context)
 
 
 # ─────────────────────────────────────────────
@@ -213,6 +231,13 @@ def apply_page(request):
 # APPLY LEAVE (API)
 # ─────────────────────────────────────────────
 
+from datetime import datetime
+import json
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import LeaveRequest
+
+
 @login_required
 def apply_leave_api(request):
     if request.method != 'POST':
@@ -224,17 +249,22 @@ def apply_leave_api(request):
 
     data = json.loads(request.body)
 
+    # ✅ Convert string → date
+    try:
+        from_date = datetime.strptime(data.get('from_date'), "%Y-%m-%d").date()
+        to_date = datetime.strptime(data.get('to_date'), "%Y-%m-%d").date()
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': 'Invalid date format'})
+
     LeaveRequest.objects.create(
         student=student,
-        from_date=data.get('from_date'),
-        to_date=data.get('to_date'),
+        from_date=from_date,   # ✅ FIXED
+        to_date=to_date,       # ✅ FIXED
         reason=data.get('reason'),
         status='Pending',
     )
 
     return JsonResponse({'status': 'success'})
-
-
 # ─────────────────────────────────────────────
 # ATTENDANCE
 # ─────────────────────────────────────────────
@@ -518,3 +548,4 @@ def upload_attendance(request):
             messages.error(request, f'Error: {str(e)}')
 
     return render(request, 'upload.html')
+
