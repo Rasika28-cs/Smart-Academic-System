@@ -35,6 +35,14 @@ class LeaveRequest(models.Model):
     to_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # ✅ NEW FIELDS (IMPORTANT)
+    email_sent = models.BooleanField(default=False)
+    batch_slot = models.IntegerField(null=True, blank=True)  
+    # 1 = 6–8 AM batch
+    # 2 = 8–9 AM batch
+
     def __str__(self):
         return f"{self.student.name} - {self.status}"
 

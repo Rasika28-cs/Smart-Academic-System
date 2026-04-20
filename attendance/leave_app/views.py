@@ -231,11 +231,24 @@ def apply_page(request):
 # APPLY LEAVE (API)
 # ─────────────────────────────────────────────
 
+
+
+
 from datetime import datetime
 import json
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import LeaveRequest
+
+
+def assign_batch():
+    current_hour = datetime.now().hour
+
+    if 6 <= current_hour < 8:
+        return 1
+    elif 8 <= current_hour < 9:
+        return 2
+    return None
 
 
 @login_required
@@ -253,18 +266,62 @@ def apply_leave_api(request):
     try:
         from_date = datetime.strptime(data.get('from_date'), "%Y-%m-%d").date()
         to_date = datetime.strptime(data.get('to_date'), "%Y-%m-%d").date()
-    except Exception as e:
+    except Exception:
         return JsonResponse({'status': 'error', 'message': 'Invalid date format'})
+
+    # ✅ Assign batch
+    batch = assign_batch()
 
     LeaveRequest.objects.create(
         student=student,
-        from_date=from_date,   # ✅ FIXED
-        to_date=to_date,       # ✅ FIXED
+        from_date=from_date,
+        to_date=to_date,
         reason=data.get('reason'),
         status='Pending',
+        batch_slot=batch,          # 🔥 NEW
+        email_sent=False           # 🔥 IMPORTANT
     )
+    LeaveRequest.objects.filter(
+    created_at__hour__gte=6,
+    created_at__hour__lt=8,
+    email_sent=False
+)
 
     return JsonResponse({'status': 'success'})
+@shared_task
+def send_leave_batch_1():
+    requests = LeaveRequest.objects.filter(
+        batch_slot=1,
+        email_sent=False
+    )
+
+    if not requests.exists():
+        return
+
+    content = ""
+    for r in requests:
+        content += f"{r.student.name} ({r.student.roll_no}) | {r.from_date} - {r.to_date}\n"
+
+    send_mailjet_email("Leave Requests (6–8 AM)", content)
+
+    requests.update(email_sent=True)
+@shared_task
+def send_leave_batch_2():
+    requests = LeaveRequest.objects.filter(
+        batch_slot=2,
+        email_sent=False
+    )
+
+    if not requests.exists():
+        return
+
+    content = ""
+    for r in requests:
+        content += f"{r.student.name} ({r.student.roll_no}) | {r.from_date} - {r.to_date}\n"
+
+    send_mailjet_email("Leave Requests (8–9 AM)", content)
+
+    requests.update(email_sent=True)
 # ─────────────────────────────────────────────
 # ATTENDANCE
 # ─────────────────────────────────────────────

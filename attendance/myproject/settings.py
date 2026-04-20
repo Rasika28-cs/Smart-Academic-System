@@ -137,4 +137,21 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+import os
+
+def load_env():
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                if '=' in line:
+                    key, value = line.strip().split('=', 1)
+                    os.environ[key] = value
+
+load_env()
+
+
+MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY')
+MAILJET_SECRET_KEY = os.environ.get('MAILJET_SECRET_KEY')
+MAILJET_SENDER_EMAIL = os.environ.get('MAILJET_SENDER_EMAIL')
