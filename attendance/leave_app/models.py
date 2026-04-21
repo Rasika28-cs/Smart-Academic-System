@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class Student(models.Model):
@@ -22,6 +23,8 @@ class Student(models.Model):
         return f"{self.name} ({self.roll_no})"
 
 
+
+
 class LeaveRequest(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -34,17 +37,12 @@ class LeaveRequest(models.Model):
     from_date = models.DateField()
     to_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    # ✅ NEW FIELDS (IMPORTANT)
-    email_sent = models.BooleanField(default=False)
-    batch_slot = models.IntegerField(null=True, blank=True)  
-    # 1 = 6–8 AM batch
-    # 2 = 8–9 AM batch
-
+    
+    created_at = models.DateTimeField(auto_now_add=True) 
     def __str__(self):
         return f"{self.student.name} - {self.status}"
+
+
 
 
 class Attendance(models.Model):
@@ -69,3 +67,35 @@ class Teacher(models.Model):
 
     def __str__(self):
         return self.name
+
+
+
+
+
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class Notification(models.Model):
+    TYPE_CHOICES = (
+        ('leave', 'Leave'),
+        ('od', 'OD'),
+    )
+
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Who should see this
+    users = models.ManyToManyField(User, related_name="notifications")
+
+    # Who has read this
+    read_by = models.ManyToManyField(User, related_name="read_notifications", blank=True)
+
+    # Redirect URL
+    url = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.title

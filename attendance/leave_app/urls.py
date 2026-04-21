@@ -29,4 +29,9 @@ urlpatterns = [
     # API
     path('api/apply_leave/', views.apply_leave_api, name='apply_leave_api'),
     path('upload-attendance/', views.upload_attendance, name='upload_attendance'),
+    path('notifications/count/', views.notification_count, name='notification_count'),
+    # urls.py
+
+ path('notifications/', views.get_notifications, name='get_notifications'),
+    path('notifications/read/<int:id>/', views.mark_as_read, name='mark_as_read'),
 ]

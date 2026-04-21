@@ -1,8 +1,7 @@
 import json
 import io
 import csv
-from datetime import date
-
+from datetime import date, datetime, timedelta
 import qrcode
 
 from django.http import JsonResponse, HttpResponse
@@ -13,13 +12,17 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 
-from .models import Student, LeaveRequest, Attendance
+from .models import Student, LeaveRequest, Attendance, Notification
 from department.models import Staff, Achievement, Winner, Gallery, NewsItem, UpcomingEvent
+from od.models import ODApplication
+
 
 # ─────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────
+
 
 def _get_student(request):
     """Return the Student linked to the logged-in Django user, or None."""
@@ -46,6 +49,7 @@ def _student_required(request):
 # HOME
 # ─────────────────────────────────────────────
 
+
 def home(request):
     # Redirect authenticated users to their dashboard
     if request.user.is_authenticated:
@@ -71,6 +75,7 @@ def home(request):
 # ─────────────────────────────────────────────
 # STUDENT SIGNUP
 # ─────────────────────────────────────────────
+
 
 def signup_page(request):
     if request.method == 'POST':
@@ -116,14 +121,14 @@ def signup_page(request):
 # LOGIN
 # ─────────────────────────────────────────────
 
+
 def login_page(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
         next_url = request.POST.get('next') or request.GET.get('next')
 
-        # ── Try Django auth (works for students whose username=roll_no,
-        #    teachers and HOD whose username is set by admin) ──────────
+        # ── Try Django auth ──────────
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
@@ -138,17 +143,12 @@ def login_page(request):
             elif user.is_staff:
                 return redirect('teacher_dashboard')
             else:
-                # Regular user → must be a student
                 return redirect('student_dashboard')
 
-        # ── Legacy fallback: student may have logged in by name before
-        #    roll_no accounts existed.  Try matching name → look up roll_no
-        #    then re-authenticate. ────────────────────────────────────────
+        # ── Legacy fallback ────────────────────────────────────────
         try:
             student_obj = Student.objects.get(name=username)
-            # Verify against legacy hashed password stored on Student
             if student_obj.password and check_password(password, student_obj.password):
-                # Ensure Django User exists and is linked
                 if student_obj.user is None:
                     django_user, _ = User.objects.get_or_create(username=student_obj.roll_no)
                     django_user.set_password(password)
@@ -176,6 +176,7 @@ def login_page(request):
 # LOGOUT
 # ─────────────────────────────────────────────
 
+
 def logout_view(request):
     logout(request)
     return redirect('login_page')
@@ -184,6 +185,7 @@ def logout_view(request):
 # ─────────────────────────────────────────────
 # STUDENT DASHBOARD
 # ─────────────────────────────────────────────
+
 
 @login_required
 def dashboard(request):
@@ -219,6 +221,7 @@ def dashboard(request):
 # APPLY LEAVE (page)
 # ─────────────────────────────────────────────
 
+
 @login_required
 def apply_page(request):
     student, err = _student_required(request)
@@ -228,27 +231,8 @@ def apply_page(request):
 
 
 # ─────────────────────────────────────────────
-# APPLY LEAVE (API)
+# APPLY LEAVE (API) - SINGLE VERSION
 # ─────────────────────────────────────────────
-
-
-
-
-from datetime import datetime
-import json
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from .models import LeaveRequest
-
-
-def assign_batch():
-    current_hour = datetime.now().hour
-
-    if 6 <= current_hour < 8:
-        return 1
-    elif 8 <= current_hour < 9:
-        return 2
-    return None
 
 
 @login_required
@@ -260,71 +244,46 @@ def apply_leave_api(request):
     if err:
         return JsonResponse({'status': 'error', 'message': 'Not logged in as student'})
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'})
 
-    # ✅ Convert string → date
+    # Convert string → date
     try:
         from_date = datetime.strptime(data.get('from_date'), "%Y-%m-%d").date()
         to_date = datetime.strptime(data.get('to_date'), "%Y-%m-%d").date()
     except Exception:
         return JsonResponse({'status': 'error', 'message': 'Invalid date format'})
 
-    # ✅ Assign batch
-    batch = assign_batch()
-
-    LeaveRequest.objects.create(
+    # Create Leave
+    leave = LeaveRequest.objects.create(
         student=student,
         from_date=from_date,
         to_date=to_date,
         reason=data.get('reason'),
         status='Pending',
-        batch_slot=batch,          # 🔥 NEW
-        email_sent=False           # 🔥 IMPORTANT
     )
-    LeaveRequest.objects.filter(
-    created_at__hour__gte=6,
-    created_at__hour__lt=8,
-    email_sent=False
-)
+
+    # Create Notification for staff
+    try:
+        staff_users = User.objects.filter(is_staff=True)
+        Notification.objects.create(
+            title="New Leave Request",
+            message=f"{student.name} applied leave\nReason: {leave.reason}",
+            type="leave",
+            url="/leave/staff/"
+        ).users.set(staff_users)
+    except:
+        pass  # Graceful fallback if Notification model issues
 
     return JsonResponse({'status': 'success'})
-@shared_task
-def send_leave_batch_1():
-    requests = LeaveRequest.objects.filter(
-        batch_slot=1,
-        email_sent=False
-    )
 
-    if not requests.exists():
-        return
 
-    content = ""
-    for r in requests:
-        content += f"{r.student.name} ({r.student.roll_no}) | {r.from_date} - {r.to_date}\n"
-
-    send_mailjet_email("Leave Requests (6–8 AM)", content)
-
-    requests.update(email_sent=True)
-@shared_task
-def send_leave_batch_2():
-    requests = LeaveRequest.objects.filter(
-        batch_slot=2,
-        email_sent=False
-    )
-
-    if not requests.exists():
-        return
-
-    content = ""
-    for r in requests:
-        content += f"{r.student.name} ({r.student.roll_no}) | {r.from_date} - {r.to_date}\n"
-
-    send_mailjet_email("Leave Requests (8–9 AM)", content)
-
-    requests.update(email_sent=True)
 # ─────────────────────────────────────────────
 # ATTENDANCE
 # ─────────────────────────────────────────────
+
 
 @login_required
 def attendance(request):
@@ -340,6 +299,7 @@ def attendance(request):
 # LEAVE STATUS
 # ─────────────────────────────────────────────
 
+
 @login_required
 def leave_status(request):
     student, err = _student_required(request)
@@ -353,6 +313,7 @@ def leave_status(request):
 # ─────────────────────────────────────────────
 # STUDENT LEAVES (alternate view)
 # ─────────────────────────────────────────────
+
 
 @login_required
 def student_leaves(request):
@@ -368,16 +329,34 @@ def student_leaves(request):
 # TEACHER DASHBOARD
 # ─────────────────────────────────────────────
 
+
 @login_required
 def teacher_dashboard(request):
     if not request.user.is_staff:
         return redirect('home')
-    return render(request, 'teacher_dashboard.html')
+
+    # Pending Leave Requests
+    pending_leaves = LeaveRequest.objects.filter(status='Pending').count()
+
+    # Pending OD Requests
+    pending_od = ODApplication.objects.filter(status='pending').count()
+
+    # Total notifications
+    total_notifications = pending_leaves + pending_od
+
+    context = {
+        'pending_leaves': pending_leaves,
+        'pending_od': pending_od,
+        'total_notifications': total_notifications
+    }
+
+    return render(request, 'teacher_dashboard.html', context)
 
 
 # ─────────────────────────────────────────────
 # VIEW STUDENTS
 # ─────────────────────────────────────────────
+
 
 @login_required
 def view_students(request):
@@ -392,7 +371,6 @@ def view_students(request):
 # MARK ATTENDANCE
 # ─────────────────────────────────────────────
 
-from datetime import date
 
 @login_required
 def mark_attendance(request):
@@ -413,13 +391,13 @@ def mark_attendance(request):
                 )
         return redirect('teacher_dashboard')
 
-    # 🔥 Create list with status (no template filter needed)
+    # Create list with status
     attendance_records = Attendance.objects.filter(date=today)
     attendance_map = {att.student_id: att.status for att in attendance_records}
 
     student_data = []
     for student in students:
-        status = attendance_map.get(student.id, 'Present')  # default Present
+        status = attendance_map.get(student.id, 'Present')
         student_data.append({
             'student': student,
             'status': status
@@ -429,23 +407,26 @@ def mark_attendance(request):
         'student_data': student_data
     })
 
+
 # ─────────────────────────────────────────────
-# UPDATE LEAVE STATUS (Teacher action)
+# UPDATE LEAVE STATUS
 # ─────────────────────────────────────────────
 
-from datetime import timedelta
 
 @login_required
 def update_leave_status(request, leave_id, action):
     if not request.user.is_staff:
         return redirect('home')
 
-    leave = LeaveRequest.objects.get(id=leave_id)
+    try:
+        leave = LeaveRequest.objects.get(id=leave_id)
+    except LeaveRequest.DoesNotExist:
+        return redirect('today_leaves')
 
     if action == 'approve':
         leave.status = 'Approved'
 
-        # 🔥 AUTO MARK ATTENDANCE AS LEAVE
+        # AUTO MARK ATTENDANCE AS LEAVE
         current_date = leave.from_date
         while current_date <= leave.to_date:
             Attendance.objects.update_or_create(
@@ -461,9 +442,11 @@ def update_leave_status(request, leave_id, action):
     leave.save()
     return redirect('today_leaves')
 
+
 # ─────────────────────────────────────────────
 # TODAY'S LEAVES (Teacher view)
 # ─────────────────────────────────────────────
+
 
 @login_required
 def today_leaves(request):
@@ -478,6 +461,7 @@ def today_leaves(request):
 # ─────────────────────────────────────────────
 # HOD DASHBOARD
 # ─────────────────────────────────────────────
+
 
 @login_required
 def hod_dashboard(request):
@@ -512,7 +496,7 @@ def hod_dashboard(request):
             'percentage': round(percentage, 2),
         })
 
-    # 🔍 Search
+    # Search
     if search_query:
         student_data = [
             s for s in student_data
@@ -520,15 +504,15 @@ def hod_dashboard(request):
             or search_query.lower() in s['roll_no'].lower()
         ]
 
-    # 🔽 Sort
+    # Sort
     if sort_order == 'low':
         student_data = sorted(student_data, key=lambda x: x['percentage'])
 
-    # 📊 Chart
+    # Chart data
     names = [s['name'] for s in student_data]
     percentages = [s['percentage'] for s in student_data]
 
-    # 📅 Daily report
+    # Daily report
     daily_records = []
     if selected_date:
         for record in Attendance.objects.filter(date=selected_date):
@@ -552,6 +536,7 @@ def hod_dashboard(request):
 # CALCULATOR
 # ─────────────────────────────────────────────
 
+
 def calculator(request):
     return render(request, 'calculator.html')
 
@@ -559,6 +544,7 @@ def calculator(request):
 # ─────────────────────────────────────────────
 # QR CODE
 # ─────────────────────────────────────────────
+
 
 def generate_qr(request):
     url = request.build_absolute_uri(reverse('home'))
@@ -572,6 +558,7 @@ def generate_qr(request):
 # ─────────────────────────────────────────────
 # UPLOAD ATTENDANCE (CSV)
 # ─────────────────────────────────────────────
+
 
 def upload_attendance(request):
     if request.method == 'POST':
@@ -606,3 +593,118 @@ def upload_attendance(request):
 
     return render(request, 'upload.html')
 
+
+# ─────────────────────────────────────────────
+# NOTIFICATION APIs
+# ─────────────────────────────────────────────
+
+
+@login_required
+def notification_count(request):
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    # ✅ FULL QUERY (NO SLICING HERE)
+    pending_leaves = LeaveRequest.objects.filter(status='Pending')
+    pending_od = ODApplication.objects.filter(status='pending')
+
+    # ✅ TRUE TOTAL COUNT
+    total = pending_leaves.count() + pending_od.count()
+
+    # ----------------------------
+    # LATEST ITEM LOGIC (SAFE)
+    # ----------------------------
+    latest_leave = pending_leaves.order_by('-id').first()
+    latest_od = pending_od.order_by('-id').first()
+
+    latest = None
+
+    if latest_leave and latest_od:
+        latest = latest_leave if latest_leave.id > latest_od.id else latest_od
+    else:
+        latest = latest_leave or latest_od
+
+    latest_message = ""
+    latest_id = 0
+    latest_url = ""
+
+    if latest:
+        if isinstance(latest, LeaveRequest):
+            latest_message = f"{latest.student.name} applied leave\nReason: {latest.reason}"
+            latest_url = f"/leave/update/{latest.id}/"
+        else:
+            latest_message = f"{latest.student.username} applied OD for {latest.event.event_name}"
+            latest_url = f"/od/update/{latest.id}/"
+
+        latest_id = latest.id
+
+    # ----------------------------
+    # COMBINED LIST
+    # ----------------------------
+    notifications = []
+
+    for leave in pending_leaves.order_by('-id')[:10]:
+        notifications.append({
+            "id": leave.id,
+            "title": f"{leave.student.name} - Leave Request",
+            "message": leave.reason,
+            "time": leave.created_at.strftime("%H:%M") if hasattr(leave, 'created_at') else "",
+            "url": f"/leave/update/{leave.id}/",
+            "type": "leave"
+        })
+
+    for od in pending_od.order_by('-id')[:10]:
+        notifications.append({
+            "id": od.id,
+            "title": f"{od.student.username} - OD Request",
+            "message": getattr(od.event, 'event_name', 'Event'),
+            "time": getattr(od, 'created_at', None).strftime("%H:%M") if hasattr(od, 'created_at') else "",
+            "url": f"/od/update/{od.id}/",
+            "type": "od"
+        })
+
+    return JsonResponse({
+        "total": total,
+        "message": latest_message,
+        "latest_id": latest_id,
+        "url": latest_url,
+        "notifications": notifications
+    })
+
+@login_required
+def get_notifications(request):
+    notifications = Notification.objects.filter(users=request.user).order_by('-id')
+    unread = notifications.exclude(read_by=request.user)
+
+    latest = unread.first()
+
+    data = {
+        "total": unread.count(),
+        "latest_id": latest.id if latest else 0,
+        "message": latest.message if latest else "",
+        "url": latest.url if latest else "",
+        "notifications": [
+            {
+                "id": n.id,
+                "title": n.title,
+                "message": n.message,
+                "time": n.created_at.strftime("%d %b %I:%M %p"),
+                "url": n.url,
+                "read": request.user in n.read_by.all()
+            }
+            for n in notifications[:5]
+        ]
+    }
+
+    return JsonResponse(data)
+
+
+@require_POST
+@login_required
+def mark_as_read(request, id):
+    try:
+        notif = Notification.objects.get(id=id)
+        notif.read_by.add(request.user)
+        return JsonResponse({"status": "ok"})
+    except Notification.DoesNotExist:
+        return JsonResponse({"status": "error"})

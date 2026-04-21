@@ -96,3 +96,19 @@ def reject_od(request, id):
 @login_required
 def dashboard(request):
     return render(request, 'od/dashboard.html')
+
+
+from django.contrib.auth.models import User
+from leave_app.models import Notification
+
+def create_od_notification(request, event):
+    staff_users = User.objects.filter(is_staff=True)
+
+    notif = Notification.objects.create(
+        title="New OD Request",
+        message=f"{request.user.username} applied OD for {event.event_name}",
+        type="od",
+        url="/od/staff/"
+    )
+
+    notif.users.set(staff_users)
