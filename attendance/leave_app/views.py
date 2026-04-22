@@ -708,3 +708,150 @@ def mark_as_read(request, id):
         return JsonResponse({"status": "ok"})
     except Notification.DoesNotExist:
         return JsonResponse({"status": "error"})
+    
+
+
+
+
+
+
+
+
+import pandas as pd
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import DefaulterStudent
+
+@login_required
+def upload_defaulters(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST only'})
+
+    file = request.FILES.get('file')
+
+    if not file:
+        return JsonResponse({'status': 'error', 'message': 'No file uploaded'})
+
+    try:
+        df = pd.read_excel(file)
+
+        # ✅ Filter only CYSE department
+        df = df[df['Dept'] == 'CYSE']
+
+        count = 0
+
+        for _, row in df.iterrows():
+            DefaulterStudent.objects.create(
+                roll_no=row['Roll No'],
+                name=row['Name'],
+                staff_incharge=row['Staff Incharge'],
+                department=row['Dept'],
+                year=row['Year'],
+                reason=row['Reason'],
+                
+            )
+            count += 1
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{count} students uploaded'
+        })
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+    
+
+
+
+
+import pandas as pd
+import json
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
+from .models import DefaulterStudent
+
+
+# 🔹 VIEW TABLE
+def defaulter_list(request):
+    students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
+
+    return render(request, 'defaulter_list.html', {
+        'students': students
+    })
+
+
+# 🔹 UPLOAD EXCEL
+@login_required
+def upload_defaulters(request):
+    if request.method == 'POST':
+        file = request.FILES.get('file')
+
+        if not file:
+            return redirect('defaulter_list')
+
+        df = pd.read_excel(file)
+
+        # clean columns
+        df.columns = df.columns.str.strip()
+        df['Dept'] = df['Dept'].astype(str).str.strip().str.upper()
+
+        # filter CYSE
+        df = df[df['Dept'] == 'CYSE']
+
+        # 🔥 clear old data
+        DefaulterStudent.objects.all().delete()
+
+        # save data
+        for _, row in df.iterrows():
+            DefaulterStudent.objects.create(
+                roll_no=row['Roll No'],
+                name=row['Name'],
+                staff_incharge=row['Staff Incharge'],
+                department=row['Dept'],
+                year=row['Year'],
+                reason=row['Reason']
+            )
+
+        return redirect('defaulter_list')
+
+    return redirect('defaulter_list')
+
+
+# 🔹 UPDATE ACTION (AJAX)
+def update_action(request, id):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error'})
+
+    try:
+        data = json.loads(request.body)
+        action = data.get('action')
+
+        student = DefaulterStudent.objects.get(id=id)
+        student.action_taken = action
+        student.save()
+
+        return JsonResponse({'status': 'success'})
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+    
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import DefaulterStudent
+
+@login_required
+def student_defaulter_view(request):
+    user = request.user
+
+    # Get all records for this student
+    students = DefaulterStudent.objects.filter(
+        roll_no=user.username
+    ).order_by('year', 'roll_no')
+
+    return render(request, 'student_defaulter.html', {
+        'students': students
+    })

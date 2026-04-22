@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Defaulter Status</title>
+
+    <!-- Bootstrap (optional but recommended) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .container-box {
+            margin-top: 40px;
+        }
+        .badge-warning {
+            background-color: orange;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container container-box">
+
+    <h2 class="mb-4 text-center">📌 Your Defaulter Status</h2>
+
+    {% if students %}
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover shadow-sm bg-white">
+
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Name</th>
+                        <th>Year</th>
+                        <th>Staff Incharge</th>
+                        <th>Reason</th>
+                        <th>Action Taken</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for student in students %}
+                    <tr class="text-center">
+
+                        <td>{{ student.roll_no }}</td>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.year }}</td>
+                        <td>{{ student.staff_incharge }}</td>
+                        <td class="text-start">{{ student.reason }}</td>
+
+                        <td>
+                            {% if student.action_taken %}
+                                <span class="badge bg-success">
+                                    {{ student.get_action_taken_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-warning text-dark">
+                                    Pending
+                                </span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-success text-center">
+            🎉 You are not in the defaulter list
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<h2>Defaulter Students (CYSE)</h2>
+
+<!-- ✅ Upload Section -->
+<form method="POST" enctype="multipart/form-data" action="{% url 'upload_defaulters' %}">
+    {% csrf_token %}
+    <input type="file" name="file" required>
+    <button type="submit">Upload Excel</button>
+</form>
+
+<br><br>
+
+<!-- ✅ Table -->
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Roll No</th>
+        <th>Name</th>
+        <th>Year</th>
+        <th>Staff Incharge</th>
+        <th>Reason</th>
+        <th>Action</th>
+    </tr>
+
+    {% for s in students %}
+    <tr>
+        <td>{{ s.roll_no }}</td>
+        <td>{{ s.name }}</td>
+        <td>{{ s.year }}</td>
+        <td>{{ s.staff_incharge }}</td>
+        <td>{{ s.reason }}</td>
+
+        <td>
+            <select onchange="updateAction({{ s.id }}, this.value)">
+                <option value="">Select</option>
+
+                <option value="letter" {% if s.action_taken == "letter" %}selected{% endif %}>
+                    Letter
+                </option>
+
+                <option value="letter_seminar" {% if s.action_taken == "letter_seminar" %}selected{% endif %}>
+                    Letter + Seminar
+                </option>
+
+                <option value="letter_assignment" {% if s.action_taken == "letter_assignment" %}selected{% endif %}>
+                    Letter + Assignment
+                </option>
+            </select>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<!-- ✅ JS for AJAX -->
+<script>
+function updateAction(id, action) {
+    fetch(`/update-action/${id}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ action: action })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Updated");
+    });
+}
+</script>

@@ -21,3 +21,7 @@ admin.site.register(LeaveRequest, LeaveRequestAdmin)
 admin.site.register(Attendance)
 
 
+from .models import DefaulterStudent
+
+admin.site.register(DefaulterStudent)
+

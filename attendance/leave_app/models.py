@@ -99,3 +99,32 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+
+
+
+
+
+class DefaulterStudent(models.Model):
+    roll_no = models.CharField(max_length=20)
+    name = models.CharField(max_length=100)
+    staff_incharge = models.CharField(max_length=100)
+    department = models.CharField(max_length=10)
+    year = models.IntegerField()
+    reason = models.TextField()
+
+    ACTION_CHOICES = [
+        ('letter', 'Letter'),
+        ('letter_seminar', 'Letter + Seminar'),
+        ('letter_assignment', 'Letter + Assignment'),
+    ]
+
+    action_taken = models.CharField(
+        max_length=30,
+        choices=ACTION_CHOICES,
+        null=True,
+        blank=True
+    )
+
+    

@@ -34,4 +34,8 @@ urlpatterns = [
 
  path('notifications/', views.get_notifications, name='get_notifications'),
     path('notifications/read/<int:id>/', views.mark_as_read, name='mark_as_read'),
+    path('upload-defaulters/', views.upload_defaulters, name='upload_defaulters'),
+    path('defaulters/', views.defaulter_list, name='defaulter_list'),
+    path('update-action/<int:id>/', views.update_action, name='update_action'),
+    path('student/defaulter/', views.student_defaulter_view, name='student_defaulter'),
 ]

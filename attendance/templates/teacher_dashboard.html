@@ -292,6 +292,31 @@
       <div><h3>Manage OD</h3><p>Approve or reject OD</p></div>
     </a>
   </div>
+  <div class="tiles">
+
+  <!-- Upload Defaulters -->
+  <a href="{% url 'defaulter_list' %}" class="tile">
+    <div class="tile-icon tile-green">
+      <i class="bi bi-upload"></i>
+    </div>
+    <div>
+      <h3>Upload Defaulters</h3>
+      <p>Upload Excel file of defaulter students</p>
+    </div>
+  </a>
+
+  <!-- View Defaulters -->
+  <a href="{% url 'defaulter_list' %}" class="tile">
+    <div class="tile-icon tile-red">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+    <div>
+      <h3>View Defaulters</h3>
+      <p>Manage defaulter list & actions</p>
+    </div>
+  </a>
+
+</div>
 
   <!-- Summary Alert Card -->
   <div class="summary-card">
@@ -309,6 +334,7 @@
             <span>OD Requests</span>
             <b id="alert-od">{{ pending_od }}</b>
         </div>
+        
     </div>
     <div class="summary-actions">
         <a href="{% url 'staff_panel' %}" class="btn-outline">View OD Requests</a>
