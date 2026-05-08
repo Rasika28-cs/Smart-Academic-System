@@ -6,8 +6,9 @@ from django.utils import timezone
 class Student(models.Model):
     """
     Represents a student profile linked 1-to-1 to a Django User.
-    username = roll_no  (used for Django auth)
+    username = roll_no (used for Django auth)
     """
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -15,14 +16,16 @@ class Student(models.Model):
         blank=True,
         related_name='student_profile'
     )
+
     name = models.CharField(max_length=100)
     roll_no = models.CharField(max_length=20, unique=True)
-    password = models.CharField(max_length=255)  # kept for legacy data; auth is via User
+    password = models.CharField(max_length=255)  # legacy use
+
+    # ✅ NEW FIELD (BATCH ADDED)
+    batch = models.CharField(max_length=20, default="2024-2028")
 
     def __str__(self):
         return f"{self.name} ({self.roll_no})"
-
-
 
 
 class LeaveRequest(models.Model):
