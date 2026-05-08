@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -70,51 +70,6 @@ def home(request):
         'upcoming_events': UpcomingEvent.objects.filter(is_active=True)[:20],
     }
     return render(request, 'index.html', context)
-
-
-# ─────────────────────────────────────────────
-# STUDENT SIGNUP
-# ─────────────────────────────────────────────
-
-
-def signup_page(request):
-    if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        roll_no = request.POST.get('roll_no', '').strip()
-        password = request.POST.get('password', '')
-        confirm_password = request.POST.get('confirm_password', '')
-
-        # ── Validation ──────────────────────────────
-        if not name or not roll_no:
-            return render(request, 'signup.html', {'error': 'Name and Roll No are required'})
-
-        if password != confirm_password:
-            return render(request, 'signup.html', {'error': 'Passwords do not match'})
-
-        if Student.objects.filter(roll_no=roll_no).exists():
-            return render(request, 'signup.html', {'error': 'Roll number already registered'})
-
-        if User.objects.filter(username=roll_no).exists():
-            return render(request, 'signup.html', {'error': 'Roll number already registered'})
-
-        # ── Create Django User (username = roll_no) ─
-        django_user = User.objects.create_user(
-            username=roll_no,
-            password=password,
-            first_name=name,
-        )
-
-        # ── Create Student profile ───────────────────
-        Student.objects.create(
-            user=django_user,
-            name=name,
-            roll_no=roll_no,
-            password=make_password(password),  # legacy field kept
-        )
-
-        return redirect('login_page')
-
-    return render(request, 'signup.html')
 
 
 # ─────────────────────────────────────────────
