@@ -8,13 +8,13 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group  # 1. ADDED GROUP
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 
-from .models import Student, LeaveRequest, Attendance, Notification
+from .models import Student, LeaveRequest, Attendance, Notification, DefaulterStudent # 6. ADDED DEFAULTERSTUDENT
 from department.models import Staff, Achievement, Winner, Gallery, NewsItem, UpcomingEvent
 from od.models import ODApplication
 
@@ -44,23 +44,34 @@ def _student_required(request):
         return None, redirect('login_page')
     return student, None
 
+# 2. ADDED HELPER FUNCTION
+def is_class_incharge(user):
+    return user.groups.filter(name='ClassIncharge').exists()
+
 
 # ─────────────────────────────────────────────
 # HOME
 # ─────────────────────────────────────────────
 
-
+# 3. CHANGED HOME VIEW
 def home(request):
-    # Redirect authenticated users to their dashboard
+
     if request.user.is_authenticated:
-        if request.user.is_staff or request.user.is_superuser:
+
+        if request.user.is_superuser:
             return redirect('hod_dashboard')
+
+        elif is_class_incharge(request.user):
+            return redirect('class_incharge_dashboard')
+
+        elif request.user.is_staff:
+            return redirect('teacher_dashboard')
+
         student = _get_student(request)
+
         if student:
             return redirect('student_dashboard')
-        return redirect('teacher_dashboard')
 
-    # Public view — fetch department + homepage data
     context = {
         'staff': Staff.objects.all(),
         'achievements': Achievement.objects.all(),
@@ -69,6 +80,7 @@ def home(request):
         'news_items': NewsItem.objects.filter(is_active=True)[:20],
         'upcoming_events': UpcomingEvent.objects.filter(is_active=True)[:20],
     }
+
     return render(request, 'index.html', context)
 
 
@@ -137,11 +149,16 @@ def login_page(request):
             if next_url:
                 return redirect(next_url)
 
-            # Route by role
+            # 4. NEW ROUTING LOGIC
             if user.is_superuser:
                 return redirect('hod_dashboard')
+
+            elif is_class_incharge(user):
+                return redirect('class_incharge_dashboard')
+
             elif user.is_staff:
                 return redirect('teacher_dashboard')
+
             else:
                 return redirect('student_dashboard')
 
@@ -352,6 +369,47 @@ def teacher_dashboard(request):
 
     return render(request, 'teacher_dashboard.html', context)
 
+
+# 5. CLASS INCHARGE DASHBOARD VIEW
+@login_required
+def class_incharge_dashboard(request):
+
+    # Allow only class incharge users
+    if not is_class_incharge(request.user):
+        return redirect('home')
+
+    # Mentor approved leaves
+    approved_leaves = LeaveRequest.objects.filter(
+        status='Approved'
+    ).count()
+
+    # Mentor approved OD
+    approved_od = ODApplication.objects.filter(
+        status='approved'
+    ).count()
+
+    # Total notifications
+    total_notifications = approved_leaves + approved_od
+
+    # Student count
+    total_students = Student.objects.count()
+
+    # Defaulter count
+    total_defaulters = DefaulterStudent.objects.count()
+
+    context = {
+        'approved_leaves': approved_leaves,
+        'approved_od': approved_od,
+        'total_notifications': total_notifications,
+        'total_students': total_students,
+        'total_defaulters': total_defaulters,
+    }
+
+    return render(
+        request,
+        'class_incharge_dashboard.html',
+        context
+    )
 
 # ─────────────────────────────────────────────
 # VIEW STUDENTS
@@ -720,7 +778,6 @@ def mark_as_read(request, id):
 import pandas as pd
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import DefaulterStudent
 
 @login_required
 def upload_defaulters(request):
@@ -771,8 +828,6 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
-from .models import DefaulterStudent
-
 
 # 🔹 VIEW TABLE
 def defaulter_list(request):
@@ -785,7 +840,7 @@ def defaulter_list(request):
 
 # 🔹 UPLOAD EXCEL
 @login_required
-def upload_defaulters(request):
+def upload_defaulters_manual(request): # Renamed to avoid collision with previous function
     if request.method == 'POST':
         file = request.FILES.get('file')
 
@@ -841,7 +896,6 @@ def update_action(request, id):
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from .models import DefaulterStudent
 
 @login_required
 def student_defaulter_view(request):

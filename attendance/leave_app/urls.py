@@ -20,6 +20,11 @@ urlpatterns = [
     path('teacher/today-leaves/', views.today_leaves, name='today_leaves'),
     path('teacher/mark-attendance/', views.mark_attendance, name='mark_attendance'),
 
+    path(
+    'class-incharge/',
+    views.class_incharge_dashboard,
+    name='class_incharge_dashboard'
+),
     # HOD
     path('hod/dashboard/', views.hod_dashboard, name='hod_dashboard'),
 
