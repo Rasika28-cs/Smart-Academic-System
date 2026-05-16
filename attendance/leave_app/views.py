@@ -228,9 +228,12 @@ def dashboard(request):
         attendance_percent = 0
 
     return render(request, 'dashboard.html', {
+        'student': student,
         'total_leaves': total_leaves,
         'pending_leaves': pending_leaves,
         'attendance_percent': round(attendance_percent, 2),
+        'present_classes': present_classes,
+        'total_classes': total_classes,
     })
 
 

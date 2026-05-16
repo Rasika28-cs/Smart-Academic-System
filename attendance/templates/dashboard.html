@@ -1,156 +1,367 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Student Dashboard - Smart Attendance</title>
-  <link rel="icon" type="image/x-icon" href="{% static 'assets/favicon.ico' %}"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
-  <link href="{% static 'css/styles.css' %}" rel="stylesheet"/>
-  <style>
-    :root{--primary:#1a56db;--primary-dk:#1342b0;--primary-lt:#e8f0fd;--accent:#0ea472;--accent-dk:#0b8a5e;--accent-lt:#e6f7f1;--warning:#d97706;--danger:#dc2626;--surface:#fff;--bg:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--nav-h:64px;--radius:12px;--radius-lg:18px;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);}
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-    .sa-nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;}
-    .sa-nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--primary);text-decoration:none;}
-    .sa-nav-links{display:flex;gap:4px;margin-left:auto;list-style:none;flex-wrap:wrap;}
-    .sa-nav-links a{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;transition:all .15s;}
-    .sa-nav-links a:hover{background:var(--bg);color:var(--text);}
-    .sa-nav-links a.active{background:var(--primary-lt);color:var(--primary);}
-    .sa-nav-links a.logout{color:var(--danger);}
-    .sa-nav-links a.logout:hover{background:#fee2e2;}
-    .sa-page{flex:1;padding:32px 24px;max-width:1100px;margin:0 auto;width:100%;}
-    /* Welcome Banner */
-    .welcome-banner{background:linear-gradient(135deg,#0f172a 0%,#1e40af 60%,#065f46 100%);border-radius:20px;padding:28px 32px;color:#fff;margin-bottom:28px;position:relative;overflow:hidden;}
-    .welcome-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,.05);border-radius:50%;}
-    .welcome-banner h2{font-size:1.4rem;font-weight:700;}
-    .welcome-banner p{color:rgba(255,255,255,.65);font-size:13px;margin-top:5px;}
-    .welcome-banner .meta span{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:3px 12px;font-size:12px;font-weight:600;margin-right:8px;margin-top:10px;}
-    /* Stats */
-    .sa-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;}
-    .sa-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 20px;box-shadow:var(--shadow);}
-    .sa-stat-icon{font-size:1.6rem;margin-bottom:10px;}
-    .sa-stat-val{font-size:2rem;font-weight:700;line-height:1;}
-    .sa-stat-lbl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-    .stat-primary .sa-stat-val{color:var(--primary);}
-    .stat-accent  .sa-stat-val{color:var(--accent);}
-    .stat-warn    .sa-stat-val{color:var(--warning);}
-    .stat-danger  .sa-stat-val{color:var(--danger);}
-    /* Card */
-    .sa-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:24px;margin-bottom:20px;}
-    .sa-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
-    /* Progress */
-    .progress-wrap{margin-top:6px;}
-    .progress-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;}
-    .progress-track{height:8px;background:var(--border);border-radius:100px;overflow:hidden;}
-    .progress-fill{height:100%;border-radius:100px;transition:width .7s;}
-    .pf-success{background:linear-gradient(90deg,var(--accent),#34d399);}
-    .pf-danger{background:linear-gradient(90deg,var(--danger),#f87171);}
-    /* Alert */
-    .sa-alert{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;margin-top:14px;}
-    .sa-alert-success{background:var(--accent-lt);color:#065f46;border:1px solid #a7f3d0;}
-    .sa-alert-warning{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
-    /* Tiles */
-    .sa-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
-    .sa-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);text-decoration:none;color:var(--text);font-size:13px;font-weight:600;transition:all .18s;text-align:center;}
-    .sa-tile:hover{border-color:var(--primary);background:var(--primary-lt);color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow);}
-    .sa-tile .tile-icon{font-size:1.8rem;}
-    .sa-footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:16px;font-size:13px;color:var(--muted);}
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Student Dashboard - Smart Academic System</title>
+</head><body class="flex flex-col min-h-screen">{% load static %}
+  <link href="{% static 'assets/favicon.ico' %}" rel="icon" type="image/x-icon"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    :root {
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    .glass-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 0.5rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--primary);
+    }
+    .nav-link.active .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1;
+    }
+    .nav-link.logout:hover {
+      background: #FEF2F2;
+      color: #DC2626;
+    }
+    .stat-card {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .progress-bar-container {
+      height: 10px;
+      background: #E2E8F0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .action-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: all 0.2s;
+      text-align: center;
+      gap: 0.75rem;
+    }
+    .action-tile:hover {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.04);
+      transform: translateY(-4px);
+    }
+    .action-tile span.icon-box {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #F1F5F9;
+      border-radius: 12px;
+      color: var(--primary);
+      transition: all 0.2s;
+    }
+    .action-tile:hover span.icon-box {
+      background: var(--primary);
+      color: white;
+    }
+    .defaulter-card {
+      background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+      border: 1px solid #FECDD3;
+    }
+    .defaulter-card:hover {
+      border-color: #F43F5E;
+    }
+
+    #mobileMenu.hidden {
+      display: none;
+    }
   </style>
-</head>
-<body>
-
-<nav class="sa-nav">
-  <a class="sa-nav-brand" href="{% url 'home' %}">
-    <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;color:var(--primary);"></i> Smart Attendance
-  </a>
-  <ul class="sa-nav-links">
-    <li><a href="{% url 'student_dashboard' %}" class="active">Dashboard</a></li>
-    <li><a href="{% url 'apply_page' %}">Apply Leave</a></li>
-    <li><a href="{% url 'leave_status' %}">Leave Status</a></li>
-    <li><a href="{% url 'attendance' %}">Attendance</a></li>
-    <li><a href="{% url 'calculator' %}">Calculator</a></li>
-    <li><a href="{% url 'logout' %}" class="logout">Logout</a></li>
-  </ul>
-</nav>
-
-<div class="sa-page">
-
-  <!-- Welcome Banner -->
-  <div class="welcome-banner">
-    <h2>👋 Welcome, {{ student.name }}!</h2>
-    <div class="meta">
-      <span>Roll No: {{ student.roll_no }}</span>
-      <span>{{ student.role|capfirst }}</span>
-    </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="sa-stats">
-    <div class="sa-stat stat-primary">
-      <div class="sa-stat-icon">📋</div>
-      <div class="sa-stat-val">{{ total_leaves }}</div>
-      <div class="sa-stat-lbl">Total Leaves Applied</div>
-    </div>
-    <div class="sa-stat stat-warn">
-      <div class="sa-stat-icon">⏳</div>
-      <div class="sa-stat-val">{{ pending_leaves }}</div>
-      <div class="sa-stat-lbl">Pending Leaves</div>
-    </div>
-    <div class="sa-stat {% if attendance_percent < 75 %}stat-danger{% else %}stat-accent{% endif %}">
-      <div class="sa-stat-icon">📊</div>
-      <div class="sa-stat-val">{{ attendance_percent }}%</div>
-      <div class="sa-stat-lbl">Attendance</div>
-    </div>
-  </div>
-
-  <!-- Attendance Overview -->
-  <div class="sa-card">
-    <div class="sa-card-title"><i class="bi bi-graph-up-arrow"></i> Attendance Overview</div>
-    <div class="progress-meta">
-      <span>{{ present_classes }} present out of {{ total_classes }} classes</span>
-      <span style="font-weight:600;">{{ attendance_percent }}%</span>
-    </div>
-    <div class="progress-track">
-      <div class="progress-fill {% if attendance_percent < 75 %}pf-danger{% else %}pf-success{% endif %}" style="width:{{ attendance_percent }}%;"></div>
-    </div>
-    {% if attendance_percent < 75 %}
-    <div class="sa-alert sa-alert-warning">
-      <i class="bi bi-exclamation-triangle-fill"></i> Your attendance is below 75%. Please attend more classes.
-    </div>
-    {% else %}
-    <div class="sa-alert sa-alert-success">
-      <i class="bi bi-check-circle-fill"></i> Your attendance is above 75%. Keep it up!
-    </div>
-    {% endif %}
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="sa-card">
-    <div class="sa-card-title"><i class="bi bi-lightning-fill"></i> Quick Actions</div>
-    <div class="sa-tiles">
-      <a href="{% url 'apply_page' %}" class="sa-tile"><span class="tile-icon">✍️</span>Apply Leave</a>
-      <a href="{% url 'leave_status' %}" class="sa-tile"><span class="tile-icon">📋</span>Leave Status</a>
-      <a href="{% url 'attendance' %}" class="sa-tile"><span class="tile-icon">📅</span>Attendance</a>
-      <a href="{% url 'calculator' %}" class="sa-tile"><span class="tile-icon">🔢</span>Calculator</a>
-      <a href="{% url 'create_event' %}" class="sa-tile"><span class="tile-icon">📝</span>Apply OD</a>
-      <a href="{% url 'event_list' %}" class="sa-tile"><span class="tile-icon">🎉</span>Events</a>
-    </div>
-  </div>
-  <a href="{% url 'student_defaulter' %}" class="tile">
-  <div class="tile-icon tile-red">
-    <i class="bi bi-exclamation-triangle-fill"></i>
-  </div>
-  <div>
-    <h3>Defaulter Status</h3>
-    <p>Check your status & action taken</p>
-  </div>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between items-center h-16">
+<!-- Left: Logo & Brand -->
+<div class="flex items-center gap-3">
+<div class="bg-blue-600 p-1.5 rounded-lg text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-xl">school</span>
+</div>
+<span class="font-extrabold text-lg tracking-tight text-slate-900 hidden sm:block">Smart Academic</span>
+</div>
+<!-- Center: Desktop Nav Links -->
+<nav class="hidden lg:flex items-center space-x-1">
+<a class="nav-link active" href="{% url 'student_dashboard' %}">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="text-sm">Dashboard</span>
 </a>
-
+<a class="nav-link" href="{% url 'attendance' %}">
+<span class="material-symbols-outlined text-xl">calendar_today</span>
+<span class="text-sm">Attendance</span>
+</a>
+<a class="nav-link" href="{% url 'apply_page' %}">
+<span class="material-symbols-outlined text-xl">edit_note</span>
+<span class="text-sm">Apply Leave</span>
+</a>
+<a class="nav-link" href="{% url 'leave_status' %}">
+<span class="material-symbols-outlined text-xl">list_alt</span>
+<span class="text-sm">Status</span>
+</a>
+<a class="nav-link" href="{% url 'calculator' %}">
+<span class="material-symbols-outlined text-xl">calculate</span>
+<span class="text-sm">Calculator</span>
+</a>
+<a class="nav-link" href="{% url 'event_list' %}">
+<span class="material-symbols-outlined text-xl">celebration</span>
+<span class="text-sm">Events</span>
+</a>
+</nav>
+<!-- Right: Profile & Logout (Desktop) -->
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex flex-col items-end mr-2">
+<span class="text-xs font-semibold text-slate-900 leading-tight">{{ student.name }}</span>
+<span class="text-[10px] text-slate-500 uppercase tracking-wider leading-tight">{{ student.roll_no }}</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-blue-600 font-bold text-xs">
+          {{ student.name|slice:":1" }}
+        </div>
+<a class="nav-link logout hidden lg:flex p-2" href="{% url 'logout' %}" title="Logout">
+<span class="material-symbols-outlined">logout</span>
+</a>
+<!-- Mobile Menu Button -->
+<button class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg" id="mobileMenuToggle">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Mobile Menu Dropdown -->
+<div class="hidden lg:hidden border-t border-slate-100 bg-white p-4 space-y-2" id="mobileMenu">
+<a class="nav-link active" href="{% url 'student_dashboard' %}">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="nav-link" href="{% url 'attendance' %}">
+<span class="material-symbols-outlined">calendar_today</span>
+<span>Attendance</span>
+</a>
+<a class="nav-link" href="{% url 'apply_page' %}">
+<span class="material-symbols-outlined">edit_note</span>
+<span>Apply Leave</span>
+</a>
+<a class="nav-link" href="{% url 'leave_status' %}">
+<span class="material-symbols-outlined">list_alt</span>
+<span>Leave Status</span>
+</a>
+<a class="nav-link" href="{% url 'calculator' %}">
+<span class="material-symbols-outlined">calculate</span>
+<span>Calculator</span>
+</a>
+<a class="nav-link" href="{% url 'event_list' %}">
+<span class="material-symbols-outlined">celebration</span>
+<span>Events</span>
+</a>
+<div class="pt-2 mt-2 border-t border-slate-100">
+<a class="nav-link logout" href="{% url 'logout' %}">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 pt-16">
+<div class="p-6 lg:p-10 max-w-6xl mx-auto w-full space-y-8">
+<!-- Welcome Section -->
+<section>
+<h1 class="text-3xl font-bold text-slate-900">Hello, {{ student.name }}! 👋</h1>
+<p class="text-slate-500 mt-1">Here's what's happening with your academics today.</p>
+</section>
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="glass-card stat-card">
+<div class="flex items-center justify-between mb-2">
+<span class="text-slate-500 font-medium text-sm">Applied Leaves</span>
+<span class="material-symbols-outlined text-blue-500">description</span>
+</div>
+<span class="text-3xl font-bold text-slate-900">{{ total_leaves }}</span>
+<span class="text-xs text-slate-400">Total requests submitted</span>
+</div>
+<div class="glass-card stat-card">
+<div class="flex items-center justify-between mb-2">
+<span class="text-slate-500 font-medium text-sm">Pending Approval</span>
+<span class="material-symbols-outlined text-amber-500">pending_actions</span>
+</div>
+<span class="text-3xl font-bold text-slate-900">{{ pending_leaves }}</span>
+<span class="text-xs text-slate-400">Currently in review</span>
+</div>
+<div class="glass-card stat-card">
+<div class="flex items-center justify-between mb-2">
+<span class="text-slate-500 font-medium text-sm">Attendance</span>
+<span class="material-symbols-outlined {% if attendance_percent < 75 %}text-red-500{% else %}text-emerald-500{% endif %}">analytics</span>
+</div>
+<span class="text-3xl font-bold text-slate-900">{{ attendance_percent }}%</span>
+<span class="text-xs {% if attendance_percent < 75 %}text-red-400{% else %}text-emerald-400{% endif %}">
+          {% if attendance_percent < 75 %}Below requirements{% else %}Maintaining well{% endif %}
+        </span>
+</div>
+</div>
+<!-- Attendance Overview -->
+<div class="glass-card p-6">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-blue-600">query_stats</span>
+<h2 class="text-lg font-bold text-slate-900">Attendance Overview</h2>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<p class="text-sm text-slate-500">Current Status</p>
+<p class="text-lg font-semibold text-slate-900">{{ present_classes }} present <span class="text-slate-400 text-base font-normal">out of {{ total_classes }}</span></p>
+</div>
+<div class="text-right">
+<span class="text-2xl font-bold text-blue-600">{{ attendance_percent }}%</span>
+</div>
+</div>
+<div class="progress-bar-container">
+<div class="progress-bar-fill {% if attendance_percent < 75 %}bg-red-500{% else %}bg-blue-600{% endif %}" style="width: {{ attendance_percent }}%"></div>
 </div>
 
-<footer class="sa-footer">&copy; 2026 Smart Attendance System</footer>
-</body>
-</html>
+        {% if attendance_percent < 75 %}
+        <div class="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-red-700">
+<span class="material-symbols-outlined">warning</span>
+<p class="text-sm font-medium">Warning: Your attendance is below the 75% threshold. Please prioritize your classes.</p>
+</div>
+        {% else %}
+        <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700">
+<span class="material-symbols-outlined">check_circle</span>
+<p class="text-sm font-medium">Great job! You're meeting the attendance requirements.</p>
+</div>
+        {% endif %}
+      </div>
+</div>
+<!-- Quick Actions -->
+<section>
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-blue-600">bolt</span>
+<h2 class="text-lg font-bold text-slate-900">Quick Actions</h2>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<a class="action-tile" href="{% url 'apply_page' %}">
+<span class="icon-box"><span class="material-symbols-outlined">edit_square</span></span>
+<span class="text-sm font-semibold">Apply Leave</span>
+</a>
+<a class="action-tile" href="{% url 'leave_status' %}">
+<span class="icon-box"><span class="material-symbols-outlined">assignment</span></span>
+<span class="text-sm font-semibold">Status</span>
+</a>
+<a class="action-tile" href="{% url 'attendance' %}">
+<span class="icon-box"><span class="material-symbols-outlined">event_available</span></span>
+<span class="text-sm font-semibold">History</span>
+</a>
+<a class="action-tile" href="{% url 'calculator' %}">
+<span class="icon-box"><span class="material-symbols-outlined">calculate</span></span>
+<span class="text-sm font-semibold">Calculator</span>
+</a>
+<a class="action-tile" href="{% url 'create_event' %}">
+<span class="icon-box"><span class="material-symbols-outlined">person_add</span></span>
+<span class="text-sm font-semibold">Apply OD</span>
+</a>
+<a class="action-tile" href="{% url 'event_list' %}">
+<span class="icon-box"><span class="material-symbols-outlined">auto_awesome</span></span>
+<span class="text-sm font-semibold">Events</span>
+</a>
+</div>
+</section>
+<!-- Defaulter Status Section -->
+<a class="block glass-card defaulter-card p-6 overflow-hidden relative group" href="{% url 'student_defaulter' %}">
+<div class="flex items-center justify-between relative z-10">
+<div class="flex items-center gap-4">
+<div class="bg-red-100 p-3 rounded-2xl text-red-600">
+<span class="material-symbols-outlined text-2xl">report_problem</span>
+</div>
+<div>
+<h3 class="text-lg font-bold text-slate-900">Defaulter Status</h3>
+<p class="text-slate-600 text-sm">Check critical status and disciplinary actions</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400 group-hover:translate-x-2 transition-transform">arrow_forward_ios</span>
+</div>
+<!-- Decorative bg icon -->
+<span class="material-symbols-outlined absolute -right-6 -bottom-6 text-9xl text-red-500/5 rotate-12">warning</span>
+</a>
+</div>
+<!-- Footer -->
+<footer class="mt-auto py-8 px-6 border-t border-slate-200 bg-white">
+<div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
+<p>© 2026 Smart Academic System. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-blue-600 transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-blue-600 transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-blue-600 transition-colors" href="#">Help Center</a>
+</div>
+</div>
+</footer>
+</main>
+<script>
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  mobileMenuToggle.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden');
+  });
+
+  // Close mobile menu on resize if screen becomes large
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) {
+      mobileMenu.classList.add('hidden');
+    }
+  });
+</script>
+</body></html>

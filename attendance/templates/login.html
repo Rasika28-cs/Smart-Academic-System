@@ -1,104 +1,140 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head></head><body class="min-h-screen flex flex-col">{% load static %}
+
+
+
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Login - Smart Attendance</title>
-  <link rel="icon" type="image/x-icon" href="{% static 'assets/favicon.ico' %}"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
-  <link href="{% static 'css/styles.css' %}" rel="stylesheet"/>
-  <style>
-    :root{--primary:#1a56db;--primary-dk:#1342b0;--primary-lt:#e8f0fd;--accent:#0ea472;--accent-lt:#e6f7f1;--surface:#fff;--bg:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--danger:#dc2626;}
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-    .sa-nav{height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;}
-    .sa-nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--primary);text-decoration:none;}
-    .sa-nav-links{display:flex;gap:4px;margin-left:auto;list-style:none;}
-    .sa-nav-links a{padding:6px 14px;border-radius:8px;font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;transition:all .15s;}
-    .sa-nav-links a:hover{background:var(--bg);color:var(--text);}
-    .sa-nav-links a.active{background:var(--primary-lt);color:var(--primary);}
-    .main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 16px;}
-    .login-wrap{width:100%;max-width:440px;}
-    .login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 4px 6px rgba(0,0,0,.05),0 10px 40px rgba(0,0,0,.1);padding:40px;}
-    .login-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;margin:0 auto 20px;}
-    .login-title{text-align:center;margin-bottom:28px;}
-    .login-title h2{font-size:1.4rem;font-weight:700;}
-    .login-title p{font-size:13px;color:var(--muted);margin-top:4px;}
-    .sa-form-group{margin-bottom:18px;}
-    .sa-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
-    .sa-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface);transition:all .15s;outline:none;}
-    .sa-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
-    .sa-btn-primary{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .18s;text-decoration:none;}
-    .sa-btn-primary:hover{background:var(--primary-dk);box-shadow:0 4px 14px rgba(26,86,219,.3);transform:translateY(-1px);}
-    .sa-alert-danger{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:16px;display:flex;gap:8px;align-items:center;}
-    .divider{border:none;border-top:1px solid var(--border);margin:24px 0;}
-    .role-pills{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
-    .role-pill{padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600;}
-    .rp-student{background:var(--primary-lt);color:var(--primary-dk);}
-    .rp-teacher{background:var(--accent-lt);color:#065f46;}
-    .rp-hod{background:#fef3c7;color:#92400e;}
-    .text-center{text-align:center;}
-    .footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:14px;font-size:13px;color:var(--muted);}
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - Smart Academic System</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#2563EB",
+            background: "#F8FAFC",
+            surface: "#FFFFFF",
+            onSurface: "#0F172A",
+            onSurfaceMuted: "#64748B",
+            error: "#EF4444",
+            outline: "#E2E8F0"
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          borderRadius: {
+            'xl': '0.75rem',
+            '2xl': '1rem',
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      background-color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    .login-card {
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1), 0 20px 25px -5px rgb(0 0 0 / 0.05);
+    }
+    input:focus {
+      border-color: #2563EB !important;
+      ring-color: #2563EB !important;
+    }
   </style>
-</head>
-<body>
-
-<nav class="sa-nav">
-  <a class="sa-nav-brand" href="{% url 'home' %}">
-    <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;"></i> Smart Attendance
-  </a>
-  <ul class="sa-nav-links">
-    <li><a href="{% url 'home' %}">Home</a></li>
-    <li><a href="#" class="active">Login</a></li>
-  </ul>
+<!-- Top Navigation Bar -->
+<nav class="h-16 bg-white border-b border-outline flex items-center px-4 md:px-8 shrink-0">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-2xl">school</span>
+</div>
+<div>
+<h1 class="text-onSurface font-bold text-lg leading-tight">Smart Academic System</h1>
+<p class="text-[10px] text-onSurfaceMuted uppercase tracking-wider font-semibold">CSE Department</p>
+</div>
+</div>
+<div class="ml-auto hidden sm:flex items-center gap-6">
+<a class="text-sm font-medium text-onSurfaceMuted hover:text-primary transition-colors" href="{% url 'home' %}">Home</a>
+<a class="text-sm font-semibold text-primary" href="#">Login</a>
+</div>
 </nav>
+<!-- Main Content -->
+<main class="flex-grow flex items-center justify-center p-6">
+<div class="w-full max-w-[440px]">
+<div class="login-card bg-surface rounded-2xl border border-outline p-8 md:p-10">
+<!-- Header -->
+<div class="text-center mb-8">
+<h2 class="text-2xl font-bold text-onSurface">Welcome back</h2>
+<p class="text-onSurfaceMuted mt-2 text-sm">Please enter your credentials to access your account</p>
+</div>
+<!-- Error Alert -->
+        {% if error %}
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-[20px]">error</span>
+<p class="text-sm text-red-800 font-medium leading-tight">{{ error }}</p>
+</div>
+        {% endif %}
 
-<main class="main">
-  <div class="login-wrap">
-    <div class="login-card">
-      <div class="login-icon">🔐</div>
-      <div class="login-title">
-        <h2>Welcome back</h2>
-        <p>Enter your credentials to continue</p>
-      </div>
-
-      {% if error %}
-      <div class="sa-alert-danger">
-        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
-      </div>
-      {% endif %}
-
-      <form method="POST" action="{% url 'login_page' %}">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.GET.next }}">
-        <div class="sa-form-group">
-          <label class="sa-label" for="username">Roll Number / Username</label>
-          <input class="sa-input" type="text" id="username" name="username"
-                 placeholder="Students: roll no — Staff: username" required>
-        </div>
-        <div class="sa-form-group">
-          <label class="sa-label" for="password">Password</label>
-          <input class="sa-input" type="password" id="password" name="password"
-                 placeholder="Your password" required>
-        </div>
-        <button type="submit" class="sa-btn-primary">
-          Login <i class="bi bi-arrow-right"></i>
-        </button>
-      </form>
-
-      <hr class="divider">
-      <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px;">Login works for all roles:</p>
-      <div class="role-pills">
-        <span class="role-pill rp-student">🎓 Student (Roll No)</span>
-        <span class="role-pill rp-teacher">👨‍🏫 Teacher</span>
-        <span class="role-pill rp-hod">👑 HOD</span>
-      </div>
-    </div>
-  </div>
+        <!-- Form -->
+<form action="{% url 'login_page' %}" class="space-y-5" method="POST">
+          {% csrf_token %}
+          <input name="next" type="hidden" value="{{ request.GET.next }}"/>
+<div class="space-y-1.5">
+<label class="text-sm font-semibold text-onSurface ml-1" for="username">Roll Number / Username</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-onSurfaceMuted text-lg">person</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-outline rounded-xl text-sm transition-all focus:ring-4 focus:ring-primary/10 outline-none" id="username" name="username" placeholder="Roll no or username" required="" type="text"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-semibold text-onSurface ml-1" for="password">Password</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-onSurfaceMuted text-lg">lock</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-outline rounded-xl text-sm transition-all focus:ring-4 focus:ring-primary/10 outline-none" id="password" name="password" placeholder="Your password" required="" type="password"/>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group" type="submit">
+            Login
+            <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</form>
+<!-- Role Indicators -->
+<div class="mt-10 border-t border-outline pt-6">
+<p class="text-center text-[11px] font-bold text-onSurfaceMuted uppercase tracking-widest mb-4">Authorized Portals</p>
+<div class="flex flex-wrap justify-center gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
+<span class="material-symbols-outlined text-[16px]">school</span> Student
+            </div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">
+<span class="material-symbols-outlined text-[16px]">record_voice_over</span> Faculty
+            </div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">
+<span class="material-symbols-outlined text-[16px]">shield_person</span> Admin/HOD
+            </div>
+</div>
+</div>
+</div>
+<!-- Quick Links (Optional) -->
+<p class="text-center mt-6 text-sm text-onSurfaceMuted">
+        Having trouble? <a class="text-primary font-semibold hover:underline" href="#">Contact Administrator</a>
+</p>
+</div>
 </main>
-
-<footer class="footer">&copy; 2026 Smart Attendance System</footer>
-</body>
-</html>
+<!-- Footer -->
+<footer class="mt-auto py-8 px-4 text-center border-t border-outline bg-white">
+<div class="max-w-4xl mx-auto">
+<p class="text-sm text-onSurfaceMuted font-medium">© 2026 Smart Academic System. All rights reserved.</p>
+<p class="text-xs text-onSurfaceMuted/60 mt-1">Department of Computer Science and Engineering</p>
+</div>
+</footer>
+</body></html>

@@ -67,6 +67,9 @@ class Command(BaseCommand):
 ("VISHAL K","24CYSE57","2024-2028"),
 ("YOGESH J","24CYSE58","2024-2028"),
 ("YUGESH M","24CYSE59","2024-2028"),
+("VIGNESHDEVI S","25CYSEL01","2024-2028"),
+("YOGESWAR S","25CYSEL02","2024-2028"),
+
 
 # ================= 25–29 BATCH =================
 ("ABINAYA T","25CYSE01","2025-2029"),
