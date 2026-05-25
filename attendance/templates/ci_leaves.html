@@ -1,0 +1,44 @@
+<h2>Class Incharge Leave Requests</h2>
+
+<form method="GET">
+
+    <select name="batch" onchange="this.form.submit()">
+
+        <option value="">All Years</option>
+
+        {% for batch in batches %}
+            <option value="{{ batch }}"
+            {% if batch == selected_batch %}selected{% endif %}>
+
+                {{ batch }}
+
+            </option>
+        {% endfor %}
+
+    </select>
+
+</form>
+
+<hr>
+
+{% for leave in leaves %}
+
+    <p>
+        {{ leave.student.name }}
+        -
+        {{ leave.student.batch }}
+        -
+        {{ leave.reason }}
+    </p>
+
+    <a href="/ci/review/{{ leave.id }}/approve/">Approve</a>
+
+    <a href="/ci/review/{{ leave.id }}/reject/">Reject</a>
+
+    <hr>
+
+{% empty %}
+
+    <p>No leave requests</p>
+
+{% endfor %}

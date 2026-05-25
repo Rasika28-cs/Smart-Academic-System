@@ -3,10 +3,14 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
+# ─────────────────────────────────────────────
+# STUDENT MODEL
+# ─────────────────────────────────────────────
+
 class Student(models.Model):
     """
-    Represents a student profile linked 1-to-1 to a Django User.
-    username = roll_no (used for Django auth)
+    Student profile linked with Django User.
+    username = roll_no
     """
 
     user = models.OneToOneField(
@@ -18,109 +22,250 @@ class Student(models.Model):
     )
 
     name = models.CharField(max_length=100)
-    roll_no = models.CharField(max_length=20, unique=True)
-    password = models.CharField(max_length=255)  # legacy use
 
-    # ✅ NEW FIELD (BATCH ADDED)
-    batch = models.CharField(max_length=20, default="2024-2028")
+    roll_no = models.CharField(
+        max_length=20,
+        unique=True
+    )
+
+    # Legacy password field
+    password = models.CharField(max_length=255)
+
+    # Batch
+    batch = models.CharField(
+        max_length=20,
+        default="2024-2028"
+    )
+
+    # OPTIONAL FUTURE IMPROVEMENT
+    # Each student assigned to mentor
+    mentor = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_students'
+    )
 
     def __str__(self):
         return f"{self.name} ({self.roll_no})"
 
 
+# ─────────────────────────────────────────────
+# LEAVE REQUEST MODEL
+# ─────────────────────────────────────────────
+
 class LeaveRequest(models.Model):
+
     STATUS_CHOICES = [
+
         ('Pending', 'Pending'),
+
+        ('Mentor Approved', 'Mentor Approved'),
+
         ('Approved', 'Approved'),
+
         ('Rejected', 'Rejected'),
+
     ]
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE
+    )
+
     reason = models.TextField()
+
     from_date = models.DateField()
+
     to_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-    
-    created_at = models.DateTimeField(auto_now_add=True) 
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default='Pending'
+    )
+
+    # ─────────────────────────
+    # REVIEW TRACKING
+    # ─────────────────────────
+
+    mentor_reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='mentor_reviews'
+    )
+
+    class_incharge_reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ci_reviews'
+    )
+
+    # ─────────────────────────
+    # REVIEW TIMESTAMPS
+    # ─────────────────────────
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    mentor_reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    class_incharge_reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    # ─────────────────────────
+    # REMARKS
+    # ─────────────────────────
+
+    mentor_remark = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    class_incharge_remark = models.TextField(
+        null=True,
+        blank=True
+    )
+
     def __str__(self):
         return f"{self.student.name} - {self.status}"
 
 
-
+# ─────────────────────────────────────────────
+# ATTENDANCE MODEL
+# ─────────────────────────────────────────────
 
 class Attendance(models.Model):
-    STATUS_CHOICES = [
-    ('Present', 'Present'),
-    ('Leave', 'Leave'),
-    ('Absent', 'Absent'),
-]
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+
+        ('Present', 'Present'),
+
+        ('Leave', 'Leave'),
+
+        ('Absent', 'Absent'),
+
+    ]
+
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE
+    )
+
     date = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES
+    )
 
     def __str__(self):
         return f"{self.student.name} - {self.date} - {self.status}"
 
 
+# ─────────────────────────────────────────────
+# TEACHER MODEL
+# ─────────────────────────────────────────────
+
 class Teacher(models.Model):
+
     name = models.CharField(max_length=100)
+
     email = models.EmailField(unique=True)
+
     password = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
 
 
-
-
-
-
-from django.db import models
-from django.contrib.auth.models import User
+# ─────────────────────────────────────────────
+# NOTIFICATION MODEL
+# ─────────────────────────────────────────────
 
 class Notification(models.Model):
+
     TYPE_CHOICES = (
+
         ('leave', 'Leave'),
+
         ('od', 'OD'),
+
     )
 
     title = models.CharField(max_length=255)
+
     message = models.TextField()
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    type = models.CharField(
+        max_length=10,
+        choices=TYPE_CHOICES
+    )
 
-    # Who should see this
-    users = models.ManyToManyField(User, related_name="notifications")
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
-    # Who has read this
-    read_by = models.ManyToManyField(User, related_name="read_notifications", blank=True)
+    # Who can see notification
+    users = models.ManyToManyField(
+        User,
+        related_name='notifications'
+    )
+
+    # Who already read notification
+    read_by = models.ManyToManyField(
+        User,
+        related_name='read_notifications',
+        blank=True
+    )
 
     # Redirect URL
-    url = models.CharField(max_length=255, blank=True)
+    url = models.CharField(
+        max_length=255,
+        blank=True
+    )
 
     def __str__(self):
         return self.title
-    
 
 
-
-
-
+# ─────────────────────────────────────────────
+# DEFAULTER STUDENT MODEL
+# ─────────────────────────────────────────────
 
 class DefaulterStudent(models.Model):
+
     roll_no = models.CharField(max_length=20)
+
     name = models.CharField(max_length=100)
+
     staff_incharge = models.CharField(max_length=100)
+
     department = models.CharField(max_length=10)
+
     year = models.IntegerField()
+
     reason = models.TextField()
 
     ACTION_CHOICES = [
+
         ('letter', 'Letter'),
+
         ('letter_seminar', 'Letter + Seminar'),
+
         ('letter_assignment', 'Letter + Assignment'),
+
     ]
 
     action_taken = models.CharField(
@@ -130,4 +275,5 @@ class DefaulterStudent(models.Model):
         blank=True
     )
 
-    
+    def __str__(self):
+        return f"{self.name} ({self.roll_no})"
