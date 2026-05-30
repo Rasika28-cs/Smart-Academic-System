@@ -36,7 +36,13 @@ class Student(models.Model):
     batch = models.CharField(max_length=20, default="2024-2028")
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     mentor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_students')
-
+    class_incharge = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ci_students'
+    )
     def __str__(self):
         return f"{self.name} ({self.roll_no})"
 
