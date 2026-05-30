@@ -7,34 +7,22 @@
   <title>Leave Status - Smart Attendance</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            background: "#F8FAFC",
-            surface: "#FFFFFF",
             primary: "#2563EB",
             "primary-dark": "#1D4ED8",
             outline: "#E2E8F0",
             "on-surface": "#0F172A",
             "on-surface-variant": "#64748B",
-            success: "#10B981",
             error: "#EF4444",
           },
-          fontFamily: {
-            sans: ["Inter", "sans-serif"],
-          },
+          fontFamily: { sans: ["Inter", "sans-serif"] },
         },
       },
     };
@@ -47,173 +35,77 @@
       color: #0f172a;
       -webkit-font-smoothing: antialiased;
     }
-
     .material-symbols-outlined {
-      font-variation-settings:
-        "FILL" 0,
-        "wght" 400,
-        "GRAD" 0,
-        "opsz" 24;
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
       vertical-align: middle;
     }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .status-badge-approved {
-      background-color: #ecfdf5;
-      color: #065f46;
-    }
-
-    .status-badge-pending {
-      background-color: #fffbeb;
-      color: #92400e;
-    }
-
-    .status-badge-rejected {
-      background-color: #fef2f2;
-      color: #991b1b;
-    }
-
+    .nav-link { transition: all 0.2s ease; }
+    .nav-link:hover { background-color: #f1f5f9; color: #2563eb; }
     .table-container {
-      box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.08),
-        0 4px 16px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
     }
-
-    .nav-link {
-      transition: all 0.2s ease;
-    }
-
-    .nav-link:hover {
-      background-color: #f1f5f9;
-      color: #2563eb;
-    }
+    {% include 'includes/leave_workflow_styles.html' %}
   </style>
 </head>
 
 <body class="min-h-screen flex flex-col">
 
-  <!-- Top Navigation -->
-  <nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
-    <a
-      href="{% url 'student_dashboard' %}"
-      class="flex items-center gap-2 font-bold text-primary text-lg no-underline"
-    >
-      <span class="material-symbols-outlined text-2xl">school</span>
-      <span class="hidden sm:inline">Smart Attendance</span>
+  <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 md:px-8 gap-4 sticky top-0 z-50">
+    <a href="{% url 'student_dashboard' %}" class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline min-w-0">
+      <span class="material-symbols-outlined text-2xl shrink-0">school</span>
+      <span class="hidden sm:inline truncate">Smart Attendance</span>
     </a>
-
-    <ul class="flex gap-1 ml-auto list-none items-center">
+    <ul class="flex gap-1 ml-auto list-none items-center shrink-0">
       <li>
-        <a
-          href="{% url 'student_dashboard' %}"
-          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline"
-        >
-          Dashboard
-        </a>
+        <a href="{% url 'student_dashboard' %}" class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline">Dashboard</a>
       </li>
       <li>
-        <a
-          href="{% url 'logout' %}"
-          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline"
-        >
-          Logout
-        </a>
+        <a href="{% url 'logout' %}" class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline">Logout</a>
       </li>
     </ul>
   </nav>
 
-  <!-- Main Content -->
-  <main class="flex-1 py-8 px-4 md:px-6 max-w-5xl mx-auto w-full">
+  <main class="flex-1 py-6 sm:py-8 px-4 md:px-6 max-w-6xl mx-auto w-full min-w-0">
 
-    <!-- Page Header -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-on-surface flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary">
-          assignment_turned_in
-        </span>
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+        <span class="material-symbols-outlined text-blue-600">assignment_turned_in</span>
         Leave Status
       </h1>
-      <p class="text-on-surface-variant text-sm mt-1">
-        Track all your submitted leave requests
-      </p>
+      <p class="text-slate-500 text-sm mt-1">Track your leave requests and approval progress</p>
     </div>
 
-    <!-- Leave Table -->
-    <div class="bg-surface border border-outline rounded-xl table-container overflow-hidden mb-8">
+    <!-- Desktop table -->
+    <div class="hidden lg:block bg-white border border-slate-200 rounded-xl table-container overflow-hidden mb-8">
       <div class="overflow-x-auto">
-        <table class="w-full border-collapse">
+        <table class="w-full border-collapse min-w-[720px]">
           <thead>
-            <tr class="bg-slate-50 border-b border-outline">
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant text-left">
-                From
-              </th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant text-left">
-                To
-              </th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant text-left">
-                Reason
-              </th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant text-left">
-                Status
-              </th>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">From</th>
+              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">To</th>
+              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">Reason</th>
+              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">Status</th>
+              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">Workflow</th>
             </tr>
           </thead>
-
-          <tbody class="divide-y divide-outline">
+          <tbody class="divide-y divide-slate-200">
             {% for leave in leaves %}
             <tr class="hover:bg-slate-50 transition-colors">
-              <td class="px-6 py-4 text-sm font-medium text-on-surface">
-                {{ leave.from_date }}
+              <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">{{ leave.from_date }}</td>
+              <td class="px-4 py-4 text-sm text-slate-500 whitespace-nowrap">{{ leave.to_date }}</td>
+              <td class="px-4 py-4 text-sm text-slate-500 max-w-[200px]">{{ leave.reason }}</td>
+              <td class="px-4 py-4">
+                {% include 'includes/leave_status_badge.html' with status=leave.status %}
               </td>
-              <td class="px-6 py-4 text-sm text-on-surface-variant">
-                {{ leave.to_date }}
-              </td>
-              <td class="px-6 py-4 text-sm text-on-surface-variant">
-                {{ leave.reason }}
-              </td>
-              <td class="px-6 py-4">
-                {% if leave.status == "Approved" %}
-                <span class="status-badge status-badge-approved">
-                  <span class="material-symbols-outlined text-sm">
-                    check_circle
-                  </span>
-                  Approved
-                </span>
-                {% elif leave.status == "Pending" %}
-                <span class="status-badge status-badge-pending">
-                  <span class="material-symbols-outlined text-sm">
-                    schedule
-                  </span>
-                  Pending
-                </span>
-                {% else %}
-                <span class="status-badge status-badge-rejected">
-                  <span class="material-symbols-outlined text-sm">
-                    cancel
-                  </span>
-                  Rejected
-                </span>
-                {% endif %}
+              <td class="px-4 py-4">
+                {% include 'includes/leave_workflow_steps.html' with status=leave.status %}
               </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="4" class="px-6 py-12">
-                <div class="flex flex-col items-center justify-center text-on-surface-variant">
-                  <span class="material-symbols-outlined text-5xl mb-3 text-slate-300">
-                    inbox
-                  </span>
-                  <p class="text-sm font-medium">No leave records found</p>
-                </div>
+              <td colspan="5" class="px-6 py-12 text-center">
+                <span class="material-symbols-outlined text-5xl mb-3 text-slate-300">inbox</span>
+                <p class="text-sm font-medium text-slate-500">No leave records found</p>
               </td>
             </tr>
             {% endfor %}
@@ -222,22 +114,40 @@
       </div>
     </div>
 
-    <!-- Back Button -->
-    <a
-      href="{% url 'student_dashboard' %}"
-      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-all shadow-sm hover:shadow-md no-underline"
-    >
+    <!-- Mobile / tablet cards -->
+    <div class="lg:hidden space-y-4 mb-8">
+      {% for leave in leaves %}
+      <article class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm min-w-0">
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Leave Period</p>
+            <p class="text-sm font-semibold">{{ leave.from_date }} → {{ leave.to_date }}</p>
+          </div>
+          {% include 'includes/leave_status_badge.html' with status=leave.status %}
+        </div>
+        <p class="text-sm text-slate-500 mb-4 break-words">{{ leave.reason }}</p>
+        <div class="pt-3 border-t border-slate-200">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Progress</p>
+          {% include 'includes/leave_workflow_steps.html' with status=leave.status %}
+        </div>
+      </article>
+      {% empty %}
+      <div class="bg-white border border-slate-200 rounded-xl p-10 text-center">
+        <span class="material-symbols-outlined text-5xl mb-3 text-slate-300">inbox</span>
+        <p class="text-sm font-medium text-slate-500">No leave records found</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <a href="{% url 'student_dashboard' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm no-underline">
       <span class="material-symbols-outlined text-lg">arrow_back</span>
       Back to Dashboard
     </a>
   </main>
 
-<!-- Footer (from Document 17) -->
-<footer class="bg-surface border-t border-outline text-center py-6 px-4">
-<p class="text-xs text-on-surface-variant">
-      © 2026 Smart Academic System • Department of Computer Science and Engineering
-    </p>
-</footer>
+  <footer class="bg-white border-t border-slate-200 text-center py-6 px-4">
+    <p class="text-xs text-slate-500">© 2026 Smart Academic System • Department of Computer Science and Engineering</p>
+  </footer>
 
 </body>
 </html>

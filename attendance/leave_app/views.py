@@ -456,9 +456,50 @@ def hod_dashboard(request):
     if sort_order == 'low':
         students = students.order_by('perc')
 
-    # For Chart.js
-    names = [s.name for s in students[:15]]
-    percentages = [round(s.perc, 2) for s in students[:15]]
+    # --- Analytics for Charts ---
+    
+    # 1. Monthly Trend: Students Present per day (last 21 days)
+    today_dt = date.today()
+    start_date = today_dt - timedelta(days=21)
+    trend_data = Attendance.objects.filter(date__gte=start_date).values('date').annotate(
+        present_count=Count('id', filter=Q(status='Present'))
+    ).order_by('date')
+    
+    trend_labels = [d['date'].strftime('%b %d') for d in trend_data]
+    trend_values = [d['present_count'] for d in trend_data]
+
+    # 2. Subject-wise Attendance
+    subject_stats = Attendance.objects.values('subject__name', 'subject__code').annotate(
+        total=Count('id'),
+        present=Count('id', filter=Q(status='Present')),
+        leave=Count('id', filter=Q(status='Leave')),
+    ).annotate(
+        perc=Case(
+            When(total__gt=0, then=(F('present') * 100.0) / F('total')),
+            default=0.0, output_field=FloatField()
+        )
+    ).order_by('subject__name')
+    
+    sub_names = [s['subject__name'] or 'General' for s in subject_stats]
+    sub_percs = [round(s['perc'], 2) for s in subject_stats]
+
+    # 3. Overall Distribution (P / L / A)
+    total_stats = Attendance.objects.aggregate(
+        p=Count('id', filter=Q(status='Present')),
+        l=Count('id', filter=Q(status='Leave')),
+        a=Count('id', filter=Q(status='Absent'))
+    )
+    dist_data = [total_stats['p'], total_stats['l'], total_stats['a']]
+
+    # Original Summary Stats
+    total_students = Student.objects.count()
+    above_75_count = students.filter(perc__gte=75).count()
+    below_75_count = students.filter(perc__lt=75).count()
+    dept_avg = students.aggregate(Avg('perc'))['perc__avg'] or 0
+
+    # For Chart.js (Original)
+    names = [s.name for s in students[:12]]
+    percentages = [round(s.perc, 2) for s in students[:12]]
 
     daily_records = []
     if selected_date:
@@ -466,8 +507,17 @@ def hod_dashboard(request):
 
     return render(request, 'hod_dashboard.html', {
         'students': students,
-        'names': names,
-        'percentages': percentages,
+        'names': json.dumps(names),
+        'percentages': json.dumps(percentages),
+        'trend_labels': json.dumps(trend_labels),
+        'trend_values': json.dumps(trend_values),
+        'sub_names': json.dumps(sub_names),
+        'sub_percs': json.dumps(sub_percs),
+        'dist_data': json.dumps(dist_data),
+        'total_students': total_students,
+        'above_75_count': above_75_count,
+        'below_75_count': below_75_count,
+        'department_average': round(dept_avg, 1),
         'search_query': search_query,
         'selected_date': selected_date,
         'daily_records': daily_records,
@@ -609,3 +659,22 @@ def student_results(request):
 def view_od_status(request):
     ods = ODApplication.objects.filter(student_user=request.user)
     return render(request, 'od_status.html', {'ods': ods})
+
+def dashboard_redirect(request):
+    user = request.user
+
+    if not user.is_authenticated:
+        return redirect("login_page")
+
+    groups = set(user.groups.values_list("name", flat=True))
+
+    print("DEBUG GROUPS:", groups)
+
+    if "Mentor" in groups:
+        return redirect("mentor_dashboard")
+
+    if "ClassIncharge" in groups:
+        return redirect("class_incharge_dashboard")
+
+
+    return redirect("login_page")

@@ -1,0 +1,63 @@
+{# Workflow stepper. Expects: status (leave.status string) #}
+<div class="workflow-track">
+  <div class="workflow-step step-done">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">check</span>
+    <span class="step-label">Submitted</span>
+  </div>
+
+  {% if status == "PENDING_MENTOR" %}
+  <div class="workflow-step step-active">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">pending</span>
+    <span class="step-label">Mentor Review</span>
+  </div>
+  {% elif status == "REJECTED_BY_MENTOR" %}
+  <div class="workflow-step step-active-rejected">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">close</span>
+    <span class="step-label">Mentor Review</span>
+  </div>
+  {% else %}
+  <div class="workflow-step step-done">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">check</span>
+    <span class="step-label">Mentor Review</span>
+  </div>
+  {% endif %}
+
+  {% if status == "PENDING_CLASSINCHARGE" or status == "APPROVED_BY_MENTOR" %}
+  <div class="workflow-step step-active-ci">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">fact_check</span>
+    <span class="step-label">CI Review</span>
+  </div>
+  {% elif status == "REJECTED" %}
+  <div class="workflow-step step-active-rejected">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">close</span>
+    <span class="step-label">CI Review</span>
+  </div>
+  {% elif status == "APPROVED" %}
+  <div class="workflow-step step-done">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">check</span>
+    <span class="step-label">CI Review</span>
+  </div>
+  {% else %}
+  <div class="workflow-step step-pending">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">radio_button_unchecked</span>
+    <span class="step-label">CI Review</span>
+  </div>
+  {% endif %}
+
+  {% if status == "APPROVED" %}
+  <div class="workflow-step step-active-done">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">task_alt</span>
+    <span class="step-label">Completed</span>
+  </div>
+  {% elif status == "REJECTED" or status == "REJECTED_BY_MENTOR" %}
+  <div class="workflow-step step-active-rejected">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">block</span>
+    <span class="step-label">Completed</span>
+  </div>
+  {% else %}
+  <div class="workflow-step step-pending">
+    <span class="step-icon material-symbols-outlined" style="font-size:14px;">radio_button_unchecked</span>
+    <span class="step-label">Completed</span>
+  </div>
+  {% endif %}
+</div>

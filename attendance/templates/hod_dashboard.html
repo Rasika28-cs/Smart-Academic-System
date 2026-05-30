@@ -1,503 +1,656 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HOD Dashboard - Smart Attendance</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      :root {
-        --primary: #1a56db;
-        --primary-dk: #1342b0;
-        --primary-lt: #e8f0fd;
-        --accent: #0ea472;
-        --accent-lt: #e6f7f1;
-        --surface: #fff;
-        --bg: #f1f5f9;
-        --border: #e2e8f0;
-        --text: #0f172a;
-        --muted: #64748b;
-        --danger: #dc2626;
-        --warning: #d97706;
-      }
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        font-family: "DM Sans", sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-      .sa-nav {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        height: 64px;
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        padding: 0 32px;
-        gap: 16px;
-      }
-      .sa-nav-brand {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 700;
-        color: var(--primary);
-        text-decoration: none;
-      }
-      .sa-nav-links {
-        display: flex;
-        gap: 4px;
-        margin-left: auto;
-        list-style: none;
-      }
-      .sa-nav-links a {
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--muted);
-        text-decoration: none;
-        transition: all 0.15s;
-      }
-      .sa-nav-links a.logout {
-        color: var(--danger);
-      }
-      .sa-page {
-        flex: 1;
-        padding: 32px 24px;
-        max-width: 1100px;
-        margin: 0 auto;
-        width: 100%;
-      }
-      .page-header {
-        margin-bottom: 28px;
-      }
-      .page-header h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-      }
-      .page-header p {
-        color: var(--muted);
-        font-size: 13px;
-        margin-top: 4px;
-      }
-      .sa-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        box-shadow:
-          0 1px 3px rgba(0, 0, 0, 0.08),
-          0 4px 16px rgba(0, 0, 0, 0.06);
-        padding: 24px;
-        margin-bottom: 24px;
-      }
-      .sa-card-title {
-        font-size: 15px;
-        font-weight: 700;
-        margin-bottom: 18px;
-        padding-bottom: 14px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .sa-table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      .sa-table thead tr {
-        background: linear-gradient(90deg, var(--primary), #2563eb);
-      }
-      .sa-table th {
-        padding: 12px 16px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: rgba(255, 255, 255, 0.9);
-        text-align: left;
-      }
-      .sa-table td {
-        padding: 12px 16px;
-        font-size: 14px;
-        border-bottom: 1px solid var(--border);
-        vertical-align: middle;
-      }
-      .sa-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .sa-table tbody tr:hover {
-        background: #fafbfd;
-      }
-      .low {
-        color: var(--danger);
-        font-weight: 700;
-      }
-      .good {
-        color: var(--accent);
-        font-weight: 700;
-      }
-      .search-row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 18px;
-        flex-wrap: wrap;
-      }
-      .sa-input {
-        padding: 9px 14px;
-        border: 1.5px solid var(--border);
-        border-radius: 10px;
-        font-family: "DM Sans", sans-serif;
-        font-size: 14px;
-        color: var(--text);
-        background: var(--surface);
-        outline: none;
-        transition: all 0.15s;
-      }
-      .sa-input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
-      }
-      .sa-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 9px 18px;
-        border-radius: 10px;
-        border: none;
-        font-family: "DM Sans", sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.18s;
-        text-decoration: none;
-      }
-      .sa-btn-primary {
-        background: var(--primary);
-        color: #fff;
-      }
-      .sa-btn-primary:hover {
-        background: var(--primary-dk);
-      }
-      .sa-btn-ghost {
-        background: var(--bg);
-        color: var(--text);
-        border: 1.5px solid var(--border);
-      }
-      .sa-btn-ghost:hover {
-        border-color: #c0cfe8;
-      }
-      .sa-badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 100px;
-        font-size: 12px;
-        font-weight: 600;
-      }
-      .sa-badge-danger {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-      .sa-badge-success {
-        background: var(--accent-lt);
-        color: #065f46;
-      }
-      .chart-wrap {
-        position: relative;
-        height: 320px;
-      }
-      .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-      }
-      @media (max-width: 700px) {
-        .grid-2 {
-          grid-template-columns: 1fr;
-        }
-      }
-      .sa-footer {
-        background: var(--surface);
-        border-top: 1px solid var(--border);
-        text-align: center;
-        padding: 16px;
-        font-size: 13px;
-        color: var(--muted);
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="sa-nav">
-      <a class="sa-nav-brand" href="#">
-        <i class="bi bi-mortarboard-fill" style="font-size: 1.3rem"></i> Smart
-        Attendance
-      </a>
-      <ul class="sa-nav-links">
-        <li>
-          <a
-            href="#"
-            style="
-              background: var(--primary-lt);
-              color: var(--primary);
-              font-weight: 600;
-              border-radius: 8px;
-              padding: 6px 12px;
-            "
-            >HOD Dashboard</a
-          >
-        </li>
-        <li><a href="{% url 'logout' %}" class="logout">Logout</a></li>
-      </ul>
-    </nav>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>HOD Dashboard – Smart Attendance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary:     #1a56db;
+      --primary-dk:  #1342b0;
+      --primary-lt:  #e8f0fd;
+      --accent:      #0ea472;
+      --accent-lt:   #e6f7f1;
+      --surface:     #ffffff;
+      --bg:          #f0f4fb;
+      --border:      #e2e8f0;
+      --text:        #0f172a;
+      --muted:       #64748b;
+      --danger:      #dc2626;
+      --danger-lt:   #fee2e2;
+      --warning:     #d97706;
+      --warning-lt:  #fef3c7;
+      --r:           14px;
+      --shadow:      0 1px 3px rgba(0,0,0,.06), 0 6px 20px rgba(0,0,0,.07);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
 
-    <div class="sa-page">
-      <div class="page-header">
-        <h1>📊 HOD Dashboard</h1>
-        <p>Manage and monitor student attendance across your department</p>
+    /* ── NAV ── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      height: 60px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 28px; gap: 12px;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 800; font-size: 15px;
+      color: var(--primary); text-decoration: none;
+    }
+    .nav-pill {
+      font-size: 10.5px; font-weight: 800; letter-spacing: .07em;
+      text-transform: uppercase;
+      background: var(--primary-lt); color: var(--primary);
+      padding: 3px 10px; border-radius: 100px;
+    }
+    .nav-links { display: flex; gap: 4px; margin-left: auto; list-style: none; }
+    .nav-links a {
+      padding: 6px 13px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; color: var(--muted); text-decoration: none; transition: .15s;
+    }
+    .nav-links a:hover { background: var(--bg); color: var(--text); }
+    .nav-links a.logout { color: var(--danger); }
+    .nav-links a.logout:hover { background: var(--danger-lt); }
+
+    /* ── PAGE ── */
+    .page { flex: 1; padding: 32px 24px; max-width: 1160px; margin: 0 auto; width: 100%; }
+
+    /* page header */
+    .ph { margin-bottom: 28px; }
+    .ph h1 { font-size: 1.45rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .ph p  { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); box-shadow: var(--shadow);
+      padding: 22px; margin-bottom: 22px;
+    }
+    .card-title {
+      font-size: 14px; font-weight: 800;
+      padding-bottom: 14px; margin-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── KPI STRIP ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+      gap: 16px; margin-bottom: 22px;
+    }
+    .kpi {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); box-shadow: var(--shadow);
+      padding: 20px 18px; position: relative; overflow: hidden;
+      animation: fadeUp .45s both;
+    }
+    .kpi:nth-child(1){animation-delay:.05s}
+    .kpi:nth-child(2){animation-delay:.1s}
+    .kpi:nth-child(3){animation-delay:.15s}
+    .kpi:nth-child(4){animation-delay:.2s}
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .kpi-bg-icon {
+      position: absolute; right: 12px; top: 10px;
+      font-size: 2.6rem; opacity: .07; pointer-events: none;
+    }
+    .kpi-label {
+      font-size: 10.5px; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+    }
+    .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .kpi-sub   { font-size: 11.5px; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+    .kpi.blue   .kpi-value { color: var(--primary); }
+    .kpi.blue   .kpi-sub   { color: var(--primary); }
+    .kpi.green  .kpi-value { color: var(--accent); }
+    .kpi.green  .kpi-sub   { color: var(--accent); }
+    .kpi.red    .kpi-value { color: var(--danger); }
+    .kpi.red    .kpi-sub   { color: var(--danger); }
+    .kpi.amber  .kpi-value { color: var(--warning); }
+    .kpi.amber  .kpi-sub   { color: var(--warning); }
+
+    /* ── CHART GRIDS ── */
+    .charts-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 22px; margin-bottom: 22px;
+    }
+    .charts-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px; margin-bottom: 22px;
+    }
+    @media(max-width:800px){
+      .charts-top, .charts-bottom { grid-template-columns: 1fr; }
+    }
+    .chart-wrap { position: relative; height: 280px; }
+    .chart-sm   { position: relative; height: 220px; }
+    .donut-wrap {
+      position: relative; height: 200px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* legend */
+    .legend { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .legend-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; display: inline-block; }
+
+    /* ── TWO-COL ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 22px; }
+    @media(max-width:700px){ .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── TABLE ── */
+    .tbl-wrap { overflow-x: auto; border-radius: 10px; }
+    table  { width: 100%; border-collapse: collapse; }
+    thead tr { background: linear-gradient(90deg,var(--primary),#2563eb); }
+    th {
+      padding: 11px 15px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .07em;
+      color: rgba(255,255,255,.9); text-align: left; white-space: nowrap;
+    }
+    td { padding: 11px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafbfd; }
+
+    /* progress bar */
+    .prog { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; width: 100px; }
+    .prog-fill { height: 100%; border-radius: 99px; }
+
+    /* badges */
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11.5px; font-weight: 700; }
+    .badge-ok  { background: var(--accent-lt);  color: #065f46; }
+    .badge-low { background: var(--danger-lt);  color: #991b1b; }
+    .badge-lv  { background: var(--warning-lt); color: #92400e; }
+
+    /* search */
+    .search-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .sa-input {
+      padding: 8px 13px; border: 1.5px solid var(--border);
+      border-radius: 9px; font-family: inherit; font-size: 14px;
+      color: var(--text); background: var(--surface); outline: none; transition: .15s;
+    }
+    .sa-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
+    .sa-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 17px; border-radius: 9px; border: none;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: .18s; text-decoration: none;
+    }
+    .btn-p { background: var(--primary); color: #fff; }
+    .btn-p:hover { background: var(--primary-dk); }
+    .btn-g { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-g:hover { border-color: #9bb5e0; }
+
+    /* empty */
+    .empty { padding: 30px; text-align: center; color: var(--muted); font-size: 13px; }
+    .empty i { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+    /* low alert cards */
+    .alert-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr)); gap: 12px; }
+    .alert-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 13px 15px;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: border-color .2s;
+    }
+    .alert-card:hover { border-color: #fca5a5; }
+    .ac-name { font-weight: 700; }
+    .ac-roll { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .ac-pct  { font-size: 1.3rem; font-weight: 900; color: var(--danger); }
+
+    .text-low  { color: var(--danger); font-weight: 700; }
+    .text-good { color: var(--accent);  font-weight: 700; }
+
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      text-align: center; padding: 14px; font-size: 12.5px; color: var(--muted);
+    }
+
+    /* chart tab buttons */
+    .tab-row { display: flex; gap: 6px; margin-bottom: 16px; }
+    .tab-btn {
+      padding: 5px 13px; border-radius: 7px; border: 1.5px solid var(--border);
+      font-family: inherit; font-size: 12.5px; font-weight: 700;
+      cursor: pointer; background: var(--bg); color: var(--muted); transition: .15s;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="#">
+    <i class="bi bi-mortarboard-fill"></i> Smart Attendance
+  </a>
+  <span class="nav-pill">HOD Portal</span>
+  <ul class="nav-links">
+    <li>
+      <a href="#" style="background:var(--primary-lt);color:var(--primary)">HOD Dashboard</a>
+    </li>
+    <li><a href="{% url 'logout' %}" class="logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+  <div class="ph">
+    <h1><i class="bi bi-bar-chart-line-fill" style="color:var(--primary)"></i> HOD Dashboard</h1>
+    <p>Monitor and manage student attendance across your department</p>
+  </div>
+
+  <!-- ── KPI CARDS ── -->
+  <div class="kpi-grid">
+    <div class="kpi blue">
+      <i class="bi bi-people-fill kpi-bg-icon"></i>
+      <div class="kpi-label">Total Students</div>
+      <div class="kpi-value">{{ total_students }}</div>
+      <div class="kpi-sub"><i class="bi bi-person-check"></i> Enrolled this semester</div>
+    </div>
+    <div class="kpi green">
+      <i class="bi bi-check-circle-fill kpi-bg-icon"></i>
+      <div class="kpi-label">Above 75%</div>
+      <div class="kpi-value">{{ above_75_count }}</div>
+      <div class="kpi-sub"><i class="bi bi-arrow-up-short"></i> On track</div>
+    </div>
+    <div class="kpi red">
+      <i class="bi bi-exclamation-triangle-fill kpi-bg-icon"></i>
+      <div class="kpi-label">Below 75%</div>
+      <div class="kpi-value">{{ below_75_count }}</div>
+      <div class="kpi-sub"><i class="bi bi-exclamation-circle"></i> Needs action</div>
+    </div>
+    <div class="kpi amber">
+      <i class="bi bi-graph-up kpi-bg-icon"></i>
+      <div class="kpi-label">Dept. Average</div>
+      <div class="kpi-value">{{ department_average }}</div>
+      <div class="kpi-sub"><i class="bi bi-activity"></i> Overall</div>
+    </div>
+  </div>
+
+  <!-- ── TREND & DISTRIBUTION ROW ── -->
+  <div class="charts-top">
+
+    <!-- Line: Dept Trend -->
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">
+        <i class="bi bi-graph-up-arrow" style="color:var(--primary)"></i>
+        Department Performance Trend
       </div>
-
-      <!-- All Students Table -->
-      <div class="sa-card">
-        <div class="sa-card-title">
-          <i class="bi bi-people-fill"></i> All Students Attendance
-        </div>
-        <form method="GET" class="search-row">
-          <input
-            class="sa-input"
-            type="text"
-            name="search"
-            placeholder="🔍 Search student..."
-            value="{{ search_query }}"
-            style="flex: 1; min-width: 180px"
-          />
-          <button type="submit" class="sa-btn sa-btn-primary">
-            <i class="bi bi-search"></i> Search
-          </button>
-          <a href="?sort=low" class="sa-btn sa-btn-ghost"
-            ><i class="bi bi-sort-down"></i> Sort Lowest</a
-          >
-        </form>
-        <div style="overflow-x: auto; border-radius: 12px">
-          <table class="sa-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Roll No</th>
-                <th>Attendance %</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for student in students %}
-              <tr>
-                <td>{{ student.name }}</td>
-                <td>{{ student.roll_no }}</td>
-                <td
-                  class="{% if student.percentage < 75 %}low{% else %}good{% endif %}"
-                >
-                  {{ student.percentage }}%
-                </td>
-                <td>
-                  {% if student.percentage < 75 %}
-                  <span class="sa-badge sa-badge-danger">⚠ Low</span>
-                  {% else %}
-                  <span class="sa-badge sa-badge-success">✓ Good</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+      <div class="chart-wrap">
+        <canvas id="trendChart"></canvas>
       </div>
-
-      <div class="grid-2">
-        <!-- Low Attendance -->
-        <div class="sa-card">
-          <div class="sa-card-title" style="color: var(--danger)">
-            <i class="bi bi-exclamation-triangle-fill"></i> Low Attendance
-            (&lt;75%)
-          </div>
-          <div style="overflow-x: auto; border-radius: 12px">
-            <table class="sa-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Roll No</th>
-                  <th>%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for student in students %} {% if student.percentage < 75 %}
-                <tr>
-                  <td>{{ student.name }}</td>
-                  <td>{{ student.roll_no }}</td>
-                  <td class="low">{{ student.percentage }}%</td>
-                </tr>
-                {% endif %} {% empty %}
-                <tr>
-                  <td
-                    colspan="3"
-                    style="
-                      text-align: center;
-                      color: var(--muted);
-                      padding: 24px;
-                    "
-                  >
-                    🎉 No low attendance students
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Daily Report -->
-        <div class="sa-card">
-          <div class="sa-card-title">
-            <i class="bi bi-calendar3"></i> Daily Attendance Report
-          </div>
-          <form method="GET" class="search-row" style="margin-bottom: 16px">
-            <input
-              class="sa-input"
-              type="date"
-              name="date"
-              value="{{ selected_date }}"
-              style="flex: 1"
-            />
-            <button type="submit" class="sa-btn sa-btn-primary">
-              <i class="bi bi-search"></i> View
-            </button>
-          </form>
-          {% if daily_records %}
-          <p
-            style="
-              font-size: 13px;
-              font-weight: 600;
-              margin-bottom: 10px;
-              color: var(--muted);
-            "
-          >
-            {{ selected_date }}
-          </p>
-          <div style="overflow-x: auto; border-radius: 12px">
-            <table class="sa-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Roll No</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for record in daily_records %}
-                <tr>
-                  <td>{{ record.name }}</td>
-                  <td>{{ record.roll_no }}</td>
-                  <td>
-                    {% if record.status == "Present" %}
-                    <span class="sa-badge sa-badge-success">Present</span>
-                    {% elif record.status == "Leave" %}
-                    <span
-                      class="sa-badge"
-                      style="background: #facc15; color: #000"
-                      >Leave</span
-                    >
-                    {% else %}
-                    <span class="sa-badge sa-badge-danger">Absent</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% else %}
-          <p
-            style="
-              text-align: center;
-              color: var(--muted);
-              padding: 24px;
-              font-size: 13px;
-            "
-          >
-            Select a date to view report
-          </p>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Chart -->
-      <div class="sa-card">
-        <div class="sa-card-title">
-          <i class="bi bi-bar-chart-fill"></i> Attendance Overview
-        </div>
-        <div class="chart-wrap">
-          <canvas id="attendanceChart"></canvas>
-        </div>
-      </div>
-      
     </div>
 
-    <footer class="sa-footer">&copy; 2026 Smart Attendance System</footer>
+    <!-- Doughnut: Overall Status Distribution -->
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">
+        <i class="bi bi-pie-chart-fill" style="color:var(--accent)"></i>
+        Current Status Breakdown
+      </div>
+      <div class="donut-wrap" style="height: 180px;">
+        <canvas id="distChart"></canvas>
+      </div>
+      <div class="legend" style="margin-top: 20px;">
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:var(--accent)"></span>Present</span>
+          <strong id="dist-p">0</strong>
+        </div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:var(--warning)"></span>Leave</span>
+          <strong id="dist-l">0</strong>
+        </div>
+        <div class="legend-row">
+          <span><span class="leg-dot" style="background:var(--danger)"></span>Absent</span>
+          <strong id="dist-a">0</strong>
+        </div>
+      </div>
+    </div>
 
-   <script>
-  const labels = JSON.parse('{{ names|escapejs }}');
-  const dataValues = JSON.parse('{{ percentages|escapejs }}');
+  </div>
 
-  const ctx = document.getElementById('attendanceChart');
+  <!-- ── SUBJECT & RANGE ROW ── -->
+  <div class="charts-bottom">
 
-  new Chart(ctx, {
-      type: 'bar',
-      data: {
-          labels: labels,
-          datasets: [{
-              label: 'Attendance %',
-              data: dataValues,
-              backgroundColor: dataValues.map(v =>
-                  v < 75 ? 'rgba(220,38,38,.7)' : 'rgba(14,164,114,.7)'
-              ),
-              borderColor: dataValues.map(v =>
-                  v < 75 ? '#dc2626' : '#0ea472'
-              ),
-              borderWidth: 1.5,
-              borderRadius: 6
-          }]
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-              y: {
-                  beginAtZero: true,
-                  max: 100,
-                  grid: { color: '#e2e8f0' }
-              },
-              x: { grid: { display: false } }
-          }
+    <!-- Bar: Subject-wise Attendance -->
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">
+        <i class="bi bi-book-half" style="color:var(--primary)"></i>
+        Subject-wise Attendance %
+      </div>
+      <div class="chart-sm">
+        <canvas id="subjectChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Bar: Attendance Range Buckets -->
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">
+        <i class="bi bi-layers-half" style="color:var(--warning)"></i>
+        Student Distribution by Range
+      </div>
+      <div class="chart-sm">
+        <canvas id="rangeChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TOP PERFORMERS (Horizontal) ── -->
+  <div class="card">
+    <div class="card-title">
+      <i class="bi bi-stars" style="color:#f59e0b"></i>
+      Individual Student Performance (Top 12)
+    </div>
+    <div class="chart-wrap" style="height: 350px;">
+      <canvas id="studentBarChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── ALL STUDENTS TABLE ── -->
+  <div class="card">
+    <div class="card-title">
+      <i class="bi bi-people-fill" style="color:var(--primary)"></i>
+      Detailed Attendance Registry
+    </div>
+    <form method="GET" class="search-row">
+      <input class="sa-input" type="text" name="search"
+        placeholder="🔍 Search student roll or name…"
+        value="{{ search_query }}" style="flex:1;min-width:180px"/>
+      <button type="submit" class="sa-btn btn-p">
+        <i class="bi bi-search"></i> Search
+      </button>
+      <a href="?sort=low" class="sa-btn btn-g">
+        <i class="bi bi-sort-down"></i> Sort Lowest %
+      </a>
+    </form>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Name</th><th>Roll No</th>
+            <th>Attendance %</th><th>Progress</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr>
+            <td style="color:var(--muted);font-size:12px">{{ forloop.counter }}</td>
+            <td style="font-weight:600">{{ student.name }}</td>
+            <td style="color:var(--muted)">{{ student.roll_no }}</td>
+            <td class="{% if student.perc < 75 %}text-low{% else %}text-good{% endif %}">
+              {{ student.perc|floatformat:1 }}%
+            </td>
+            <td>
+              <div class="prog">
+                <div class="prog-fill" style="width:{{ student.perc }}%;background:{% if student.perc < 75 %}var(--danger){% else %}var(--accent){% endif %}"></div>
+              </div>
+            </td>
+            <td>
+              {% if student.perc < 75 %}
+                <span class="badge badge-low">⚠ Defaulter</span>
+              {% else %}
+                <span class="badge badge-ok">✓ Regular</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6">
+            <div class="empty">
+              <i class="bi bi-person-slash"></i>
+              No students found{% if search_query %} matching "{{ search_query }}"{% endif %}.
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── GRID: LOW ATTENDANCE + DAILY REPORT ── -->
+  <div class="grid-2">
+
+    <!-- Low Attendance -->
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title" style="color:var(--danger)">
+        <i class="bi bi-exclamation-triangle-fill"></i> Defaulter Watchlist (&lt;75%)
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Roll No</th><th>%</th></tr></thead>
+          <tbody>
+            {% for student in students %}
+              {% if student.perc < 75 %}
+              <tr>
+                <td style="font-weight:600">{{ student.name }}</td>
+                <td style="color:var(--muted)">{{ student.roll_no }}</td>
+                <td class="text-low">{{ student.perc|floatformat:1 }}%</td>
+              </tr>
+              {% endif %}
+            {% empty %}
+            <tr><td colspan="3">
+              <div class="empty"><i class="bi bi-emoji-smile"></i>No students below 75% 🎉</div>
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Daily Report -->
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">
+        <i class="bi bi-calendar3" style="color:var(--primary)"></i> Daily Attendance Report
+      </div>
+      <form method="GET" class="search-row">
+        <input class="sa-input" type="date" name="date"
+          value="{{ selected_date }}" style="flex:1"/>
+        <button type="submit" class="sa-btn btn-p">
+          <i class="bi bi-search"></i> View
+        </button>
+      </form>
+      {% if daily_records %}
+      <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:12px">{{ selected_date }}</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Roll No</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for record in daily_records %}
+            <tr>
+              <td style="font-weight:600">{{ record.student.name }}</td>
+              <td style="color:var(--muted)">{{ record.student.roll_no }}</td>
+              <td>
+                {% if record.status == "Present" %}
+                  <span class="badge badge-ok">Present</span>
+                {% elif record.status == "Leave" %}
+                  <span class="badge badge-lv">Leave</span>
+                {% else %}
+                  <span class="badge badge-low">Absent</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty">
+        <i class="bi bi-calendar-x"></i>
+        {% if selected_date %}No records for {{ selected_date }}.{% else %}Select a date to view report.{% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div><!-- /grid-2 -->
+
+</div><!-- /page -->
+
+<footer>&copy; 2026 Smart Attendance System &nbsp;·&nbsp; CSE Department</footer>
+
+<script>
+  /* ── Data from Django ── */
+  const names       = JSON.parse('{{ names|safe }}');
+  const percentages = JSON.parse('{{ percentages|safe }}');
+  const trendLabels = JSON.parse('{{ trend_labels|safe }}');
+  const trendValues = JSON.parse('{{ trend_values|safe }}');
+  const subNames    = JSON.parse('{{ sub_names|safe }}');
+  const subPercs    = JSON.parse('{{ sub_percs|safe }}');
+  const distData    = JSON.parse('{{ dist_data|safe }}');
+
+  // Update distribution legend numbers
+  document.getElementById('dist-p').innerText = distData[0] || 0;
+  document.getElementById('dist-l').innerText = distData[1] || 0;
+  document.getElementById('dist-a').innerText = distData[2] || 0;
+
+  const baseOpts = { 
+    responsive:true, 
+    maintainAspectRatio:false,
+    plugins: {
+      legend: { display: false }
+    }
+  };
+
+  /* ── 1. LINE: Performance Trend ── */
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        label: 'Present Students',
+        data: trendValues,
+        borderColor: '#1a56db',
+        backgroundColor: 'rgba(26,86,219,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#1a56db',
+        pointBorderWidth: 2,
+        borderWidth: 3
+      }]
+    },
+    options: {
+      ...baseOpts,
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
       }
+    }
+  });
+
+  /* ── 2. DOUGHNUT: Current Status Distribution ── */
+  new Chart(document.getElementById('distChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Present', 'Leave', 'Absent'],
+      datasets: [{
+        data: distData,
+        backgroundColor: ['#0ea472', '#d97706', '#dc2626'],
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 15
+      }]
+    },
+    options: {
+      ...baseOpts,
+      cutout: '75%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true }
+      }
+    }
+  });
+
+  /* ── 3. BAR: Subject-wise Attendance ── */
+  new Chart(document.getElementById('subjectChart'), {
+    type: 'bar',
+    data: {
+      labels: subNames,
+      datasets: [{
+        label: 'Avg Attendance %',
+        data: subPercs,
+        backgroundColor: 'rgba(26,86,219,0.7)',
+        borderRadius: 8,
+        barThickness: 30
+      }]
+    },
+    options: {
+      ...baseOpts,
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  /* ── 4. BAR: Range Buckets ── */
+  // Range buckets - recalculated in JS for safety
+  let buckets = [0, 0, 0, 0, 0];
+  {% for student in students %}
+    var pVal = {{ student.perc }};
+    if (pVal < 50) buckets[0]++;
+    else if (pVal < 60) buckets[1]++;
+    else if (pVal < 75) buckets[2]++;
+    else if (pVal < 85) buckets[3]++;
+    else buckets[4]++;
+  {% endfor %}
+
+  new Chart(document.getElementById('rangeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['<50%', '50-60%', '60-75%', '75-85%', '>85%'],
+      datasets: [{
+        data: buckets,
+        backgroundColor: ['#dc2626', '#f97316', '#fbbf24', '#34d399', '#3b82f6'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      ...baseOpts,
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  /* ── 5. LARGE BAR: Top Students ── */
+  new Chart(document.getElementById('studentBarChart'), {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{
+        label: 'Attendance %',
+        data: percentages,
+        backgroundColor: percentages.map(v => v < 75 ? 'rgba(220,38,38,0.7)' : 'rgba(14,164,114,0.7)'),
+        borderColor: percentages.map(v => v < 75 ? '#dc2626' : '#0ea472'),
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      ...baseOpts,
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+        x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45 } }
+      }
+    }
   });
 </script>
-  </body>
+</body>
 </html>

@@ -4,10 +4,12 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1" name="viewport" />
-  <title>Today's Leave Requests - Smart Academic System</title>
+  <title>Mentor Leave Requests - Smart Academic System</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
   <script>
@@ -77,206 +79,249 @@
   </style>
 </head>
 
-
 <body class="min-h-screen flex flex-col">
-<form method="GET">
 
-    <select name="batch" onchange="this.form.submit()">
-
-        <option value="">All Years</option>
-
-        {% for batch in batches %}
-
-            <option value="{{ batch }}"
-                {% if batch == selected_batch %}selected{% endif %}>
-
-                {{ batch }}
-
-            </option>
-
-        {% endfor %}
-
-    </select>
-
-</form>
-  <!-- Top Navigation (Copied from leave_status.html) -->
+  <!-- Navbar -->
   <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
+
     <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline"
-       href="{% url 'teacher_dashboard' %}">
+       href="{% url 'dashboard' %}">
+
       <span class="material-symbols-outlined text-2xl">school</span>
-      <span class="hidden sm:inline">Smart Attendance</span>
+
+      <span class="hidden sm:inline">
+        Smart Attendance
+      </span>
+
     </a>
 
     <ul class="flex gap-1 ml-auto list-none items-center">
+
       <li>
         <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline"
-           href="{% url 'teacher_dashboard' %}">
+           href="{% url 'dashboard' %}">
           Dashboard
         </a>
       </li>
+
       <li>
         <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline"
            href="{% url 'logout' %}">
           Logout
         </a>
       </li>
+
     </ul>
   </nav>
 
-  <!-- Main Content -->
+  <!-- Main -->
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
 
     <!-- Header -->
     <div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+
       <div>
+
         <div class="flex items-center gap-3 mb-1">
-          <span class="material-symbols-outlined text-primary text-3xl">fact_check</span>
+
+          <span class="material-symbols-outlined text-primary text-3xl">
+            fact_check
+          </span>
+
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Today's Leave Requests
+            Mentor Leave Requests
           </h1>
+
         </div>
+
         <p class="text-slate-500 text-sm sm:text-base">
-          Review and manage student leave requests for today.
+          Review and manage mentor leave requests.
         </p>
+
       </div>
+
+      <!-- Filter -->
+      <form method="GET">
+
+        <select
+          name="batch"
+          onchange="this.form.submit()"
+          class="px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+
+          <option value="">All Years</option>
+
+          {% for batch in batches %}
+
+            <option value="{{ batch }}"
+              {% if batch == selected_batch %}selected{% endif %}>
+
+              {{ batch }}
+
+            </option>
+
+          {% endfor %}
+
+        </select>
+
+      </form>
+
     </div>
 
-    <!-- Table Card -->
+    <!-- Table -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
       <div class="table-container overflow-x-auto">
 
         <table class="w-full text-left border-collapse zebra-table">
+
           <thead>
+
             <tr class="bg-slate-50/80 border-b border-slate-200">
+
               <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Student
               </th>
+
+              <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                Batch
+              </th>
+
               <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Reason
               </th>
-              <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                From
-              </th>
-              <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                To
-              </th>
-              <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 text-center">
-                Status
-              </th>
+
               <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 text-right">
                 Action
               </th>
+
             </tr>
+
           </thead>
 
           <tbody class="divide-y divide-slate-100">
+
             {% for leave in leaves %}
+
             <tr class="group">
+
               <!-- Student -->
               <td class="px-6 py-5 whitespace-nowrap">
+
                 <span class="text-sm font-semibold text-slate-900">
                   {{ leave.student.name }}
                 </span>
+
+              </td>
+
+              <!-- Batch -->
+              <td class="px-6 py-5 whitespace-nowrap">
+
+                <span class="text-sm text-slate-700">
+                  {{ leave.student.batch }}
+                </span>
+
               </td>
 
               <!-- Reason -->
               <td class="px-6 py-5">
+
                 <p class="text-sm text-slate-600 max-w-xs truncate group-hover:whitespace-normal">
                   {{ leave.reason }}
                 </p>
-              </td>
 
-              <!-- From Date -->
-              <td class="px-6 py-5 whitespace-nowrap">
-                <span class="text-sm font-medium text-slate-700">
-                  {{ leave.from_date }}
-                </span>
-              </td>
-
-              <!-- To Date -->
-              <td class="px-6 py-5 whitespace-nowrap">
-                <span class="text-sm font-medium text-slate-700">
-                  {{ leave.to_date }}
-                </span>
-              </td>
-
-              <!-- Status -->
-              <td class="px-6 py-5 text-center whitespace-nowrap">
-                {% if leave.status == "Approved" %}
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-success border border-emerald-100">
-                    <span class="material-symbols-outlined text-[14px]">check_circle</span>
-                    Approved
-                  </span>
-                {% elif leave.status == "Pending" %}
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-warning border border-amber-100">
-                    <span class="material-symbols-outlined text-[14px]">pending</span>
-                    Pending
-                  </span>
-                {% else %}
-                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-red-50 text-danger border border-red-100">
-                    <span class="material-symbols-outlined text-[14px]">cancel</span>
-                    Rejected
-                  </span>
-                {% endif %}
               </td>
 
               <!-- Actions -->
               <td class="px-6 py-5 text-right whitespace-nowrap">
-                {% if leave.status == "Pending" %}
+
                 <div class="flex items-center justify-end gap-2">
-                  <a href="{% url 'update_leave_status' leave.id 'approve' %}"
+
+                  <a href="/mentor/review/{{ leave.id }}/approve/"
                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition">
-                    <span class="material-symbols-outlined text-sm">check</span>
+
+                    <span class="material-symbols-outlined text-sm">
+                      check
+                    </span>
+
                     Approve
+
                   </a>
 
-                  <a href="{% url 'update_leave_status' leave.id 'reject' %}"
+                  <a href="/mentor/review/{{ leave.id }}/reject/"
                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold transition">
-                    <span class="material-symbols-outlined text-sm">close</span>
+
+                    <span class="material-symbols-outlined text-sm">
+                      close
+                    </span>
+
                     Reject
+
                   </a>
+
                 </div>
-                {% else %}
-                <span class="inline-flex px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
-                  Done
-                </span>
-                {% endif %}
+
               </td>
+
             </tr>
+
             {% empty %}
+
             <tr>
-              <td colspan="6" class="px-6 py-20 text-center">
+
+              <td colspan="4" class="px-6 py-20 text-center">
+
                 <div class="flex flex-col items-center max-w-xs mx-auto">
+
                   <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                    <span class="material-symbols-outlined text-slate-300 text-5xl">inbox</span>
+
+                    <span class="material-symbols-outlined text-slate-300 text-5xl">
+                      inbox
+                    </span>
+
                   </div>
-                  <h3 class="text-lg font-bold text-slate-900">No leave requests today</h3>
+
+                  <h3 class="text-lg font-bold text-slate-900">
+                    No leave requests
+                  </h3>
+
                   <p class="text-slate-500 text-sm mt-1">
-                    There are no leave requests for today.
+                    There are no mentor leave requests available.
                   </p>
+
                 </div>
+
               </td>
+
             </tr>
+
             {% endfor %}
+
           </tbody>
+
         </table>
 
       </div>
 
       <!-- Footer -->
       <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-200">
+
         <p class="text-[11px] font-medium text-slate-500 uppercase tracking-widest">
-          Showing today's leave requests
+          Showing mentor leave requests
         </p>
+
       </div>
+
     </div>
+
   </main>
 
-  <!-- Standard Footer (Copied from leave_status.html) -->
-  <footer class="mt-auto py-8 text-center border-t border-outline/40">
-    <p class="text-xs text-on-surface-variant/60">
-      &copy; 2026 Smart Academic System • Department of Computer Science and Engineering
+  <!-- Footer -->
+  <footer class="mt-auto py-8 text-center border-t border-slate-200 bg-white">
+
+    <p class="text-xs text-slate-500">
+      © 2026 Smart Academic System • Department of Computer Science and Engineering
     </p>
+
   </footer>
 
 </body>
