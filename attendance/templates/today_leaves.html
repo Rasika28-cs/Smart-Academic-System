@@ -236,7 +236,7 @@
 
                 <div class="flex items-center justify-end gap-2">
 
-                  <a href="/mentor/review/{{ leave.id }}/approve/"
+                  <a href="{% url 'mentor_review_leave' leave.id 'approve' %}"
                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition">
 
                     <span class="material-symbols-outlined text-sm">
@@ -247,7 +247,7 @@
 
                   </a>
 
-                  <a href="/mentor/review/{{ leave.id }}/reject/"
+                  <a href="{% url 'mentor_review_leave' leave.id 'approve' %}"
                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold transition">
 
                     <span class="material-symbols-outlined text-sm">

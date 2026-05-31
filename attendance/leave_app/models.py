@@ -1,19 +1,29 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 
-# ─────────────────────────────────────────────
-# ACADEMIC CORE MODELS
-# ─────────────────────────────────────────────
+# ─────────────────────────────
+# DEPARTMENT
+# ─────────────────────────────
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=10, unique=True)
-    hod = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_dept')
+    hod = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='managed_dept'
+    )
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+
+
+# ─────────────────────────────
+# SUBJECT
+# ─────────────────────────────
 
 class Subject(models.Model):
     name = models.CharField(max_length=100)
@@ -24,83 +34,86 @@ class Subject(models.Model):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
-# ─────────────────────────────────────────────
-# STUDENT MODEL (Updated with Dept/Batch)
-# ─────────────────────────────────────────────
+
+# ─────────────────────────────
+# STUDENT
+# ─────────────────────────────
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name='student_profile')
     name = models.CharField(max_length=100)
     roll_no = models.CharField(max_length=20, unique=True)
-    password = models.CharField(max_length=255) # Legacy field
+    password = models.CharField(max_length=255)
     batch = models.CharField(max_length=20, default="2024-2028")
+
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+
     mentor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_students')
-    class_incharge = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='ci_students'
-    )
+    class_incharge = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ci_students')
+
     def __str__(self):
         return f"{self.name} ({self.roll_no})"
 
-# ─────────────────────────────────────────────
-# LEAVE REQUEST MODEL (Hierarchical Workflow)
-# ─────────────────────────────────────────────
 
 class LeaveRequest(models.Model):
     STATUS_CHOICES = [
-        ('PENDING_MENTOR', 'Pending Mentor Approval'),
-        ('APPROVED_BY_MENTOR', 'Approved by Mentor (Pending CI)'),
-        ('REJECTED_BY_MENTOR', 'Rejected by Mentor'),
-        ('PENDING_CLASSINCHARGE', 'Pending Class Incharge'),
+        ('PENDING', 'Pending'),
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
     ]
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    reason = models.TextField()
     from_date = models.DateField()
     to_date = models.DateField()
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='PENDING_MENTOR')
-
-    # Mentor Review Fields
-    mentor_reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='mentor_reviews')
-    mentor_reviewed_at = models.DateTimeField(null=True, blank=True)
-    mentor_remark = models.TextField(null=True, blank=True)
-
-    # Class Incharge Review Fields
-    class_incharge_reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ci_reviews')
-    class_incharge_reviewed_at = models.DateTimeField(null=True, blank=True)
-    class_incharge_remark = models.TextField(null=True, blank=True)
-
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    
+    mentor_reviewed_by = models.ForeignKey(User, related_name='mentor_reviews', on_delete=models.SET_NULL, null=True, blank=True)
+    class_incharge_reviewed_by = models.ForeignKey(User, related_name='ci_reviews', on_delete=models.SET_NULL, null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.student.name} - {self.status}"
+        return f"{self.student.roll_no} - {self.status}"
 
-# ─────────────────────────────────────────────
-# ATTENDANCE MODEL
-# ─────────────────────────────────────────────
+# ─────────────────────────────
+# ATTENDANCE (FIXED)
+# ─────────────────────────────
 
 class Attendance(models.Model):
-    STATUS_CHOICES = [('Present', 'Present'), ('Leave', 'Leave'), ('Absent', 'Absent')]
+    STATUS_CHOICES = [
+        ('Present', 'Present'),
+        ('Leave', 'Leave'),
+        ('Absent', 'Absent')
+    ]
+
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
 
+    class Meta:
+        unique_together = ('student', 'subject', 'date')
+
     def __str__(self):
         return f"{self.student.name} - {self.date} - {self.status}"
 
-# ─────────────────────────────────────────────
-# ACADEMIC MODULES (Assignments, Timetable, Exams)
-# ─────────────────────────────────────────────
+
+# ─────────────────────────────
+# TIMETABLE (FIXED)
+# ─────────────────────────────
 
 class Timetable(models.Model):
-    DAYS = [('Mon', 'Monday'), ('Tue', 'Tuesday'), ('Wed', 'Wednesday'), ('Thu', 'Thursday'), ('Fri', 'Friday'), ('Sat', 'Saturday')]
+    DAYS = [
+        ('Mon', 'Monday'),
+        ('Tue', 'Tuesday'),
+        ('Wed', 'Wednesday'),
+        ('Thu', 'Thursday'),
+        ('Fri', 'Friday'),
+        ('Sat', 'Saturday'),
+    ]
+
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     batch = models.CharField(max_length=20)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
@@ -109,6 +122,22 @@ class Timetable(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     room = models.CharField(max_length=20, blank=True)
+
+    def clean(self):
+        clash = Timetable.objects.filter(
+            day=self.day,
+            room=self.room,
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time
+        ).exclude(pk=self.pk)
+
+        if clash.exists():
+            raise ValidationError("Room is already occupied at this time.")
+
+
+# ─────────────────────────────
+# ASSIGNMENT
+# ─────────────────────────────
 
 class Assignment(models.Model):
     title = models.CharField(max_length=200)
@@ -119,16 +148,45 @@ class Assignment(models.Model):
     file = models.FileField(upload_to='assignments/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.title
+
+# ─────────────────────────────
+# ASSIGNMENT SUBMISSION (NEW FIXED)
+# ─────────────────────────────
+
+class AssignmentSubmission(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='submissions/')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    marks = models.FloatField(null=True, blank=True)
+    feedback = models.TextField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('assignment', 'student')
+
+
+# ─────────────────────────────
+# EXAM
+# ─────────────────────────────
 
 class Exam(models.Model):
-    TYPE_CHOICES = [('Internal 1', 'Internal 1'), ('Internal 2', 'Internal 2'), ('Model', 'Model'), ('University', 'University')]
+    TYPE_CHOICES = [
+        ('Internal 1', 'Internal 1'),
+        ('Internal 2', 'Internal 2'),
+        ('Model', 'Model'),
+        ('University', 'University')
+    ]
+
     name = models.CharField(max_length=100)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     exam_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     date = models.DateField()
     max_marks = models.IntegerField(default=100)
+
+
+# ─────────────────────────────
+# RESULT (FIXED)
+# ─────────────────────────────
 
 class Result(models.Model):
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
@@ -136,19 +194,35 @@ class Result(models.Model):
     marks_obtained = models.FloatField()
     is_present = models.BooleanField(default=True)
 
-# ─────────────────────────────────────────────
-# NOTIFICATIONS & COMMUNICATION
-# ─────────────────────────────────────────────
+    class Meta:
+        unique_together = ('exam', 'student')
+
+
+# ─────────────────────────────
+# NOTIFICATION
+# ─────────────────────────────
 
 class Notification(models.Model):
-    TYPE_CHOICES = (('leave', 'Leave'), ('od', 'OD'), ('academic', 'Academic'), ('circular', 'Circular'))
+    TYPE_CHOICES = (
+        ('leave', 'Leave'),
+        ('od', 'OD'),
+        ('academic', 'Academic'),
+        ('circular', 'Circular')
+    )
+
     title = models.CharField(max_length=255)
     message = models.TextField()
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
+
     users = models.ManyToManyField(User, related_name='notifications')
     read_by = models.ManyToManyField(User, related_name='read_notifications', blank=True)
     url = models.CharField(max_length=255, blank=True)
+
+
+# ─────────────────────────────
+# CIRCULAR
+# ─────────────────────────────
 
 class Circular(models.Model):
     title = models.CharField(max_length=255)
@@ -157,9 +231,10 @@ class Circular(models.Model):
     file = models.FileField(upload_to='circulars/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-# ─────────────────────────────────────────────
-# DEFAULTERS & AUDIT
-# ─────────────────────────────────────────────
+
+# ─────────────────────────────
+# DEFAULTERS
+# ─────────────────────────────
 
 class DefaulterStudent(models.Model):
     roll_no = models.CharField(max_length=20)
@@ -170,11 +245,21 @@ class DefaulterStudent(models.Model):
     reason = models.TextField()
     action_taken = models.CharField(max_length=30, null=True, blank=True)
 
+
+# ─────────────────────────────
+# ACTIVITY LOG
+# ─────────────────────────────
+
 class ActivityLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     action = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
     ip_address = models.GenericIPAddressField(null=True)
+
+
+# ─────────────────────────────
+# PARENT PROFILE
+# ─────────────────────────────
 
 class ParentProfile(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='parent')

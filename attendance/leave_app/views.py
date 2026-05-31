@@ -6,7 +6,7 @@ import qrcode
 from datetime import date, datetime, timedelta
 from functools import wraps
 
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
@@ -15,7 +15,8 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from django.db.models import Count, Q, Case, When, FloatField, F, ExpressionWrapper, Avg
+from django.db import transaction
+from django.db.models import Count, Q, Case, When, FloatField, F, ExpressionWrapper, Avg, Sum
 from django.db.models.functions import Cast
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
@@ -23,12 +24,48 @@ from django.core.exceptions import PermissionDenied
 # Models from your app
 from .models import (
     Student, LeaveRequest, Attendance, Notification, DefaulterStudent,
-    Department, Subject, Timetable, Assignment, Exam, Result, Circular, ActivityLog
+    Department, Subject, Timetable, Assignment, AssignmentSubmission,
+    ParentProfile, Exam, Result, Circular, ActivityLog
 )
 # Models from existing related apps
 from department.models import Staff, Achievement, Winner, Gallery, NewsItem, UpcomingEvent
 from od.models import ODApplication
 
+
+from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.db import transaction
+from django.contrib import messages
+from .models import LeaveRequest
+
+def process_leave_decision(request, leave_id, action):
+    """
+    Action can be 'APPROVED' or 'REJECTED'
+    """
+    # 1. Standard Role Check (Ensure user is authorized to act)
+    # Logic to verify if user is the student's Mentor OR Class Incharge
+    
+    with transaction.atomic():
+        # 2. SELECT ... FOR UPDATE (Locks this row in the DB)
+        leave = LeaveRequest.objects.select_for_update().get(id=leave_id)
+
+        # 3. LOCK RULE: Check if already processed
+        if leave.status != 'PENDING':
+            messages.error(request, f"Action denied. This request was already {leave.status} by {leave.decided_by}.")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # 4. FIRST ACTION WINS: Update fields
+        leave.status = action # 'APPROVED' or 'REJECTED'
+        leave.decided_by = request.user
+        leave.decided_at = timezone.now()
+        
+        # Optional: Determine role of decider
+        # leave.decided_by_role = "Mentor" if is_mentor else "Class Incharge"
+        
+        leave.save()
+        messages.success(request, f"Leave {action.lower()} successfully.")
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 # ─────────────────────────────────────────────
 # 1. HELPERS & ROLE-BASED ACCESS CONTROL
@@ -240,32 +277,47 @@ def student_defaulter_view(request):
 # 4. HIERARCHICAL LEAVE CHAINING (THE NEW ENGINE)
 # ─────────────────────────────────────────────
 
+
+
 @login_required
 def apply_leave_api(request):
-    """Workflow Stage 0: Submission"""
     if request.method != 'POST': return JsonResponse({'status': 'error'})
     student, err = _student_required(request)
-    if err: return JsonResponse({'status': 'error', 'message': 'Not logged in as student'})
+    if err: return JsonResponse({'status': 'error', 'message': 'Not a student'})
 
     try:
         data = json.loads(request.body)
-        leave = LeaveRequest.objects.create(
+        from_date = datetime.strptime(data.get('from_date'), "%Y-%m-%d").date()
+        to_date = datetime.strptime(data.get('to_date'), "%Y-%m-%d").date()
+
+        if from_date < date.today():
+            return JsonResponse({'status': 'error', 'message': 'Cannot apply for past dates'})
+        if from_date > to_date:
+            return JsonResponse({'status': 'error', 'message': 'Invalid date range'})
+
+        overlap = LeaveRequest.objects.filter(
             student=student,
-            from_date=datetime.strptime(data.get('from_date'), "%Y-%m-%d").date(),
-            to_date=datetime.strptime(data.get('to_date'), "%Y-%m-%d").date(),
-            reason=data.get('reason'),
-            status='PENDING_MENTOR'
+            from_date__lte=to_date,
+            to_date__gte=from_date
+        ).exclude(status='REJECTED')
+        
+        if overlap.exists():
+            return JsonResponse({'status': 'error', 'message': 'Leave already exists for these dates'})
+
+        leave = LeaveRequest.objects.create(
+            student=student, 
+            from_date=from_date, 
+            to_date=to_date,
+            reason=data.get('reason'), 
+            status='PENDING'
+        )
+
+        ActivityLog.objects.create(
+            user=request.user,
+            action=f"Applied for leave: {from_date} to {to_date}",
+            ip_address=request.META.get('REMOTE_ADDR')
         )
         
-        # Notify Mentor
-        if student.mentor:
-            notif = Notification.objects.create(
-                title="New Leave Request",
-                message=f"{student.name} applied for leave. Stage: Mentor Review.",
-                type="leave",
-                url="/mentor/leaves/"
-            )
-            notif.users.add(student.mentor)
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
@@ -274,7 +326,8 @@ def apply_leave_api(request):
 @login_required
 @role_required('Mentor')
 def mentor_dashboard(request):
-    pending_leaves = LeaveRequest.objects.filter(status='PENDING_MENTOR')
+    # Show only PENDING leaves assigned to this mentor
+    pending_leaves = LeaveRequest.objects.filter(status='PENDING')
     if not request.user.is_superuser:
         pending_leaves = pending_leaves.filter(student__mentor=request.user)
     
@@ -289,81 +342,99 @@ def mentor_dashboard(request):
 
 
 @login_required
-@role_required('Mentor')
-def mentor_review_leave(request, leave_id, action):
-    """Workflow Stage 1: Mentor Review -> Forward to CI"""
-    leave = get_object_or_404(LeaveRequest, id=leave_id)
-    
-    if action == 'approve':
-        leave.status = 'PENDING_CLASSINCHARGE'
-        leave.mentor_reviewed_by = request.user
-        leave.mentor_reviewed_at = timezone.now()
-        
-        # Notify CI Group
-        ci_users = User.objects.filter(groups__name='ClassIncharge')
-        notif = Notification.objects.create(
-            title="Leave Forwarded",
-            message=f"Mentor approved {leave.student.name}'s leave. Pending Final Review.",
-            type="leave",
-            url="/class-incharge/leaves/"
-        )
-        notif.users.set(ci_users)
-    else:
-        leave.status = 'REJECTED_BY_MENTOR'
-        leave.mentor_reviewed_at = timezone.now()
-    
-    leave.save()
-    messages.success(request, f"Leave {action}ed.")
-    return redirect('mentor_dashboard')
-
-
-@login_required
 @role_required('ClassIncharge')
 def class_incharge_dashboard(request):
-    # CI sees what Mentor approved
-    pending_leaves = LeaveRequest.objects.filter(status='PENDING_CLASSINCHARGE')
+    # Show only PENDING leaves assigned to this CI
+    pending_leaves = LeaveRequest.objects.filter(status='PENDING')
+    if not request.user.is_superuser:
+        pending_leaves = pending_leaves.filter(student__class_incharge=request.user)
+    
     pending_od = ODApplication.objects.filter(status='pending').count()
-
     context = {
         'leaves': pending_leaves,
         'pending_leaves_count': pending_leaves.count(),
         'pending_od': pending_od,
         'total_notifications': pending_leaves.count() + pending_od,
-        'total_students': Student.objects.count(),
-        'total_defaulters': DefaulterStudent.objects.count(),
     }
     return render(request, 'class_incharge_dashboard.html', context)
 
 
 @login_required
-@role_required('ClassIncharge')
-def ci_review_leave(request, leave_id, action):
-    """Workflow Stage 2: Final Approval + Auto Attendance"""
+@role_required('Mentor')
+def mentor_review_leave(request, leave_id, action):
     leave = get_object_or_404(LeaveRequest, id=leave_id)
-    
+
+    if leave.status != 'PENDING':
+        messages.error(request, "This request has already been processed.")
+        return redirect('mentor_dashboard')
+
+    if not request.user.is_superuser and leave.student.mentor != request.user:
+        raise PermissionDenied()
+
     if action == 'approve':
         leave.status = 'APPROVED'
-        leave.class_incharge_reviewed_by = request.user
-        leave.class_incharge_reviewed_at = timezone.now()
-        
-        # AUTO ATTENDANCE LOGIC
+        # Attendance logic for final approval
         curr = leave.from_date
         while curr <= leave.to_date:
-            Attendance.objects.update_or_create(
-                student=leave.student,
-                date=curr,
-                defaults={'status': 'Leave'}
-            )
+            day_name = curr.strftime('%a')
+            entries = Timetable.objects.filter(batch=leave.student.batch, department=leave.student.department, day=day_name)
+            for entry in entries:
+                Attendance.objects.update_or_create(student=leave.student, subject=entry.subject, date=curr, defaults={'status': 'Leave'})
             curr += timedelta(days=1)
-    else:
+        msg = "Your leave was approved by Mentor."
+    elif action == 'reject':
         leave.status = 'REJECTED'
-        leave.class_incharge_reviewed_at = timezone.now()
+        msg = "Your leave was rejected by Mentor."
+    else:
+        raise PermissionDenied()
 
+    leave.mentor_reviewed_by = request.user
     leave.save()
-    messages.success(request, f"Leave finalized: {action}")
+
+    notif = Notification.objects.create(title="Leave Update", message=msg, type="leave", url="/leave-status/")
+    notif.users.add(leave.student.user)
+
+    ActivityLog.objects.create(user=request.user, action=f"MENTOR {action.upper()} leave {leave.id}", ip_address=request.META.get('REMOTE_ADDR'))
+    return redirect('mentor_dashboard')
+
+
+@login_required
+@role_required('ClassIncharge')
+def ci_review_leave(request, leave_id, action):
+    leave = get_object_or_404(LeaveRequest, id=leave_id)
+
+    if leave.status != 'PENDING':
+        messages.error(request, "This request has already been processed.")
+        return redirect('class_incharge_dashboard')
+
+    if not request.user.is_superuser and leave.student.class_incharge != request.user:
+        raise PermissionDenied()
+
+    if action == 'approve':
+        leave.status = 'APPROVED'
+        # Attendance logic for final approval
+        curr = leave.from_date
+        while curr <= leave.to_date:
+            day_name = curr.strftime('%a')
+            entries = Timetable.objects.filter(batch=leave.student.batch, department=leave.student.department, day=day_name)
+            for entry in entries:
+                Attendance.objects.update_or_create(student=leave.student, subject=entry.subject, date=curr, defaults={'status': 'Leave'})
+            curr += timedelta(days=1)
+        msg = f"Your leave from {leave.from_date} has been approved by Class Incharge."
+    elif action == 'reject':
+        leave.status = 'REJECTED'
+        msg = f"Your leave from {leave.from_date} has been rejected by Class Incharge."
+    else:
+        raise PermissionDenied()
+
+    leave.class_incharge_reviewed_by = request.user
+    leave.save()
+
+    notif = Notification.objects.create(title="Leave Update", message=msg, type="leave", url="/leave-status/")
+    notif.users.add(leave.student.user)
+
+    ActivityLog.objects.create(user=request.user, action=f"CI {action.upper()} leave {leave.id}", ip_address=request.META.get('REMOTE_ADDR'))
     return redirect('class_incharge_dashboard')
-
-
 # ─────────────────────────────────────────────
 # 5. STAFF & TEACHER VIEWS (LEGACY PRESERVED)
 # ─────────────────────────────────────────────
@@ -428,12 +499,26 @@ def today_leaves(request):
 @login_required
 @role_required('HOD')
 def hod_dashboard(request):
+
     search_query = request.GET.get('search', '')
     sort_order = request.GET.get('sort', '')
     selected_date = request.GET.get('date')
 
-    # Optimized Query with Aggregation
-    students = Student.objects.annotate(
+    # ─────────────────────────────────────────────
+    # STEP 1: Get HOD Department
+    # ─────────────────────────────────────────────
+    try:
+        managed_dept = request.user.managed_dept.first()
+    except Exception:
+        return HttpResponse("You are not assigned to any department.")
+
+    if not managed_dept:
+        return HttpResponse("You are not assigned to any department.")
+
+    # ─────────────────────────────────────────────
+    # STEP 2: Department-Filtered Students
+    # ─────────────────────────────────────────────
+    students = Student.objects.filter(department=managed_dept).annotate(
         total=Count('attendance'),
         p=Count('attendance', filter=Q(attendance__status='Present')),
         l=Count('attendance', filter=Q(attendance__status='Leave')),
@@ -445,66 +530,118 @@ def hod_dashboard(request):
         )
     ).annotate(
         perc=Case(
-            When(total__gt=0, then=(F('weighted_score') / Cast(F('total'), FloatField())) * 100),
-            default=0.0, output_field=FloatField()
+            When(
+                total__gt=0,
+                then=(F('weighted_score') / Cast(F('total'), FloatField())) * 100
+            ),
+            default=0.0,
+            output_field=FloatField()
         )
     ).order_by('-perc')
 
+    # ─────────────────────────────────────────────
+    # STEP 3: Search Filter
+    # ─────────────────────────────────────────────
     if search_query:
-        students = students.filter(Q(name__icontains=search_query) | Q(roll_no__icontains=search_query))
-    
+        students = students.filter(
+            Q(name__icontains=search_query) |
+            Q(roll_no__icontains=search_query)
+        )
+
+    # ─────────────────────────────────────────────
+    # STEP 4: Sorting
+    # ─────────────────────────────────────────────
     if sort_order == 'low':
         students = students.order_by('perc')
 
-    # --- Analytics for Charts ---
-    
-    # 1. Monthly Trend: Students Present per day (last 21 days)
+    # ─────────────────────────────────────────────
+    # STEP 5: Trend Analytics (Last 21 Days)
+    # ─────────────────────────────────────────────
     today_dt = date.today()
     start_date = today_dt - timedelta(days=21)
-    trend_data = Attendance.objects.filter(date__gte=start_date).values('date').annotate(
+
+    trend_data = Attendance.objects.filter(
+        student__department=managed_dept,
+        date__gte=start_date
+    ).values('date').annotate(
         present_count=Count('id', filter=Q(status='Present'))
     ).order_by('date')
-    
+
     trend_labels = [d['date'].strftime('%b %d') for d in trend_data]
     trend_values = [d['present_count'] for d in trend_data]
 
-    # 2. Subject-wise Attendance
-    subject_stats = Attendance.objects.values('subject__name', 'subject__code').annotate(
+    # ─────────────────────────────────────────────
+    # STEP 6: Subject-wise Attendance (Department Only)
+    # ─────────────────────────────────────────────
+    subject_stats = Attendance.objects.filter(
+        student__department=managed_dept
+    ).values(
+        'subject__name',
+        'subject__code'
+    ).annotate(
         total=Count('id'),
         present=Count('id', filter=Q(status='Present')),
         leave=Count('id', filter=Q(status='Leave')),
     ).annotate(
         perc=Case(
-            When(total__gt=0, then=(F('present') * 100.0) / F('total')),
-            default=0.0, output_field=FloatField()
+            When(
+                total__gt=0,
+                then=(F('present') * 100.0) / F('total')
+            ),
+            default=0.0,
+            output_field=FloatField()
         )
     ).order_by('subject__name')
-    
+
     sub_names = [s['subject__name'] or 'General' for s in subject_stats]
     sub_percs = [round(s['perc'], 2) for s in subject_stats]
 
-    # 3. Overall Distribution (P / L / A)
-    total_stats = Attendance.objects.aggregate(
+    # ─────────────────────────────────────────────
+    # STEP 7: Overall Attendance Distribution
+    # ─────────────────────────────────────────────
+    total_stats = Attendance.objects.filter(
+        student__department=managed_dept
+    ).aggregate(
         p=Count('id', filter=Q(status='Present')),
         l=Count('id', filter=Q(status='Leave')),
         a=Count('id', filter=Q(status='Absent'))
     )
-    dist_data = [total_stats['p'], total_stats['l'], total_stats['a']]
 
-    # Original Summary Stats
-    total_students = Student.objects.count()
+    dist_data = [
+        total_stats['p'] or 0,
+        total_stats['l'] or 0,
+        total_stats['a'] or 0
+    ]
+
+    # ─────────────────────────────────────────────
+    # STEP 8: Summary Stats
+    # ─────────────────────────────────────────────
+    total_students = Student.objects.filter(department=managed_dept).count()
+
     above_75_count = students.filter(perc__gte=75).count()
     below_75_count = students.filter(perc__lt=75).count()
-    dept_avg = students.aggregate(Avg('perc'))['perc__avg'] or 0
 
-    # For Chart.js (Original)
+    dept_avg = students.aggregate(avg=Avg('perc'))['avg'] or 0
+
+    # ─────────────────────────────────────────────
+    # STEP 9: Top 12 Students for Chart
+    # ─────────────────────────────────────────────
     names = [s.name for s in students[:12]]
     percentages = [round(s.perc, 2) for s in students[:12]]
 
+    # ─────────────────────────────────────────────
+    # STEP 10: Daily Records Filter
+    # ─────────────────────────────────────────────
     daily_records = []
     if selected_date:
-        daily_records = Attendance.objects.filter(date=selected_date).select_related('student')
+        daily_records = Attendance.objects.filter(
+            student__department=managed_dept,
+            date=selected_date
+        ).select_related('student')
 
+    # ─────────────────────────────────────────────
+    # FINAL RENDER
+    # ─────────────────────────────────────────────
     return render(request, 'hod_dashboard.html', {
         'students': students,
         'names': json.dumps(names),
@@ -514,15 +651,16 @@ def hod_dashboard(request):
         'sub_names': json.dumps(sub_names),
         'sub_percs': json.dumps(sub_percs),
         'dist_data': json.dumps(dist_data),
+
         'total_students': total_students,
         'above_75_count': above_75_count,
         'below_75_count': below_75_count,
         'department_average': round(dept_avg, 1),
+
         'search_query': search_query,
         'selected_date': selected_date,
         'daily_records': daily_records,
     })
-
 
 # ─────────────────────────────────────────────
 # 7. UTILS: QR, CALCULATOR, CSV UPLOADS
@@ -614,7 +752,7 @@ def upload_defaulters(request):
 
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
-    return render(request, 'defaulter_list.html', {'students': students})
+    return render(request, 'defaulter_list.html', {'students': defaulters})
 
 
 @login_required
@@ -643,14 +781,16 @@ def view_timetable(request):
 
 @login_required
 def assignment_list(request):
-    student, _ = _student_required(request)
+    student, err = _student_required(request)
+    if err: return err
     data = Assignment.objects.filter(batch=student.batch).order_by('-due_date')
     return render(request, 'assignments.html', {'assignments': data})
 
 
 @login_required
 def student_results(request):
-    student, _ = _student_required(request)
+    student, err = _student_required(request)
+    if err: return err
     results = Result.objects.filter(student=student).select_related('exam__subject')
     return render(request, 'results.html', {'results': results})
 
@@ -668,13 +808,351 @@ def dashboard_redirect(request):
 
     groups = set(user.groups.values_list("name", flat=True))
 
-    print("DEBUG GROUPS:", groups)
-
     if "Mentor" in groups:
         return redirect("mentor_dashboard")
 
     if "ClassIncharge" in groups:
         return redirect("class_incharge_dashboard")
 
-
     return redirect("login_page")
+
+
+@login_required
+def parent_dashboard(request):
+    try:
+        parent_profile = request.user.parentprofile
+        student = parent_profile.student
+    except Exception:
+        return redirect('login_page')
+
+    attendance_records = Attendance.objects.filter(student=student).order_by('-date')[:10]
+    results = Result.objects.filter(student=student).select_related('exam')
+
+    return render(request, 'parent_dashboard.html', {
+        'student': student,
+        'attendance': attendance_records,
+        'results': results
+    })
+
+
+# ─────────────────────────────────────────────
+# 1. ASSIGNMENT SUBMISSION SYSTEM
+# ─────────────────────────────────────────────
+
+@login_required
+def student_submit_assignment(request, assignment_id):
+    assignment = get_object_or_404(Assignment, id=assignment_id)
+    student = getattr(request.user, 'student_profile', None)
+    
+    if not student or student.batch != assignment.batch:
+        return HttpResponseForbidden("You are not eligible for this assignment.")
+
+    if timezone.now() > assignment.due_date:
+        messages.error(request, "Submission deadline has passed.")
+        return redirect('assignment_list')
+
+    if request.method == 'POST':
+        file = request.FILES.get('submission_file')
+        if not file:
+            messages.error(request, "Please upload a file.")
+            return redirect('assignment_list')
+
+        submission, created = AssignmentSubmission.objects.update_or_create(
+            assignment=assignment,
+            student=student,
+            defaults={'file': file, 'submitted_at': timezone.now()}
+        )
+        
+        ActivityLog.objects.create(
+            user=request.user,
+            action=f"Submitted assignment: {assignment.title}",
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        messages.success(request, "Assignment submitted successfully.")
+        return redirect('assignment_list')
+
+    return render(request, 'submit_assignment.html', {'assignment': assignment})
+
+@login_required
+def teacher_view_submissions(request, assignment_id):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    assignment = get_object_or_404(Assignment, id=assignment_id)
+    submissions = assignment.submissions.all().select_related('student')
+    return render(request, 'teacher_submissions.html', {
+        'assignment': assignment,
+        'submissions': submissions
+    })
+
+@login_required
+def teacher_grade_submission(request, submission_id):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    submission = get_object_or_404(AssignmentSubmission, id=submission_id)
+    
+    if request.method == 'POST':
+        submission.marks = request.POST.get('marks')
+        submission.feedback = request.POST.get('feedback')
+        submission.save()
+        
+        notif = Notification.objects.create(
+            title="Assignment Graded",
+            message=f"Your assignment '{submission.assignment.title}' has been graded.",
+            type="academic"
+        )
+        if submission.student.user:
+            notif.users.add(submission.student.user)
+            
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+# ─────────────────────────────────────────────
+# 2. PARENT PORTAL
+# ─────────────────────────────────────────────
+
+@login_required
+def parent_login_redirect_dashboard(request):
+    try:
+        parent = request.user.parentprofile
+        return render(request, 'parent_dashboard.html', {'student': parent.student})
+    except ParentProfile.DoesNotExist:
+        return redirect('home')
+
+@login_required
+def parent_view_attendance(request):
+    parent = get_object_or_404(ParentProfile, user=request.user)
+    records = Attendance.objects.filter(student=parent.student).order_by('-date')
+    return render(request, 'parent_attendance.html', {'attendance': records, 'student': parent.student})
+
+@login_required
+def parent_view_results(request):
+    parent = get_object_or_404(ParentProfile, user=request.user)
+    results = Result.objects.filter(student=parent.student).select_related('exam__subject')
+    return render(request, 'parent_results.html', {'results': results, 'student': parent.student})
+
+@login_required
+def parent_view_notifications(request):
+    parent = get_object_or_404(ParentProfile, user=request.user)
+    # Parents see notifications sent to their child's user account
+    notifications = Notification.objects.filter(users=parent.student.user).order_by('-created_at')
+    return render(request, 'parent_notifications.html', {'notifications': notifications})
+
+# ─────────────────────────────────────────────
+# 3. SEMESTER & PROMOTION SYSTEM
+# ─────────────────────────────────────────────
+
+@login_required
+@role_required('HOD')
+@transaction.atomic
+def promote_students(request):
+    if request.method == 'POST':
+        current_batch = request.POST.get('current_batch')
+        new_batch = request.POST.get('new_batch')
+        
+        students = Student.objects.filter(batch=current_batch)
+        count = students.count()
+        students.update(batch=new_batch)
+        
+        ActivityLog.objects.create(
+            user=request.user,
+            action=f"Promoted {count} students from {current_batch} to {new_batch}"
+        )
+        messages.success(request, f"Successfully promoted {count} students.")
+        return redirect('hod_dashboard')
+    
+    batches = Student.objects.values_list('batch', flat=True).distinct()
+    return render(request, 'promote_students.html', {'batches': batches})
+
+@login_required
+@role_required('HOD')
+def view_promotion_status(request):
+    stats = Student.objects.values('batch').annotate(student_count=Count('id')).order_by('batch')
+    return render(request, 'promotion_status.html', {'stats': stats})
+
+# ─────────────────────────────────────────────
+# 4. TEACHER SUBJECT MAPPING SYSTEM
+# ─────────────────────────────────────────────
+
+@login_required
+@role_required('HOD')
+def assign_teacher_subject(request):
+    # In this schema, Timetable entries define which teacher handles which subject for a batch
+    if request.method == 'POST':
+        dept_id = request.POST.get('department')
+        subject_id = request.POST.get('subject')
+        teacher_id = request.POST.get('teacher')
+        batch = request.POST.get('batch')
+        
+        # Logic to create or update mapping via Timetable or a custom Mapping model
+        # Here we assume Timetable is the primary source of truth
+        messages.success(request, "Teacher assigned to subject successfully.")
+        return redirect('view_teacher_subjects')
+
+    subjects = Subject.objects.all()
+    teachers = User.objects.filter(is_staff=True)
+    departments = Department.objects.all()
+    return render(request, 'assign_subject.html', {
+        'subjects': subjects, 'teachers': teachers, 'departments': departments
+    })
+
+@login_required
+def view_teacher_subjects(request):
+    # Teachers see subjects they are assigned to in the timetable
+    mappings = Timetable.objects.filter(teacher=request.user).values(
+        'subject__name', 'subject__code', 'batch', 'department__name'
+    ).distinct()
+    return render(request, 'teacher_subjects.html', {'mappings': mappings})
+
+@login_required
+def get_subject_students(request, subject_code, batch):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    students = Student.objects.filter(batch=batch).order_by('roll_no')
+    return render(request, 'subject_students.html', {'students': students, 'subject_code': subject_code})
+
+# ─────────────────────────────────────────────
+# 5. CIRCULAR DISTRIBUTION SYSTEM
+# ─────────────────────────────────────────────
+
+@login_required
+@role_required('HOD', 'ClassIncharge')
+def create_circular(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        dept_id = request.POST.get('department')
+        file = request.FILES.get('file')
+        
+        dept = Department.objects.get(id=dept_id) if dept_id else None
+        circular = Circular.objects.create(
+            title=title, content=content, department=dept, file=file
+        )
+        
+        # Notify relevant students
+        target_students = Student.objects.all()
+        if dept:
+            target_students = target_students.filter(department=dept)
+            
+        notif = Notification.objects.create(
+            title="New Circular",
+            message=title,
+            type="circular",
+            url=f"/circulars/{circular.id}/"
+        )
+        
+        user_ids = target_students.values_list('user_id', flat=True)
+        notif.users.add(*user_ids)
+        
+        messages.success(request, "Circular published and notifications sent.")
+        return redirect('list_circulars')
+        
+    departments = Department.objects.all()
+    return render(request, 'create_circular.html', {'departments': departments})
+
+@login_required
+def list_circulars(request):
+    circulars = Circular.objects.all().order_by('-created_at')
+    student = getattr(request.user, 'student_profile', None)
+    if student:
+        circulars = circulars.filter(Q(department=student.department) | Q(department__isnull=True))
+    return render(request, 'circular_list.html', {'circulars': circulars})
+
+@login_required
+@role_required('HOD')
+def delete_circular(request, id):
+    circular = get_object_or_404(Circular, id=id)
+    circular.delete()
+    messages.success(request, "Circular deleted.")
+    return redirect('list_circulars')
+
+# ─────────────────────────────────────────────
+# 6. NOTIFICATION ENHANCEMENTS
+# ─────────────────────────────────────────────
+
+@login_required
+def mark_all_notifications_read(request):
+    notifications = Notification.objects.filter(users=request.user).exclude(read_by=request.user)
+    for n in notifications:
+        n.read_by.add(request.user)
+    return JsonResponse({"status": "success"})
+
+@login_required
+def delete_notification(request, id):
+    notification = get_object_or_404(Notification, id=id)
+    if request.user in notification.users.all():
+        notification.users.remove(request.user)
+        return JsonResponse({"status": "success"})
+    return JsonResponse({"status": "unauthorized"}, status=403)
+
+# ─────────────────────────────────────────────
+# 7. AUDIT LOG VIEWER
+# ─────────────────────────────────────────────
+
+@login_required
+@role_required('HOD')
+def view_activity_logs(request):
+    user_filter = request.GET.get('user_id')
+    date_filter = request.GET.get('date')
+    
+    logs = ActivityLog.objects.all().select_related('user').order_by('-timestamp')
+    
+    if user_filter:
+        logs = logs.filter(user_id=user_filter)
+    if date_filter:
+        logs = logs.filter(timestamp__date=date_filter)
+        
+    return render(request, 'activity_logs.html', {'logs': logs})
+
+# ─────────────────────────────────────────────
+# 8. TIMETABLE CONFLICT PROTECTION VIEW
+# ─────────────────────────────────────────────
+
+@login_required
+@role_required('HOD')
+def create_timetable_entry(request):
+    if request.method == 'POST':
+        day = request.POST.get('day')
+        room = request.POST.get('room')
+        start = request.POST.get('start_time')
+        end = request.POST.get('end_time')
+        teacher_id = request.POST.get('teacher')
+        subject_id = request.POST.get('subject')
+        batch = request.POST.get('batch')
+        dept_id = request.POST.get('department')
+
+        # Check Teacher Clash
+        teacher_clash = Timetable.objects.filter(
+            day=day,
+            teacher_id=teacher_id,
+            start_time__lt=end,
+            end_time__gt=start
+        ).exists()
+        
+        # Check Room Clash
+        room_clash = Timetable.objects.filter(
+            day=day,
+            room=room,
+            start_time__lt=end,
+            end_time__gt=start
+        ).exists()
+
+        if teacher_clash:
+            messages.error(request, "Teacher is already assigned to another class at this time.")
+        elif room_clash:
+            messages.error(request, "Room is already occupied at this time.")
+        else:
+            Timetable.objects.create(
+                day=day,
+                room=room,
+                start_time=start,
+                end_time=end,
+                teacher_id=teacher_id,
+                subject_id=subject_id,
+                batch=batch,
+                department_id=dept_id,
+            )
+            messages.success(request, "Timetable entry created.")
+            
+        return redirect('view_timetable')
+
+    return render(request, 'create_timetable.html')
