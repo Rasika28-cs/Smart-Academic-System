@@ -55,6 +55,9 @@ class Student(models.Model):
         return f"{self.name} ({self.roll_no})"
 
 
+from django.db import models
+from django.contrib.auth.models import User
+
 class LeaveRequest(models.Model):
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
@@ -62,21 +65,68 @@ class LeaveRequest(models.Model):
         ('REJECTED', 'Rejected'),
     ]
 
+    REVIEWER_CHOICES = [
+        ('Mentor', 'Mentor'),
+        ('Class Incharge', 'Class Incharge'),
+        ('Superuser', 'Superuser'),
+    ]
+
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     from_date = models.DateField()
     to_date = models.DateField()
     reason = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    
-    mentor_reviewed_by = models.ForeignKey(User, related_name='mentor_reviews', on_delete=models.SET_NULL, null=True, blank=True)
-    class_incharge_reviewed_by = models.ForeignKey(User, related_name='ci_reviews', on_delete=models.SET_NULL, null=True, blank=True)
-    
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PENDING'
+    )
+
+    # Legacy tracking fields
+    mentor_reviewed_by = models.ForeignKey(
+        User,
+        related_name='mentor_reviews',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    class_incharge_reviewed_by = models.ForeignKey(
+        User,
+        related_name='ci_reviews',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    # Unified audit fields
+    reviewed_by = models.ForeignKey(
+        User,
+        related_name='reviewed_leaves',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    reviewer_role = models.CharField(
+        max_length=20,
+        choices=REVIEWER_CHOICES,
+        null=True,
+        blank=True
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.student.roll_no} - {self.status}"
-
+    
+    
 # ─────────────────────────────
 # ATTENDANCE (FIXED)
 # ─────────────────────────────

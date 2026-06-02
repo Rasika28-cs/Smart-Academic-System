@@ -19,10 +19,9 @@ urlpatterns = [
     path('calculator/', views.calculator, name='calculator'),
 
     # Leave APIs
+    
     path('api/apply_leave/', views.apply_leave_api, name='apply_leave_api'),
-    path('mentor/review/<int:leave_id>/<str:action>/', views.mentor_review_leave, name='mentor_review_leave'),
-    path('ci/review/<int:leave_id>/<str:action>/', views.ci_review_leave, name='ci_review_leave'),
-
+   path('leave/review/<int:leave_id>/<str:action>/', views.review_leave, name='review_leave'),
     # Dashboards
     path('mentor/dashboard/', views.mentor_dashboard, name='mentor_dashboard'),
     path('class-incharge/', views.class_incharge_dashboard, name='class_incharge_dashboard'),

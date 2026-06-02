@@ -250,10 +250,52 @@ def attendance(request):
     return render(request, 'attendance.html', {'attendance': records})
 
 
+
+# ─────────────────────────────
+# Helper
+# ─────────────────────────────
+def _student_required(request):
+    try:
+        student = Student.objects.get(user=request.user)
+        return student, None
+    except Student.DoesNotExist:
+        return None, HttpResponse('Unauthorized', status=403)
+
+
+def _redirect_after_review(user, leave=None):
+    if user.is_superuser:
+        return redirect('teacher_dashboard')
+
+    if hasattr(leave, "student"):
+        if leave.student.class_incharge == user:
+            return redirect('class_incharge_dashboard')
+        if leave.student.mentor == user:
+            return redirect('mentor_dashboard')
+
+    if user.groups.filter(name='Mentor').exists():
+        return redirect('mentor_dashboard')
+
+    if user.groups.filter(name='ClassIncharge').exists():
+        return redirect('class_incharge_dashboard')
+
+    return redirect('teacher_dashboard')
+
+
+# ─────────────────────────────
+# STUDENT VIEWS
+# ─────────────────────────────
+@login_required
+def view_students(request):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    students = Student.objects.all().order_by('roll_no')
+    return render(request, 'view_students.html', {'students': students})
 @login_required
 def leave_status(request):
     student, err = _student_required(request)
     if err: return err
+
     leaves = LeaveRequest.objects.filter(student=student).order_by('-created_at')
     return render(request, 'leave_status.html', {'leaves': leaves})
 
@@ -262,6 +304,7 @@ def leave_status(request):
 def apply_page(request):
     student, err = _student_required(request)
     if err: return err
+
     return render(request, 'apply.html')
 
 
@@ -269,229 +312,253 @@ def apply_page(request):
 def student_defaulter_view(request):
     student, err = _student_required(request)
     if err: return err
-    defaulters = DefaulterStudent.objects.filter(roll_no=student.roll_no).order_by('year')
+
+    defaulters = DefaulterStudent.objects.filter(
+        roll_no=student.roll_no
+    ).order_by('year')
+
     return render(request, 'student_defaulter.html', {'students': defaulters})
 
 
-# ─────────────────────────────────────────────
-# 4. HIERARCHICAL LEAVE CHAINING (THE NEW ENGINE)
-# ─────────────────────────────────────────────
-
-
-
+# ─────────────────────────────
+# LEAVE APPLICATION API
+# ─────────────────────────────
 @login_required
 def apply_leave_api(request):
-    if request.method != 'POST': return JsonResponse({'status': 'error'})
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error'})
+
     student, err = _student_required(request)
-    if err: return JsonResponse({'status': 'error', 'message': 'Not a student'})
+    if err:
+        return JsonResponse({'status': 'error', 'message': 'Not a student'})
 
     try:
         data = json.loads(request.body)
-        from_date = datetime.strptime(data.get('from_date'), "%Y-%m-%d").date()
-        to_date = datetime.strptime(data.get('to_date'), "%Y-%m-%d").date()
+
+        from_date = datetime.strptime(data['from_date'], "%Y-%m-%d").date()
+        to_date = datetime.strptime(data['to_date'], "%Y-%m-%d").date()
 
         if from_date < date.today():
-            return JsonResponse({'status': 'error', 'message': 'Cannot apply for past dates'})
+            return JsonResponse({'status': 'error', 'message': 'Past date not allowed'})
         if from_date > to_date:
-            return JsonResponse({'status': 'error', 'message': 'Invalid date range'})
+            return JsonResponse({'status': 'error', 'message': 'Invalid range'})
 
         overlap = LeaveRequest.objects.filter(
             student=student,
             from_date__lte=to_date,
             to_date__gte=from_date
         ).exclude(status='REJECTED')
-        
-        if overlap.exists():
-            return JsonResponse({'status': 'error', 'message': 'Leave already exists for these dates'})
 
-        leave = LeaveRequest.objects.create(
-            student=student, 
-            from_date=from_date, 
+        if overlap.exists():
+            return JsonResponse({'status': 'error', 'message': 'Already applied'})
+
+        LeaveRequest.objects.create(
+            student=student,
+            from_date=from_date,
             to_date=to_date,
-            reason=data.get('reason'), 
+            reason=data.get('reason'),
             status='PENDING'
         )
 
         ActivityLog.objects.create(
             user=request.user,
-            action=f"Applied for leave: {from_date} to {to_date}",
+            action=f"Applied leave {from_date}-{to_date}",
             ip_address=request.META.get('REMOTE_ADDR')
         )
-        
+
         return JsonResponse({'status': 'success'})
+
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
 
+# ─────────────────────────────
+# DASHBOARDS
+# ─────────────────────────────
 @login_required
-@role_required('Mentor')
 def mentor_dashboard(request):
-    # Show only PENDING leaves assigned to this mentor
-    pending_leaves = LeaveRequest.objects.filter(status='PENDING')
+    if not request.user.groups.filter(name='Mentor').exists():
+        return redirect('home')
+
+    leaves = LeaveRequest.objects.filter(status='PENDING')
     if not request.user.is_superuser:
-        pending_leaves = pending_leaves.filter(student__mentor=request.user)
-    
-    pending_od = ODApplication.objects.filter(status='pending').count()
-    context = {
-        'leaves': pending_leaves,
-        'pending_leaves_count': pending_leaves.count(),
-        'pending_od': pending_od,
-        'total_notifications': pending_leaves.count() + pending_od,
-    }
-    return render(request, 'mentor_dashboard.html', context)
+        leaves = leaves.filter(student__mentor=request.user)
 
-
-@login_required
-@role_required('ClassIncharge')
-def class_incharge_dashboard(request):
-    # Show only PENDING leaves assigned to this CI
-    pending_leaves = LeaveRequest.objects.filter(status='PENDING')
-    if not request.user.is_superuser:
-        pending_leaves = pending_leaves.filter(student__class_incharge=request.user)
-    
-    pending_od = ODApplication.objects.filter(status='pending').count()
-    context = {
-        'leaves': pending_leaves,
-        'pending_leaves_count': pending_leaves.count(),
-        'pending_od': pending_od,
-        'total_notifications': pending_leaves.count() + pending_od,
-    }
-    return render(request, 'class_incharge_dashboard.html', context)
-
-
-@login_required
-@role_required('Mentor')
-def mentor_review_leave(request, leave_id, action):
-    leave = get_object_or_404(LeaveRequest, id=leave_id)
-
-    if leave.status != 'PENDING':
-        messages.error(request, "This request has already been processed.")
-        return redirect('mentor_dashboard')
-
-    if not request.user.is_superuser and leave.student.mentor != request.user:
-        raise PermissionDenied()
-
-    if action == 'approve':
-        leave.status = 'APPROVED'
-        # Attendance logic for final approval
-        curr = leave.from_date
-        while curr <= leave.to_date:
-            day_name = curr.strftime('%a')
-            entries = Timetable.objects.filter(batch=leave.student.batch, department=leave.student.department, day=day_name)
-            for entry in entries:
-                Attendance.objects.update_or_create(student=leave.student, subject=entry.subject, date=curr, defaults={'status': 'Leave'})
-            curr += timedelta(days=1)
-        msg = "Your leave was approved by Mentor."
-    elif action == 'reject':
-        leave.status = 'REJECTED'
-        msg = "Your leave was rejected by Mentor."
-    else:
-        raise PermissionDenied()
-
-    leave.mentor_reviewed_by = request.user
-    leave.save()
-
-    notif = Notification.objects.create(title="Leave Update", message=msg, type="leave", url="/leave-status/")
-    notif.users.add(leave.student.user)
-
-    ActivityLog.objects.create(user=request.user, action=f"MENTOR {action.upper()} leave {leave.id}", ip_address=request.META.get('REMOTE_ADDR'))
-    return redirect('mentor_dashboard')
-
-
-@login_required
-@role_required('ClassIncharge')
-def ci_review_leave(request, leave_id, action):
-    leave = get_object_or_404(LeaveRequest, id=leave_id)
-
-    if leave.status != 'PENDING':
-        messages.error(request, "This request has already been processed.")
-        return redirect('class_incharge_dashboard')
-
-    if not request.user.is_superuser and leave.student.class_incharge != request.user:
-        raise PermissionDenied()
-
-    if action == 'approve':
-        leave.status = 'APPROVED'
-        # Attendance logic for final approval
-        curr = leave.from_date
-        while curr <= leave.to_date:
-            day_name = curr.strftime('%a')
-            entries = Timetable.objects.filter(batch=leave.student.batch, department=leave.student.department, day=day_name)
-            for entry in entries:
-                Attendance.objects.update_or_create(student=leave.student, subject=entry.subject, date=curr, defaults={'status': 'Leave'})
-            curr += timedelta(days=1)
-        msg = f"Your leave from {leave.from_date} has been approved by Class Incharge."
-    elif action == 'reject':
-        leave.status = 'REJECTED'
-        msg = f"Your leave from {leave.from_date} has been rejected by Class Incharge."
-    else:
-        raise PermissionDenied()
-
-    leave.class_incharge_reviewed_by = request.user
-    leave.save()
-
-    notif = Notification.objects.create(title="Leave Update", message=msg, type="leave", url="/leave-status/")
-    notif.users.add(leave.student.user)
-
-    ActivityLog.objects.create(user=request.user, action=f"CI {action.upper()} leave {leave.id}", ip_address=request.META.get('REMOTE_ADDR'))
-    return redirect('class_incharge_dashboard')
-# ─────────────────────────────────────────────
-# 5. STAFF & TEACHER VIEWS (LEGACY PRESERVED)
-# ─────────────────────────────────────────────
-
-@login_required
-def teacher_dashboard(request):
-    if not request.user.is_staff: return redirect('home')
-    pending_leaves = LeaveRequest.objects.filter(status__icontains='PENDING').count()
-    pending_od = ODApplication.objects.filter(status='pending').count()
-    return render(request, 'teacher_dashboard.html', {
-        'pending_leaves': pending_leaves,
-        'pending_od': pending_od,
-        'total_notifications': pending_leaves + pending_od
+    return render(request, 'mentor_dashboard.html', {
+        'leaves': leaves,
+        'pending_leaves_count': leaves.count(),
+        'pending_od': ODApplication.objects.filter(status='pending').count()
     })
 
 
 @login_required
+def class_incharge_dashboard(request):
+    if not request.user.groups.filter(name='ClassIncharge').exists():
+        return redirect('home')
+
+    leaves = LeaveRequest.objects.filter(status='APPROVED_BY_MENTOR')
+    if not request.user.is_superuser:
+        leaves = leaves.filter(student__class_incharge=request.user)
+
+    return render(request, 'class_incharge_dashboard.html', {
+        'leaves': leaves,
+        'pending_leaves_count': leaves.count(),
+        'pending_od': ODApplication.objects.filter(status='pending').count()
+    })
+
+
+@login_required
+def teacher_dashboard(request):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    return render(request, 'teacher_dashboard.html', {
+        'pending_leaves': LeaveRequest.objects.filter(status__icontains='PENDING').count(),
+        'pending_od': ODApplication.objects.filter(status='pending').count()
+    })
+
+
+# ─────────────────────────────
+# HIERARCHICAL APPROVAL ENGINE
+# ─────────────────────────────
+@login_required
+def review_leave(request, leave_id, action):
+    if action not in ['approve', 'reject']:
+        raise PermissionDenied()
+
+    user = request.user
+
+    try:
+        with transaction.atomic():
+            leave = LeaveRequest.objects.select_for_update().get(id=leave_id)
+
+            is_mentor = leave.student.mentor == user
+            is_ci = leave.student.class_incharge == user
+
+            if not (is_mentor or is_ci or user.is_superuser):
+                raise PermissionDenied()
+
+            if is_mentor and leave.status != 'PENDING':
+                return _redirect_after_review(user, leave)
+
+            if is_ci and leave.status != 'APPROVED_BY_MENTOR':
+                return _redirect_after_review(user, leave)
+
+            if action == 'approve':
+
+                if is_mentor:
+                    leave.status = 'APPROVED_BY_MENTOR'
+                    msg = "Approved by Mentor, pending Class Incharge"
+                else:
+                    leave.status = 'APPROVED'
+
+                    curr = leave.from_date
+                    while curr <= leave.to_date:
+                        day = curr.strftime('%a')
+                        timetable = Timetable.objects.filter(
+                            batch=leave.student.batch,
+                            department=leave.student.department,
+                            day=day
+                        )
+
+                        for t in timetable:
+                            Attendance.objects.update_or_create(
+                                student=leave.student,
+                                subject=t.subject,
+                                date=curr,
+                                defaults={'status': 'Leave'}
+                            )
+                        curr += timedelta(days=1)
+
+                    msg = "Final approval completed"
+
+            else:
+                leave.status = 'REJECTED'
+                msg = "Leave rejected"
+
+            leave.reviewed_by = user
+            leave.reviewed_at = timezone.now()
+            leave.save()
+
+            Notification.objects.create(
+                title="Leave Update",
+                message=msg,
+                type="leave",
+                url="/leave-status/"
+            ).users.add(leave.student.user)
+
+            ActivityLog.objects.create(
+                user=user,
+                action=f"{action.upper()} leave {leave.id}",
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+    except LeaveRequest.DoesNotExist:
+        raise Http404()
+
+    return _redirect_after_review(user, leave)
+
+
+# ─────────────────────────────
+# ATTENDANCE
+# ─────────────────────────────
+@login_required
 def mark_attendance(request):
-    if not request.user.is_staff: return HttpResponse('Unauthorized', status=403)
+    if not request.user.is_staff:
+        return HttpResponse('Unauthorized', status=403)
+
     students = Student.objects.all().order_by('roll_no')
     today = date.today()
 
     if request.method == 'POST':
-        for student in students:
-            status = request.POST.get(f'status_{student.id}')
+        for s in students:
+            status = request.POST.get(f'status_{s.id}')
             if status:
                 Attendance.objects.update_or_create(
-                    student=student, date=today, defaults={'status': status}
+                    student=s,
+                    date=today,
+                    defaults={'status': status}
                 )
-        messages.success(request, "Attendance marked for today.")
+
+        messages.success(request, "Attendance marked")
         return redirect('teacher_dashboard')
 
     records = Attendance.objects.filter(date=today)
     att_map = {r.student_id: r.status for r in records}
-    student_data = [{'student': s, 'status': att_map.get(s.id, 'Present')} for s in students]
-    return render(request, 'mark_attendance.html', {'student_data': student_data})
+
+    return render(request, 'mark_attendance.html', {
+        'student_data': [
+            {'student': s, 'status': att_map.get(s.id, 'Present')}
+            for s in students
+        ]
+    })
 
 
-@login_required
-def view_students(request):
-    if not request.user.is_staff: return redirect('home')
-    students = Student.objects.all().order_by('roll_no')
-    return render(request, 'view_students.html', {'students': students})
-
-
+# ─────────────────────────────
+# TODAY LEAVES
+# ─────────────────────────────
 @login_required
 def today_leaves(request):
-    if not request.user.is_staff: return redirect('home')
+    if not request.user.is_staff:
+        return redirect('home')
+
     today = date.today()
-    selected_batch = request.GET.get('batch')
-    leaves = LeaveRequest.objects.filter(from_date__lte=today, to_date__gte=today)
-    if selected_batch:
-        leaves = leaves.filter(student__batch=selected_batch)
-    batches = Student.objects.values_list('batch', flat=True).distinct()
-    return render(request, 'today_leaves.html', {'leaves': leaves, 'batches': batches, 'selected_batch': selected_batch})
+    batch = request.GET.get('batch')
 
+    leaves = LeaveRequest.objects.filter(
+        from_date__lte=today,
+        to_date__gte=today,
+        status__in=['PENDING', 'APPROVED']
+    ).select_related('student')
 
+    if batch:
+        leaves = leaves.filter(student__batch=batch)
+
+    return render(request, 'today_leaves.html', {
+        'leaves': leaves,
+        'batches': Student.objects.values_list('batch', flat=True).distinct(),
+        'selected_batch': batch
+    })
 # ─────────────────────────────────────────────
 # 6. HOD DASHBOARD & ANALYTICS (OPTIMIZED)
 # ─────────────────────────────────────────────

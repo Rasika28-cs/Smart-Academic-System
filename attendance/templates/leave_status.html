@@ -4,12 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Leave Status - Smart Attendance</title>
-
+  <title>Leave Status & History - Smart Attendance</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-
   <script>
     tailwind.config = {
       theme: {
@@ -27,12 +25,11 @@
       },
     };
   </script>
-
   <style>
     body {
       font-family: "Inter", sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
+      background-color: #F8FAFC;
+      color: #0F172A;
       -webkit-font-smoothing: antialiased;
     }
     .material-symbols-outlined {
@@ -40,14 +37,9 @@
       vertical-align: middle;
     }
     .nav-link { transition: all 0.2s ease; }
-    .nav-link:hover { background-color: #f1f5f9; color: #2563eb; }
-    .table-container {
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
-    }
-    {% include 'includes/leave_workflow_styles.html' %}
+    .nav-link:hover { background-color: #F1F5F9; color: #2563eb; }
   </style>
 </head>
-
 <body class="min-h-screen flex flex-col">
 
   <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 md:px-8 gap-4 sticky top-0 z-50">
@@ -65,88 +57,147 @@
     </ul>
   </nav>
 
-  <main class="flex-1 py-6 sm:py-8 px-4 md:px-6 max-w-6xl mx-auto w-full min-w-0">
-
-    <div class="mb-6 sm:mb-8">
-      <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
-        <span class="material-symbols-outlined text-blue-600">assignment_turned_in</span>
-        Leave Status
-      </h1>
-      <p class="text-slate-500 text-sm mt-1">Track your leave requests and approval progress</p>
-    </div>
-
-    <!-- Desktop table -->
-    <div class="hidden lg:block bg-white border border-slate-200 rounded-xl table-container overflow-hidden mb-8">
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse min-w-[720px]">
-          <thead>
-            <tr class="bg-slate-50 border-b border-slate-200">
-              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">From</th>
-              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">To</th>
-              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">Reason</th>
-              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">Status</th>
-              <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">Workflow</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200">
-            {% for leave in leaves %}
-            <tr class="hover:bg-slate-50 transition-colors">
-              <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">{{ leave.from_date }}</td>
-              <td class="px-4 py-4 text-sm text-slate-500 whitespace-nowrap">{{ leave.to_date }}</td>
-              <td class="px-4 py-4 text-sm text-slate-500 max-w-[200px]">{{ leave.reason }}</td>
-              <td class="px-4 py-4">
-                {% include 'includes/leave_status_badge.html' with status=leave.status %}
-              </td>
-              <td class="px-4 py-4">
-                {% include 'includes/leave_workflow_steps.html' with status=leave.status %}
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="5" class="px-6 py-12 text-center">
-                <span class="material-symbols-outlined text-5xl mb-3 text-slate-300">inbox</span>
-                <p class="text-sm font-medium text-slate-500">No leave records found</p>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  <main class="flex-1 py-6 sm:py-8 px-4 md:px-6 max-w-5xl mx-auto w-full min-w-0">
+    
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-600 text-3xl">assignment_turned_in</span>
+          Leave Status
+        </h1>
+        <p class="text-slate-500 text-sm mt-1">Track your request histories and real-time outcomes</p>
       </div>
+      <a href="{% url 'student_dashboard' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all shadow-sm">
+        <span class="material-symbols-outlined text-lg">arrow_back</span>
+        Dashboard
+      </a>
     </div>
 
-    <!-- Mobile / tablet cards -->
-    <div class="lg:hidden space-y-4 mb-8">
+    <div class="grid grid-cols-1 gap-6">
       {% for leave in leaves %}
-      <article class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm min-w-0">
-        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
-          <div class="min-w-0">
-            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Leave Period</p>
-            <p class="text-sm font-semibold">{{ leave.from_date }} → {{ leave.to_date }}</p>
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+              <span class="material-symbols-outlined">calendar_today</span>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Leave Duration</p>
+              <p class="text-sm font-bold text-slate-800">{{ leave.from_date }} → {{ leave.to_date }}</p>
+            </div>
           </div>
-          {% include 'includes/leave_status_badge.html' with status=leave.status %}
+
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="text-left md:text-right">
+              <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Applied On</p>
+              <p class="text-sm text-slate-600 font-medium">{{ leave.applied_date }}</p>
+            </div>
+            <div>
+              {% if leave.status == "PENDING" %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                  Pending
+                </span>
+              {% elif leave.status == "APPROVED" %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Approved
+                </span>
+              {% elif leave.status == "REJECTED" %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-100">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                  Rejected
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-500">
+                  {{ leave.status }}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
         </div>
-        <p class="text-sm text-slate-500 mb-4 break-words">{{ leave.reason }}</p>
-        <div class="pt-3 border-t border-slate-200">
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Progress</p>
-          {% include 'includes/leave_workflow_steps.html' with status=leave.status %}
+
+        <div class="py-4">
+          <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Reason for Absence</p>
+          <p class="text-sm text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-relaxed font-medium">
+            {{ leave.reason }}
+          </p>
         </div>
-      </article>
+
+        <div class="pt-4 border-t border-slate-100">
+          <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-4">Workflow Roadmap</p>
+          <div class="relative flex items-center justify-between w-full max-w-md">
+            
+            <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-100 -z-10"></div>
+            {% if leave.status == "PENDING" %}
+              <div class="absolute left-0 w-1/2 top-1/2 -translate-y-1/2 h-0.5 bg-amber-400 -z-10"></div>
+            {% else %}
+              <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 {% if leave.status == 'APPROVED' %}bg-emerald-500{% else %}bg-rose-500{% endif %} -z-10"></div>
+            {% endif %}
+
+            <div class="flex flex-col items-center bg-white pr-4">
+              <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                <span class="material-symbols-outlined text-sm font-bold">check</span>
+              </div>
+              <span class="text-[11px] font-bold text-slate-800 mt-1">Submitted</span>
+            </div>
+
+            <div class="flex flex-col items-center bg-white px-4">
+              {% if leave.status == "PENDING" %}
+                <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center border border-amber-600 animate-pulse">
+                  <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+                </div>
+                <span class="text-[11px] font-bold text-amber-600 mt-1">Reviewing</span>
+              {% else %}
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                  <span class="material-symbols-outlined text-sm font-bold">check</span>
+                </div>
+                <span class="text-[11px] font-bold text-slate-800 mt-1">Reviewed</span>
+              {% endif %}
+            </div>
+
+            <div class="flex flex-col items-center bg-white pl-4">
+              {% if leave.status == "PENDING" %}
+                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
+                  <span class="material-symbols-outlined text-sm">pending</span>
+                </div>
+                <span class="text-[11px] font-medium text-slate-400 mt-1">Decision</span>
+              {% elif leave.status == "APPROVED" %}
+                <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border border-emerald-600">
+                  <span class="material-symbols-outlined text-sm font-bold">done_all</span>
+                </div>
+                <span class="text-[11px] font-bold text-emerald-600 mt-1">Approved</span>
+              {% elif leave.status == "REJECTED" %}
+                <div class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center border border-rose-600">
+                  <span class="material-symbols-outlined text-sm font-bold">close</span>
+                </div>
+                <span class="text-[11px] font-bold text-rose-600 mt-1">Rejected</span>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+
+      </div>
       {% empty %}
-      <div class="bg-white border border-slate-200 rounded-xl p-10 text-center">
-        <span class="material-symbols-outlined text-5xl mb-3 text-slate-300">inbox</span>
-        <p class="text-sm font-medium text-slate-500">No leave records found</p>
+      <div class="bg-white border border-slate-200 rounded-2xl p-16 text-center">
+        <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-slate-300 text-5xl">inbox</span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">No leave history found</h3>
+        <p class="text-slate-500 text-sm mt-1">You haven't submitted any leave requests yet.</p>
       </div>
       {% endfor %}
     </div>
 
-    <a href="{% url 'student_dashboard' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm no-underline">
-      <span class="material-symbols-outlined text-lg">arrow_back</span>
-      Back to Dashboard
-    </a>
   </main>
 
-  <footer class="bg-white border-t border-slate-200 text-center py-6 px-4">
-    <p class="text-xs text-slate-500">© 2026 Smart Academic System • Department of Computer Science and Engineering</p>
+  <footer class="mt-auto py-8 text-center border-t border-slate-200 bg-white">
+    <p class="text-xs text-slate-500">
+      © 2026 Smart Academic System • Department of Computer Science and Engineering
+    </p>
   </footer>
 
 </body>
