@@ -251,9 +251,6 @@ def attendance(request):
 
 
 
-# ─────────────────────────────
-# Helper
-# ─────────────────────────────
 def _student_required(request):
     try:
         student = Student.objects.get(user=request.user)
@@ -360,21 +357,6 @@ def apply_leave_api(request):
             status='PENDING'
         )
 
-        # NEW NOTIFICATION
-        notif = Notification.objects.create(
-            title="New Leave Request",
-            message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
-            type="leave",
-            url="/teacher/today-leaves/"
-        )
-
-        if student.mentor:
-            notif.users.add(student.mentor)
-
-        if student.class_incharge:
-            notif.users.add(student.class_incharge)
-
-
         ActivityLog.objects.create(
             user=request.user,
             action=f"Applied leave {from_date}-{to_date}",
@@ -423,32 +405,22 @@ def class_incharge_dashboard(request):
 
 
 @login_required
-@role_required('Mentor')
-def mentor_review_leave(request, leave_id, action):
-    leave = get_object_or_404(LeaveRequest, id=leave_id)
+def teacher_dashboard(request):
+    if not request.user.is_staff:
+        return redirect('home')
 
-    if leave.status != 'PENDING':
-        messages.error(request, "This request has already been processed.")
-        return redirect('mentor_dashboard')
+    return render(request, 'teacher_dashboard.html', {
+        'pending_leaves': LeaveRequest.objects.filter(status__icontains='PENDING').count(),
+        'pending_od': ODApplication.objects.filter(status='pending').count()
+    })
 
-    if not request.user.is_superuser and leave.student.mentor != request.user:
-        raise PermissionDenied()
 
-    if action == 'approve':
-        leave.status = 'APPROVED'
-        # Attendance logic for final approval
-        curr = leave.from_date
-        while curr <= leave.to_date:
-            day_name = curr.strftime('%a')
-            entries = Timetable.objects.filter(batch=leave.student.batch, department=leave.student.department, day=day_name)
-            for entry in entries:
-                Attendance.objects.update_or_create(student=leave.student, subject=entry.subject, date=curr, defaults={'status': 'Leave'})
-            curr += timedelta(days=1)
-        msg = "Your leave was approved by Mentor."
-    elif action == 'reject':
-        leave.status = 'REJECTED'
-        msg = "Your leave was rejected by Mentor."
-    else:
+# ─────────────────────────────
+# HIERARCHICAL APPROVAL ENGINE
+# ─────────────────────────────
+@login_required
+def review_leave(request, leave_id, action):
+    if action not in ['approve', 'reject']:
         raise PermissionDenied()
 
     user = request.user
