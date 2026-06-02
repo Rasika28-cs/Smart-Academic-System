@@ -312,6 +312,21 @@ def apply_leave_api(request):
             status='PENDING'
         )
 
+        # NEW NOTIFICATION
+        notif = Notification.objects.create(
+            title="New Leave Request",
+            message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
+            type="leave",
+            url="/teacher/today-leaves/"
+        )
+
+        if student.mentor:
+            notif.users.add(student.mentor)
+
+        if student.class_incharge:
+            notif.users.add(student.class_incharge)
+
+
         ActivityLog.objects.create(
             user=request.user,
             action=f"Applied for leave: {from_date} to {to_date}",
@@ -363,6 +378,14 @@ def class_incharge_dashboard(request):
 @role_required('Mentor')
 def mentor_review_leave(request, leave_id, action):
     leave = get_object_or_404(LeaveRequest, id=leave_id)
+
+    print("==========")
+    print("LEAVE ID:", leave_id)
+    print("ACTION:", action)
+    print("STATUS:", leave.status)
+    print("LOGGED USER:", request.user)
+    print("STUDENT MENTOR:", leave.student.mentor)
+    print("==========")
 
     if leave.status != 'PENDING':
         messages.error(request, "This request has already been processed.")

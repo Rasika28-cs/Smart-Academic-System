@@ -401,7 +401,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ---------------- FETCH NOTIFICATIONS ----------------
     function fetchNotifications() {
-        fetch("/notifications/count/")   // IMPORTANT: your API
+        fetch("/notifications/unread/")   // IMPORTANT: your API
             .then(res => res.json())
             .then(data => {
 

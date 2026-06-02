@@ -55,7 +55,7 @@
           <span class="material-symbols-outlined text-blue-600 text-3xl shrink-0">fact_check</span>
           <h1 class="text-xl sm:text-3xl font-extrabold tracking-tight truncate">Mentor Leave Requests</h1>
         </div>
-        <p class="text-slate-500 text-sm sm:text-base">Review and manage student leave requests assigned to you.</p>
+        <p class="text-slate-500 text-sm sm:text-base">Review and approve or reject student leave requests.</p>
       </div>
       {% if batches %}
       <form method="GET" class="w-full sm:w-auto shrink-0">
@@ -98,7 +98,7 @@
               </td>
               <td class="px-4 lg:px-6 py-5 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  {% if leave.status == "PENDING_MENTOR" %}
+                  {% if leave.status == "PENDING" %}
                   <a href="{% url 'mentor_review_leave' leave.id 'approve' %}"
                      onclick="return confirmLeaveAction('approve', '{{ leave.student.name|escapejs }}');"
                      class="btn-action inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold shadow-sm transition">
@@ -125,7 +125,7 @@
               <td colspan="6" class="px-6 py-20 text-center">
                 <span class="material-symbols-outlined text-slate-300 text-5xl mb-4">inbox</span>
                 <h3 class="text-lg font-bold">No leave requests</h3>
-                <p class="text-slate-500 text-sm mt-1">There are no mentor leave requests right now.</p>
+                <p class="text-slate-500 text-sm mt-1">There are currently no leave requests available.</p>
               </td>
             </tr>
             {% endfor %}
@@ -150,7 +150,7 @@
         </div>
         <p class="text-sm text-slate-600 mb-4 break-words">{{ leave.reason }}</p>
         <div class="flex flex-col gap-2 pt-3 border-t border-slate-100">
-          {% if leave.status == "PENDING_MENTOR" %}
+          {% if leave.status == "PENDING" %}
           <a href="{% url 'mentor_review_leave' leave.id 'approve' %}"
              onclick="return confirmLeaveAction('approve', '{{ leave.student.name|escapejs }}');"
              class="btn-action w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-semibold shadow-sm transition">
@@ -171,7 +171,7 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
         <span class="material-symbols-outlined text-slate-300 text-5xl mb-3">inbox</span>
         <h3 class="text-lg font-bold">No leave requests</h3>
-        <p class="text-slate-500 text-sm mt-1">There are no mentor leave requests right now.</p>
+        <p class="text-slate-500 text-sm mt-1">There are currently no leave requests available.</p>
       </div>
       {% endfor %}
     </div>
@@ -184,8 +184,14 @@
 
   <script>
     function confirmLeaveAction(action, studentName) {
-      const verb = action === 'approve' ? 'approve and forward to Class Incharge' : 'reject';
-      return confirm('Are you sure you want to ' + verb + ' the leave request for ' + studentName + '?');
+      const verb = action === 'approve' ? 'approve' : 'reject';
+      return confirm(
+        'Are you sure you want to ' +
+        verb +
+        ' the leave request for ' +
+        studentName +
+        '?'
+      );
     }
   </script>
 </body>

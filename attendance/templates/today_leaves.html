@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1" name="viewport" />
-  <title>Mentor Leave Requests - Smart Academic System</title>
+<title>Today's Leave Students - Smart Academic System</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
@@ -129,13 +129,13 @@
           </span>
 
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Mentor Leave Requests
+            Today's Leave Students
           </h1>
 
         </div>
 
         <p class="text-slate-500 text-sm sm:text-base">
-          Review and manage mentor leave requests.
+          Students who have applied leave for today.
         </p>
 
       </div>
@@ -190,8 +190,8 @@
                 Reason
               </th>
 
-              <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 text-right">
-                Action
+              <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 text-center">
+                Status
               </th>
 
             </tr>
@@ -231,37 +231,26 @@
 
               </td>
 
-              <!-- Actions -->
-              <td class="px-6 py-5 text-right whitespace-nowrap">
+              <!-- Status -->
+              <td class="px-6 py-5 text-center">
 
-                <div class="flex items-center justify-end gap-2">
-
-                  <a href="{% url 'mentor_review_leave' leave.id 'approve' %}"
-                     class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition">
-
-                    <span class="material-symbols-outlined text-sm">
-                      check
+                {% if leave.status == "APPROVED" %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                        Approved Leave
                     </span>
 
-                    Approve
-
-                  </a>
-
-                  <a href="{% url 'mentor_review_leave' leave.id 'approve' %}"
-                     class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold transition">
-
-                    <span class="material-symbols-outlined text-sm">
-                      close
+                {% elif leave.status == "REJECTED" %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                        Rejected
                     </span>
 
-                    Reject
-
-                  </a>
-
-                </div>
+                {% else %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+                        Pending
+                    </span>
+                {% endif %}
 
               </td>
-
             </tr>
 
             {% empty %}
@@ -306,7 +295,7 @@
       <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-200">
 
         <p class="text-[11px] font-medium text-slate-500 uppercase tracking-widest">
-          Showing mentor leave requests
+          Showing today's leave students
         </p>
 
       </div>
