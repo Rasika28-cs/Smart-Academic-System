@@ -281,6 +281,20 @@ def _redirect_after_review(user, leave=None):
 # ─────────────────────────────
 # STUDENT VIEWS
 # ─────────────────────────────
+
+def is_student_on_leave(student, check_date):
+    """
+    Helper function to determine if a student has an approved leave 
+    covering the specified check_date.
+    """
+    return LeaveRequest.objects.filter(
+        student=student,
+        from_date__lte=check_date,
+        to_date__gte=check_date,
+        status='APPROVED'
+    ).exists()
+
+
 @login_required
 def view_students(request):
     if not request.user.is_staff:
@@ -288,10 +302,13 @@ def view_students(request):
 
     students = Student.objects.all().order_by('roll_no')
     return render(request, 'view_students.html', {'students': students})
+
+
 @login_required
 def leave_status(request):
     student, err = _student_required(request)
-    if err: return err
+    if err: 
+        return err
 
     leaves = LeaveRequest.objects.filter(student=student).order_by('-created_at')
     return render(request, 'leave_status.html', {'leaves': leaves})
@@ -300,7 +317,8 @@ def leave_status(request):
 @login_required
 def apply_page(request):
     student, err = _student_required(request)
-    if err: return err
+    if err: 
+        return err
 
     return render(request, 'apply.html')
 
@@ -308,7 +326,8 @@ def apply_page(request):
 @login_required
 def student_defaulter_view(request):
     student, err = _student_required(request)
-    if err: return err
+    if err: 
+        return err
 
     defaulters = DefaulterStudent.objects.filter(
         roll_no=student.roll_no
@@ -507,8 +526,40 @@ def mark_attendance(request):
     students = Student.objects.all().order_by('roll_no')
     today = date.today()
 
+    # Query all students who have approved leave covering today's date
+    students_on_leave_ids = set(
+        LeaveRequest.objects.filter(
+            from_date__lte=today,
+            to_date__gte=today,
+            status='APPROVED'
+        ).values_list('student_id', flat=True)
+    )
+
+    # Fetch existing today's attendance records to prevent redundant creations
+    existing_attendances = {
+        att.student_id: att for att in Attendance.objects.filter(date=today)
+    }
+
+    # Automatically create/update records for students with active approved leave
+    for student_id in students_on_leave_ids:
+        att = existing_attendances.get(student_id)
+        if not att:
+            new_att = Attendance.objects.create(
+                student_id=student_id,
+                date=today,
+                status='Leave'
+            )
+            existing_attendances[student_id] = new_att
+        elif att.status != 'Leave':
+            att.status = 'Leave'
+            att.save(update_fields=['status'])
+
     if request.method == 'POST':
         for s in students:
+            # Skip students on approved leave to preserve their Leave state
+            if s.id in students_on_leave_ids:
+                continue
+
             status = request.POST.get(f'status_{s.id}')
             if status:
                 Attendance.objects.update_or_create(
@@ -520,14 +571,26 @@ def mark_attendance(request):
         messages.success(request, "Attendance marked")
         return redirect('teacher_dashboard')
 
-    records = Attendance.objects.filter(date=today)
-    att_map = {r.student_id: r.status for r in records}
+    # Build response dataset for safe UI rendering
+    student_data = []
+    for s in students:
+        is_on_leave = s.id in students_on_leave_ids
+        
+        if is_on_leave:
+            current_status = 'Leave'
+        elif s.id in existing_attendances:
+            current_status = existing_attendances[s.id].status
+        else:
+            current_status = 'Present'
+
+        student_data.append({
+            'student': s,
+            'status': current_status,
+            'is_on_leave': is_on_leave
+        })
 
     return render(request, 'mark_attendance.html', {
-        'student_data': [
-            {'student': s, 'status': att_map.get(s.id, 'Present')}
-            for s in students
-        ]
+        'student_data': student_data
     })
 
 
