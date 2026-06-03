@@ -43,6 +43,7 @@ class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name='student_profile')
     name = models.CharField(max_length=100)
     roll_no = models.CharField(max_length=20, unique=True)
+    reg_no = models.CharField(max_length=30, unique=True)
     password = models.CharField(max_length=255)
     batch = models.CharField(max_length=20, default="2024-2028")
 
@@ -317,8 +318,10 @@ class ParentProfile(models.Model):
     phone_number = models.CharField(max_length=15)
 
 
+
 from django.db import models
 from django.contrib.auth.models import User
+from leave_app.models import Student   # ✅ IMPORTANT FIX (must import)
 
 
 class GradeUpload(models.Model):
@@ -339,7 +342,11 @@ class StudentGrade(models.Model):
         related_name='grades'
     )
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='grades'   # ✅ helps reverse queries
+    )
 
     subject_code = models.CharField(max_length=50)
     subject_name = models.CharField(max_length=150, blank=True, null=True)
@@ -350,4 +357,5 @@ class StudentGrade(models.Model):
         unique_together = ('upload', 'student', 'subject_code')
 
     def __str__(self):
-        return f"{self.student} - {self.subject_code}"
+        return f"{self.student.roll_no} - {self.subject_code}"
+    

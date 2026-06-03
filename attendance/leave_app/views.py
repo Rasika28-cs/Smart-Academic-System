@@ -1343,21 +1343,21 @@ def create_timetable_entry(request):
     return render(request, 'create_timetable.html')
 
 
-
 import pandas as pd
-
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-
-from .models import GradeUpload, StudentGrade, Student
+from .models import GradeUpload, Student, StudentGrade
 
 
 @login_required
 def upload_grades(request):
     if request.method == 'POST':
-        file = request.FILES['file']
+        file = request.FILES.get('file')
         title = request.POST.get('title')
         semester = request.POST.get('semester')
+
+        if not file:
+            return render(request, 'upload_grades.html', {'error': 'Please upload a file'})
 
         upload = GradeUpload.objects.create(
             title=title,
@@ -1366,37 +1366,56 @@ def upload_grades(request):
             uploaded_by=request.user
         )
 
-        # Read file
+        # READ FILE
         if file.name.endswith('.csv'):
-            df = pd.read_csv(file)
+            df = pd.read_csv(file, encoding='utf-8-sig')  # FIX BOM issue
+
+        elif file.name.endswith('.xlsx'):
+            df = pd.read_excel(file, engine='openpyxl')
+
         else:
-            df = pd.read_excel(file)
+            return render(request, 'upload_grades.html', {
+                'error': 'Only CSV or XLSX files allowed'
+            })
 
-        # First column = register number
-        df.columns = [str(c).strip() for c in df.columns]
+        # CLEAN COLUMN NAMES (VERY IMPORTANT)
+        df.columns = df.columns.str.strip()
 
-        subject_columns = [c for c in df.columns if c != "Register No"]
+        print("COLUMNS FOUND:", df.columns.tolist())  # DEBUG
+
+        # FIND register column safely
+        reg_col = None
+        for c in df.columns:
+            if "register" in c.lower():
+                reg_col = c
+                break
+
+        if not reg_col:
+            return render(request, 'upload_grades.html', {
+                'error': 'Register No column not found in file'
+            })
+
+        subject_columns = [c for c in df.columns if c != reg_col and c != "Student Name"]
 
         for _, row in df.iterrows():
-            reg_no = str(row["Register No"]).strip()
+            reg_no = str(row[reg_col]).strip()
 
             try:
-                student = Student.objects.get(register_number=reg_no)
+                student = Student.objects.get(reg_no__iexact=reg_no)
 
                 for subject_code in subject_columns:
                     grade = str(row[subject_code]).strip()
 
-                    if grade and grade != "nan":
-
-                        StudentGrade.objects.create(
+                    if grade and grade.lower() != "nan":
+                        StudentGrade.objects.update_or_create(
                             upload=upload,
                             student=student,
                             subject_code=subject_code,
-                            grade=grade
+                            defaults={'grade': grade}
                         )
 
             except Student.DoesNotExist:
-                continue
+                print("❌ Student NOT FOUND:", reg_no)
 
         return redirect('upload_grades')
 
@@ -1404,9 +1423,7 @@ def upload_grades(request):
 
 @login_required
 def student_grades(request):
-    student, err = _student_required(request)
-    if err:
-        return err
+    student = request.user.student_profile  # safe direct access
 
     grades = StudentGrade.objects.filter(
         student=student
@@ -1415,3 +1432,5 @@ def student_grades(request):
     return render(request, 'student_grades.html', {
         'grades': grades
     })
+
+
