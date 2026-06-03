@@ -446,6 +446,7 @@
 <p>Upload Excel file of defaulter students</p>
 </div>
 </a>
+
 <!-- View Defaulters -->
 <a class="tile" href="{% url 'defaulter_list' %}">
 <div class="tile-icon tile-red">
@@ -455,6 +456,16 @@
 <h3>View Defaulters</h3>
 <p>Manage defaulter list and follow-up actions</p>
 </div>
+</a>
+<a href="{% url 'upload_grades' %}" class="tile">
+  <div class="tile-icon tile-green">
+    <i class="bi bi-file-earmark-arrow-up-fill"></i>
+  </div>
+
+  <div>
+    <h3>Upload Grades</h3>
+    <p>Upload CSV / Excel / PDF marks</p>
+  </div>
 </a>
 </div>
 <!-- Summary Alert Card -->
