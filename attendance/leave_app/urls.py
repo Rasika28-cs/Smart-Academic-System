@@ -40,6 +40,8 @@ urlpatterns = [
 
     # Defaulters
     path('defaulters/', views.defaulter_list, name='defaulter_list'),
+    path('upload-defaulters/',views.upload_defaulters,name='upload_defaulters'),
+    path('update-action/<int:id>/',views.update_action,name='update_action'),
 
     # Notifications
     path('notifications/unread/', views.get_notifications, name='get_notifications'),
