@@ -4,15 +4,12 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1" name="viewport" />
-<<<<<<< HEAD
   <title>Today's Active Leaves - Smart Academic System</title>
-=======
-<title>Today's Leave Students - Smart Academic System</title>
 
->>>>>>> main
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
   <script>
     tailwind.config = {
       theme: {
@@ -21,15 +18,16 @@
             primary: "#2563EB",
             success: "#10B981",
             warning: "#F59E0B",
-            danger: "#EF4444",
+            danger:  "#EF4444",
           },
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
-          }
-        }
-      }
+          },
+        },
+      },
     }
   </script>
+
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -40,60 +38,80 @@
       flex-direction: column;
       -webkit-font-smoothing: antialiased;
     }
+
     .material-symbols-outlined {
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       vertical-align: middle;
     }
+
     .zebra-table tbody tr:nth-child(even) {
       background-color: #F8FAFC;
     }
+
     .zebra-table tbody tr:hover {
       background-color: #F1F5F9;
       transition: background-color 0.2s ease;
     }
+
     .table-container::-webkit-scrollbar {
       height: 6px;
     }
+
     .table-container::-webkit-scrollbar-thumb {
       background: #CBD5E1;
       border-radius: 10px;
     }
+
     .nav-link {
       transition: all 0.2s ease;
     }
+
     .nav-link:hover {
       background-color: #F1F5F9;
       color: #2563EB;
     }
   </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
 
+  <!-- ───────────── Navigation ───────────── -->
   <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
-    <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'dashboard' %}">
+    <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline"
+       href="{% url 'dashboard' %}">
       <span class="material-symbols-outlined text-2xl">school</span>
       <span class="hidden sm:inline">Smart Attendance</span>
     </a>
+
     <ul class="flex gap-1 ml-auto list-none items-center">
       <li>
-        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline" href="{% url 'dashboard' %}">
+        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline"
+           href="{% url 'dashboard' %}">
           Dashboard
         </a>
       </li>
       <li>
-        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline" href="{% url 'logout' %}">
+        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline"
+           href="{% url 'logout' %}">
           Logout
         </a>
       </li>
     </ul>
   </nav>
 
+  <!-- ───────────── Main Content ───────────── -->
   <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
 
+    <!-- Flash Messages -->
     {% if messages %}
     <div class="mb-6 space-y-2">
       {% for message in messages %}
-      <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-2 {% if message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-emerald-50 text-emerald-800 border border-emerald-200{% endif %}">
+      <div class="p-4 rounded-xl text-sm font-medium flex items-center gap-2
+                  {% if message.tags == 'error' %}
+                    bg-red-50 text-red-800 border border-red-200
+                  {% else %}
+                    bg-emerald-50 text-emerald-800 border border-emerald-200
+                  {% endif %}">
         <span class="material-symbols-outlined text-lg">
           {% if message.tags == 'error' %}error{% else %}check_circle{% endif %}
         </span>
@@ -103,31 +121,26 @@
     </div>
     {% endif %}
 
+    <!-- Page Header -->
     <div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
       <div>
         <div class="flex items-center gap-3 mb-1">
-          <span class="material-symbols-outlined text-primary text-3xl">
-            calendar_today
-          </span>
+          <span class="material-symbols-outlined text-primary text-3xl">calendar_today</span>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-<<<<<<< HEAD
             Today's Active Leaves
-=======
-            Today's Leave Students
->>>>>>> main
           </h1>
         </div>
         <p class="text-slate-500 text-sm sm:text-base">
-<<<<<<< HEAD
           Monitor and process active leave requests for today.
-=======
-          Students who have applied leave for today.
->>>>>>> main
         </p>
       </div>
 
+      <!-- Batch Filter -->
       <form method="GET">
-        <select name="batch" onchange="this.form.submit()" class="px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        <select name="batch"
+                onchange="this.form.submit()"
+                class="px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm
+                       focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">All Batches</option>
           {% for batch in batches %}
             <option value="{{ batch }}" {% if batch == selected_batch %}selected{% endif %}>
@@ -138,9 +151,11 @@
       </form>
     </div>
 
+    <!-- Table Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="table-container overflow-x-auto">
         <table class="w-full text-left border-collapse zebra-table">
+
           <thead>
             <tr class="bg-slate-50/80 border-b border-slate-200">
               <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
@@ -155,23 +170,20 @@
               <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Reason
               </th>
-<<<<<<< HEAD
               <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                 Status
               </th>
               <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 text-right">
                 Action
-=======
-
-              <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-500 text-center">
-                Status
->>>>>>> main
               </th>
             </tr>
           </thead>
+
           <tbody class="divide-y divide-slate-100">
             {% for leave in leaves %}
             <tr class="group">
+
+              <!-- Student Detail -->
               <td class="px-6 py-5 whitespace-nowrap">
                 <div class="flex flex-col">
                   <span class="text-sm font-semibold text-slate-900">
@@ -185,107 +197,106 @@
                 </div>
               </td>
 
+              <!-- Batch -->
               <td class="px-6 py-5 whitespace-nowrap">
                 <span class="text-sm text-slate-700 font-medium">
                   {{ leave.student.batch }}
                 </span>
               </td>
 
+              <!-- Active Period -->
               <td class="px-6 py-5 whitespace-nowrap">
                 <span class="text-sm text-slate-600 font-medium">
                   {{ leave.from_date }} → {{ leave.to_date }}
                 </span>
               </td>
 
+              <!-- Reason -->
               <td class="px-6 py-5">
                 <p class="text-sm text-slate-600 max-w-xs truncate group-hover:whitespace-normal">
                   {{ leave.reason }}
                 </p>
               </td>
 
-<<<<<<< HEAD
+              <!-- Status Badge -->
               <td class="px-6 py-5 whitespace-nowrap">
                 {% if leave.status == "PENDING" %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                               bg-amber-50 text-amber-700 border border-amber-100">
                     Pending
                   </span>
                 {% elif leave.status == "APPROVED" %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                               bg-emerald-50 text-emerald-700 border border-emerald-100">
                     Approved
                   </span>
                 {% elif leave.status == "REJECTED" %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-100">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                               bg-rose-50 text-rose-700 border border-rose-100">
                     Rejected
                   </span>
                 {% else %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-500">
+                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                               bg-slate-100 text-slate-500">
                     {{ leave.status }}
                   </span>
                 {% endif %}
               </td>
 
+              <!-- Action Buttons -->
               <td class="px-6 py-5 text-right whitespace-nowrap">
                 {% if leave.status == "PENDING" %}
                   <div class="flex items-center justify-end gap-2">
-                    <a href="/leave/review/{{ leave.id }}/approve/" onclick="return confirm('Approve leave for {{ leave.student.name|escapejs }}?');" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition shadow-sm">
+                    <a href="/leave/review/{{ leave.id }}/approve/"
+                       onclick="return confirm('Approve leave for {{ leave.student.name|escapejs }}?');"
+                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                              bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold
+                              transition shadow-sm">
                       <span class="material-symbols-outlined text-sm">check</span>
                       Approve
                     </a>
-                    <a href="/leave/review/{{ leave.id }}/reject/" onclick="return confirm('Reject leave for {{ leave.student.name|escapejs }}?');" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition shadow-sm">
+                    <a href="/leave/review/{{ leave.id }}/reject/"
+                       onclick="return confirm('Reject leave for {{ leave.student.name|escapejs }}?');"
+                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                              bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold
+                              transition shadow-sm">
                       <span class="material-symbols-outlined text-sm">close</span>
                       Reject
                     </a>
                   </div>
                 {% else %}
                   <div class="flex items-center justify-end gap-2">
-                    <button disabled class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed border border-slate-200">
+                    <button disabled
+                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                                   bg-slate-100 text-slate-400 text-xs font-semibold
+                                   cursor-not-allowed border border-slate-200">
                       <span class="material-symbols-outlined text-sm text-slate-300">check</span>
                       Approve
                     </button>
-                    <button disabled class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed border border-slate-200">
+                    <button disabled
+                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                                   bg-slate-100 text-slate-400 text-xs font-semibold
+                                   cursor-not-allowed border border-slate-200">
                       <span class="material-symbols-outlined text-sm text-slate-300">close</span>
                       Reject
                     </button>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg
+                                 bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200">
                       Completed
                     </span>
                   </div>
                 {% endif %}
-=======
-              <!-- Status -->
-              <td class="px-6 py-5 text-center">
-
-                {% if leave.status == "APPROVED" %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                        Approved Leave
-                    </span>
-
-                {% elif leave.status == "REJECTED" %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
-                        Rejected
-                    </span>
-
-                {% else %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
-                        Pending
-                    </span>
-                {% endif %}
-
->>>>>>> main
               </td>
+
             </tr>
             {% empty %}
             <tr>
               <td colspan="6" class="px-6 py-20 text-center">
                 <div class="flex flex-col items-center max-w-xs mx-auto">
                   <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                    <span class="material-symbols-outlined text-slate-300 text-5xl">
-                      inbox
-                    </span>
+                    <span class="material-symbols-outlined text-slate-300 text-5xl">inbox</span>
                   </div>
-                  <h3 class="text-lg font-bold text-slate-900">
-                    No active leaves today
-                  </h3>
+                  <h3 class="text-lg font-bold text-slate-900">No active leaves today</h3>
                   <p class="text-slate-500 text-sm mt-1">
                     There are no ongoing active leave requests for today.
                   </p>
@@ -294,21 +305,21 @@
             </tr>
             {% endfor %}
           </tbody>
+
         </table>
       </div>
 
+      <!-- Table Footer -->
       <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-200">
         <p class="text-[11px] font-medium text-slate-500 uppercase tracking-widest">
-<<<<<<< HEAD
           Active leaves monitoring panel
-=======
-          Showing today's leave students
->>>>>>> main
         </p>
       </div>
     </div>
+
   </main>
 
+  <!-- ───────────── Footer ───────────── -->
   <footer class="mt-auto py-8 text-center border-t border-slate-200 bg-white">
     <p class="text-xs text-slate-500">
       © 2026 Smart Academic System • Department of Computer Science and Engineering

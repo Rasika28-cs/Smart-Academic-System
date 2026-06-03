@@ -816,7 +816,7 @@ def upload_defaulters(request):
 
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
-    return render(request, 'defaulter_list.html', {'students': defaulters})
+    return render(request, 'defaulter_list.html', {'students': defaulter_list})
 
 
 @login_required
