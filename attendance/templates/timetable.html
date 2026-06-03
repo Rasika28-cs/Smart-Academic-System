@@ -1,0 +1,19 @@
+<h2>📅 Timetable</h2>
+
+<table border="1">
+    <tr>
+        <th>Day</th>
+        <th>Subject</th>
+        <th>Batch</th>
+        <th>Time</th>
+    </tr>
+
+    {% for t in timetable %}
+    <tr>
+        <td>{{ t.day }}</td>
+        <td>{{ t.subject }}</td>
+        <td>{{ t.batch }}</td>
+        <td>{{ t.start_time }} - {{ t.end_time }}</td>
+    </tr>
+    {% endfor %}
+</table>

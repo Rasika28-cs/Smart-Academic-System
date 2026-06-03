@@ -125,6 +125,8 @@ def home(request):
             return redirect('mentor_dashboard')
         elif request.user.is_staff:
             return redirect('teacher_dashboard')
+        elif is_classrep(user):
+            return redirect('cr_dashboard')
         
         student = _get_student(request)
         if student:
@@ -157,6 +159,7 @@ def login_page(request):
             elif is_class_incharge(user): return redirect('class_incharge_dashboard')
             elif is_mentor(user): return redirect('mentor_dashboard')
             elif user.is_staff: return redirect('teacher_dashboard')
+            elif is_classrep(user):return redirect('cr_dashboard')
             return redirect('student_dashboard')
 
         # Legacy Fallback Logic (Roll No based login)
@@ -240,7 +243,11 @@ def dashboard(request):
         'today_timetable': Timetable.objects.filter(batch=student.batch, day=date.today().strftime('%a'))
     }
     return render(request, 'dashboard.html', context)
+def dashboard_redirect(request):
+    user = request.user
 
+    if user.groups.filter(name='ClassRep').exists():
+        return redirect('cr_dashboard')
 
 @login_required
 def attendance(request):
@@ -1159,7 +1166,7 @@ def view_promotion_status(request):
 # ─────────────────────────────────────────────
 
 @login_required
-@role_required('HOD')
+@role_required('ClassRep')
 def assign_teacher_subject(request):
     # In this schema, Timetable entries define which teacher handles which subject for a batch
     if request.method == 'POST':
@@ -1200,7 +1207,7 @@ def get_subject_students(request, subject_code, batch):
 # ─────────────────────────────────────────────
 
 @login_required
-@role_required('HOD', 'ClassIncharge')
+@role_required('ClassRep')
 def create_circular(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -1243,7 +1250,7 @@ def list_circulars(request):
     return render(request, 'circular_list.html', {'circulars': circulars})
 
 @login_required
-@role_required('HOD')
+@role_required('ClassRep')
 def delete_circular(request, id):
     circular = get_object_or_404(Circular, id=id)
     circular.delete()
@@ -1293,7 +1300,7 @@ def view_activity_logs(request):
 # ─────────────────────────────────────────────
 
 @login_required
-@role_required('HOD')
+@role_required('ClassRep')
 def create_timetable_entry(request):
     if request.method == 'POST':
         day = request.POST.get('day')
@@ -1434,3 +1441,12 @@ def student_grades(request):
     })
 
 
+
+
+@login_required
+@role_required('ClassRep')
+def cr_dashboard(request):
+    return render(request, 'cr_dashboard.html')
+
+def is_classrep(user):
+    return user.groups.filter(name='ClassRep').exists()

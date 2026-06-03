@@ -47,5 +47,14 @@ urlpatterns = [
 
     # Notifications
     path('notifications/unread/', views.get_notifications, name='get_notifications'),
+
+    #class rep
+    path('cr-dashboard/', views.cr_dashboard, name='cr_dashboard'),
+
+    path('teacher/timetable/', views.view_timetable, name='view_timetable'),
+
+path('student/assignments/', views.assignment_list, name='assignment_list'),
+
+path('timetable/create/', views.create_timetable_entry, name='create_timetable_entry'),
     
 ]

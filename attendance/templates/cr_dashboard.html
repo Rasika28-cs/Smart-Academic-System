@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Class Rep Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+        }
+
+        .card a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h2>Class Representative Dashboard</h2>
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <a href="{% url 'view_timetable' %}">
+            📅 View Timetable
+        </a>
+    </div>
+
+    <div class="card">
+        <a href="{% url 'assignment_list' %}">
+            📝 View Assignments
+        </a>
+    </div>
+
+    <div class="card">
+        <a href="{% url 'create_timetable_entry' %}">
+            ➕ Add Timetable
+        </a>
+    </div>
+
+    
+
+</div>
+
+</body>
+</html>
