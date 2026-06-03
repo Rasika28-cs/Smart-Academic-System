@@ -284,8 +284,7 @@ def _redirect_after_review(user, leave=None):
 
 def is_student_on_leave(student, check_date):
     """
-    Helper function to determine if a student has an approved leave 
-    covering the specified check_date.
+    Returns True if an approved leave request covers the check_date for a student.
     """
     return LeaveRequest.objects.filter(
         student=student,
@@ -437,6 +436,7 @@ def teacher_dashboard(request):
 # ─────────────────────────────
 # HIERARCHICAL APPROVAL ENGINE
 # ─────────────────────────────
+
 @login_required
 def review_leave(request, leave_id, action):
     if action not in ['approve', 'reject']:
@@ -446,7 +446,13 @@ def review_leave(request, leave_id, action):
 
     try:
         with transaction.atomic():
-            leave = LeaveRequest.objects.select_for_update().get(id=leave_id)
+
+            leave = LeaveRequest.objects.select_related(
+                'student',
+                'student__user',
+                'student__mentor',
+                'student__class_incharge'
+            ).select_for_update().get(id=leave_id)
 
             is_mentor = leave.student.mentor == user
             is_ci = leave.student.class_incharge == user
@@ -454,54 +460,78 @@ def review_leave(request, leave_id, action):
             if not (is_mentor or is_ci or user.is_superuser):
                 raise PermissionDenied()
 
-            if is_mentor and leave.status != 'PENDING':
-                return _redirect_after_review(user, leave)
-
-            if is_ci and leave.status != 'APPROVED_BY_MENTOR':
+            # Only pending leaves can be reviewed
+            if leave.status != 'PENDING':
                 return _redirect_after_review(user, leave)
 
             if action == 'approve':
 
-                if is_mentor:
-                    leave.status = 'APPROVED_BY_MENTOR'
-                    msg = "Approved by Mentor, pending Class Incharge"
-                else:
-                    leave.status = 'APPROVED'
+                leave.status = 'APPROVED'
+                msg = "Leave approved"
 
-                    curr = leave.from_date
-                    while curr <= leave.to_date:
-                        day = curr.strftime('%a')
-                        timetable = Timetable.objects.filter(
-                            batch=leave.student.batch,
-                            department=leave.student.department,
-                            day=day
-                        )
+                # Auto-create attendance records
+                curr = leave.from_date
 
-                        for t in timetable:
-                            Attendance.objects.update_or_create(
+                while curr <= leave.to_date:
+
+                    timetable = Timetable.objects.filter(
+                        batch=leave.student.batch,
+                        department=leave.student.department,
+                        day=curr.strftime('%a')
+                    ).select_related('subject')
+
+                    if timetable.exists():
+
+                        for slot in timetable:
+
+                            attendance, created = Attendance.objects.get_or_create(
                                 student=leave.student,
-                                subject=t.subject,
+                                subject=slot.subject,
                                 date=curr,
                                 defaults={'status': 'Leave'}
                             )
-                        curr += timedelta(days=1)
 
-                    msg = "Final approval completed"
+                            if not created and attendance.status != 'Leave':
+                                attendance.status = 'Leave'
+                                attendance.save(update_fields=['status'])
+
+                    else:
+                        attendance, created = Attendance.objects.get_or_create(
+                            student=leave.student,
+                            subject=None,
+                            date=curr,
+                            defaults={'status': 'Leave'}
+                        )
+
+                        if not created and attendance.status != 'Leave':
+                            attendance.status = 'Leave'
+                            attendance.save(update_fields=['status'])
+
+                    curr += timedelta(days=1)
 
             else:
                 leave.status = 'REJECTED'
                 msg = "Leave rejected"
 
             leave.reviewed_by = user
+
+            if user.is_superuser:
+                leave.reviewer_role = 'Superuser'
+            elif is_ci:
+                leave.reviewer_role = 'Class Incharge'
+            else:
+                leave.reviewer_role = 'Mentor'
+
             leave.reviewed_at = timezone.now()
             leave.save()
 
-            Notification.objects.create(
+            notification = Notification.objects.create(
                 title="Leave Update",
                 message=msg,
                 type="leave",
                 url="/leave-status/"
-            ).users.add(leave.student.user)
+            )
+            notification.users.add(leave.student.user)
 
             ActivityLog.objects.create(
                 user=user,
@@ -514,19 +544,15 @@ def review_leave(request, leave_id, action):
 
     return _redirect_after_review(user, leave)
 
-
-# ─────────────────────────────
-# ATTENDANCE
-# ─────────────────────────────
 @login_required
 def mark_attendance(request):
     if not request.user.is_staff:
         return HttpResponse('Unauthorized', status=403)
 
-    students = Student.objects.all().order_by('roll_no')
     today = date.today()
+    students = Student.objects.all().order_by('roll_no')
 
-    # Query all students who have approved leave covering today's date
+    # Students having approved leave today
     students_on_leave_ids = set(
         LeaveRequest.objects.filter(
             from_date__lte=today,
@@ -535,65 +561,83 @@ def mark_attendance(request):
         ).values_list('student_id', flat=True)
     )
 
-    # Fetch existing today's attendance records to prevent redundant creations
-    existing_attendances = {
-        att.student_id: att for att in Attendance.objects.filter(date=today)
-    }
+    # Existing attendance records for today
+    attendance_records = Attendance.objects.filter(
+        date=today
+    ).select_related('student')
 
-    # Automatically create/update records for students with active approved leave
-    for student_id in students_on_leave_ids:
-        att = existing_attendances.get(student_id)
-        if not att:
-            new_att = Attendance.objects.create(
-                student_id=student_id,
-                date=today,
-                status='Leave'
-            )
-            existing_attendances[student_id] = new_att
-        elif att.status != 'Leave':
-            att.status = 'Leave'
-            att.save(update_fields=['status'])
+    attendance_map = {}
+    for att in attendance_records:
+        if att.student_id not in attendance_map:
+            attendance_map[att.student_id] = att.status
 
     if request.method == 'POST':
-        for s in students:
-            # Skip students on approved leave to preserve their Leave state
-            if s.id in students_on_leave_ids:
+        for student in students:
+            # Skip students on approved leave
+            if student.id in students_on_leave_ids:
                 continue
 
-            status = request.POST.get(f'status_{s.id}')
-            if status:
-                Attendance.objects.update_or_create(
-                    student=s,
-                    date=today,
-                    defaults={'status': status}
+            status = request.POST.get(f'status_{student.id}')
+            if not status:
+                continue
+
+            # Update existing attendance records of the student for today
+            updated_count = Attendance.objects.filter(
+                student=student,
+                date=today
+            ).update(status=status)
+
+            # If no attendance entries existed yet, generate them dynamically
+            if updated_count == 0:
+                day = today.strftime('%a')
+                timetable = Timetable.objects.filter(
+                    batch=student.batch,
+                    department=student.department,
+                    day=day
                 )
 
-        messages.success(request, "Attendance marked")
+                if timetable.exists():
+                    for t in timetable:
+                        Attendance.objects.get_or_create(
+                            student=student,
+                            subject=t.subject,
+                            date=today,
+                            defaults={'status': status}
+                        )
+                else:
+                    Attendance.objects.get_or_create(
+                        student=student,
+                        subject=None,
+                        date=today,
+                        defaults={'status': status}
+                    )
+
+        messages.success(request, "Attendance marked successfully")
         return redirect('teacher_dashboard')
 
-    # Build response dataset for safe UI rendering
     student_data = []
-    for s in students:
-        is_on_leave = s.id in students_on_leave_ids
-        
+    for student in students:
+        is_on_leave = student.id in students_on_leave_ids
+
         if is_on_leave:
             current_status = 'Leave'
-        elif s.id in existing_attendances:
-            current_status = existing_attendances[s.id].status
         else:
-            current_status = 'Present'
+            current_status = attendance_map.get(student.id, 'Present')
 
         student_data.append({
-            'student': s,
+            'student': student,
             'status': current_status,
             'is_on_leave': is_on_leave
         })
 
-    return render(request, 'mark_attendance.html', {
-        'student_data': student_data
-    })
-
-
+    return render(
+        request,
+        'mark_attendance.html',
+        {
+            'student_data': student_data,
+            'today': today
+        }
+    )
 # ─────────────────────────────
 # TODAY LEAVES
 # ─────────────────────────────
