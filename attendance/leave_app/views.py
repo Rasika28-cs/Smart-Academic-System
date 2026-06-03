@@ -375,6 +375,20 @@ def apply_leave_api(request):
             status='PENDING'
         )
 
+        # NEW NOTIFICATION
+        notif = Notification.objects.create(
+            title="New Leave Request",
+            message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
+            type="leave",
+            url=reverse('today_leaves')
+        )
+
+        if student.mentor:
+            notif.users.add(student.mentor)
+
+        if student.class_incharge:
+            notif.users.add(student.class_incharge)
+
         ActivityLog.objects.create(
             user=request.user,
             action=f"Applied leave {from_date}-{to_date}",
@@ -529,7 +543,7 @@ def review_leave(request, leave_id, action):
                 title="Leave Update",
                 message=msg,
                 type="leave",
-                url="/leave-status/"
+                url=reverse('leave_status')
             )
             notification.users.add(leave.student.user)
 

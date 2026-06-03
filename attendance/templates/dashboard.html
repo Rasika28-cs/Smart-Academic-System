@@ -180,13 +180,49 @@
 <span class="material-symbols-outlined">menu</span>
 </button>
 <div class="flex items-center gap-4 ml-auto">
-<div class="hidden sm:flex flex-col items-end">
-<span class="text-sm font-semibold text-slate-900">{{ student.name }}</span>
-<span class="text-xs text-slate-500 uppercase tracking-wider">{{ student.roll_no }}</span>
-</div>
-<div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-blue-600 font-bold">
-          {{ student.name|slice:":1" }}
+
+    <!-- Student Details -->
+    <div class="hidden sm:flex flex-col items-end">
+        <span class="text-sm font-semibold text-slate-900">
+            {{ student.name }}
+        </span>
+        <span class="text-xs text-slate-500 uppercase tracking-wider">
+            {{ student.roll_no }}
+        </span>
+    </div>
+
+    <!-- Avatar -->
+    <div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-blue-600 font-bold">
+        {{ student.name|slice:":1" }}
+    </div>
+
+    <!-- Notification Bell -->
+    <div class="relative">
+        <button id="notificationBtn"
+                class="relative p-2 rounded-full hover:bg-slate-100 transition">
+
+            <span class="material-symbols-outlined text-slate-700">
+                notifications
+            </span>
+
+            <span id="notificationCount"
+                  class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                0
+            </span>
+        </button>
+
+        <div id="notificationDropdown"
+             class="hidden absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
+
+            <div class="p-3 font-semibold border-b bg-slate-50">
+                Notifications
+            </div>
+
+            <div id="notificationList" class="max-h-80 overflow-y-auto"></div>
+
         </div>
+    </div>
+
 </div>
 </header>
 <div class="p-6 lg:p-10 max-w-6xl mx-auto w-full space-y-8">
@@ -377,17 +413,6 @@
 <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-9xl text-red-500/5 rotate-12">warning</span>
 </a>
 </div>
-<!-- Footer -->
-<footer class="mt-auto py-8 px-6 border-t border-slate-200 bg-white">
-<div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
-<p class="">© 2026 Smart Academic System. All rights reserved.</p>
-<div class="flex gap-6">
-<a class="hover:text-blue-600 transition-colors" href="#">Privacy Policy</a>
-<a class="hover:text-blue-600 transition-colors" href="#">Terms of Service</a>
-<a class="hover:text-blue-600 transition-colors" href="#">Help Center</a>
-</div>
-</div>
-</footer>
 </main>
 <script>
     const sidebar = document.getElementById('sidebar');
@@ -446,4 +471,46 @@
       }
     });
   </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const btn = document.getElementById("notificationBtn");
+    const dropdown = document.getElementById("notificationDropdown");
+
+    btn.addEventListener("click", () => {
+        dropdown.classList.toggle("hidden");
+    });
+
+    function loadNotifications() {
+        fetch("/notifications/unread/")
+            .then(response => response.json())
+            .then(data => {
+
+                document.getElementById("notificationCount").innerText = data.total;
+
+                const container = document.getElementById("notificationList");
+
+                if (!data.notifications.length) {
+                    container.innerHTML =
+                        '<div class="p-4 text-center text-gray-500">No notifications</div>';
+                    return;
+                }
+
+                container.innerHTML = data.notifications.map(n => `
+                    <a href="${n.url || '#'}"
+                       class="block p-4 hover:bg-gray-50">
+                        <div class="font-semibold">${n.title}</div>
+                        <div class="text-sm text-gray-600 mt-1">${n.message}</div>
+                        <div class="text-xs text-gray-400 mt-2">${n.time}</div>
+                    </a>
+                `).join('');
+            })
+            .catch(err => console.error("Notification Error:", err));
+    }
+
+    loadNotifications();
+
+    setInterval(loadNotifications, 30000);
+});
+</script>
 </body></html>

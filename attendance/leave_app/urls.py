@@ -45,5 +45,5 @@ urlpatterns = [
 
     # Notifications
     path('notifications/unread/', views.get_notifications, name='get_notifications'),
-
+    
 ]
