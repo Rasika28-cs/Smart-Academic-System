@@ -359,3 +359,4 @@ class StudentGrade(models.Model):
     def __str__(self):
         return f"{self.student.roll_no} - {self.subject_code}"
     
+    
