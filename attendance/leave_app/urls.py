@@ -37,6 +37,8 @@ urlpatterns = [
     # Uploads
     path('upload/attendance/', views.upload_attendance, name='upload_attendance'),
     path('upload/defaulters/', views.upload_defaulters, name='upload_defaulters'),
+    path('upload-grades/', views.upload_grades, name='upload_grades'),
+    path('student-grades/', views.student_grades, name='student_grades'),
 
     # Defaulters
     path('defaulters/', views.defaulter_list, name='defaulter_list'),
