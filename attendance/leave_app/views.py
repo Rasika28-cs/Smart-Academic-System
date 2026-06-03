@@ -1341,3 +1341,77 @@ def create_timetable_entry(request):
         return redirect('view_timetable')
 
     return render(request, 'create_timetable.html')
+
+
+
+import pandas as pd
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+
+from .models import GradeUpload, StudentGrade, Student
+
+
+@login_required
+def upload_grades(request):
+    if request.method == 'POST':
+        file = request.FILES['file']
+        title = request.POST.get('title')
+        semester = request.POST.get('semester')
+
+        upload = GradeUpload.objects.create(
+            title=title,
+            semester=semester,
+            uploaded_file=file,
+            uploaded_by=request.user
+        )
+
+        # Read file
+        if file.name.endswith('.csv'):
+            df = pd.read_csv(file)
+        else:
+            df = pd.read_excel(file)
+
+        # First column = register number
+        df.columns = [str(c).strip() for c in df.columns]
+
+        subject_columns = [c for c in df.columns if c != "Register No"]
+
+        for _, row in df.iterrows():
+            reg_no = str(row["Register No"]).strip()
+
+            try:
+                student = Student.objects.get(register_number=reg_no)
+
+                for subject_code in subject_columns:
+                    grade = str(row[subject_code]).strip()
+
+                    if grade and grade != "nan":
+
+                        StudentGrade.objects.create(
+                            upload=upload,
+                            student=student,
+                            subject_code=subject_code,
+                            grade=grade
+                        )
+
+            except Student.DoesNotExist:
+                continue
+
+        return redirect('upload_grades')
+
+    return render(request, 'upload_grades.html')
+
+@login_required
+def student_grades(request):
+    student, err = _student_required(request)
+    if err:
+        return err
+
+    grades = StudentGrade.objects.filter(
+        student=student
+    ).select_related('upload').order_by('-id')
+
+    return render(request, 'student_grades.html', {
+        'grades': grades
+    })
