@@ -1,0 +1,13 @@
+<h2>➕ Add Timetable</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <input type="text" name="day" placeholder="Day"><br><br>
+    <input type="text" name="room" placeholder="Room"><br><br>
+    <input type="time" name="start_time"><br><br>
+    <input type="time" name="end_time"><br><br>
+    <input type="text" name="batch" placeholder="Batch"><br><br>
+
+    <button type="submit">Save</button>
+</form>

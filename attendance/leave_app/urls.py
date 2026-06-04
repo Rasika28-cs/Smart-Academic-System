@@ -37,11 +37,24 @@ urlpatterns = [
     # Uploads
     path('upload/attendance/', views.upload_attendance, name='upload_attendance'),
     path('upload/defaulters/', views.upload_defaulters, name='upload_defaulters'),
+    path('upload-grades/', views.upload_grades, name='upload_grades'),
+    path('student-grades/', views.student_grades, name='student_grades'),
 
     # Defaulters
     path('defaulters/', views.defaulter_list, name='defaulter_list'),
+    path('upload-defaulters/',views.upload_defaulters,name='upload_defaulters'),
+    path('update-action/<int:id>/',views.update_action,name='update_action'),
 
     # Notifications
     path('notifications/unread/', views.get_notifications, name='get_notifications'),
 
+    #class rep
+    path('cr-dashboard/', views.cr_dashboard, name='cr_dashboard'),
+
+    path('teacher/timetable/', views.view_timetable, name='view_timetable'),
+
+path('student/assignments/', views.assignment_list, name='assignment_list'),
+
+path('timetable/create/', views.create_timetable_entry, name='create_timetable_entry'),
+    
 ]

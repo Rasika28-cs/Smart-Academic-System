@@ -304,6 +304,16 @@
       <p>Manage defaulter list & actions</p>
     </div>
   </a>
+  <a href="{% url 'upload_grades' %}" class="tile">
+  <div class="tile-icon tile-green">
+    <i class="bi bi-file-earmark-arrow-up-fill"></i>
+  </div>
+
+  <div>
+    <h3>Upload Grades</h3>
+    <p>Upload CSV / Excel / PDF marks</p>
+  </div>
+</a>
 
 </div>
 
@@ -449,7 +459,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <b>${n.title}</b><br>
                             <small>${n.message}</small><br>
                             <span style="font-size:11px;color:#777;">
-                                ${n.time} • ${n.type.toUpperCase()}
+                                ${n.time}
                             </span>
                         </div>
                     `).join("");

@@ -1,0 +1,9 @@
+<h2>📝 Assignments</h2>
+
+<ul>
+    {% for a in assignments %}
+        <li>
+            <b>{{ a.title }}</b> - Due: {{ a.due_date }}
+        </li>
+    {% endfor %}
+</ul>

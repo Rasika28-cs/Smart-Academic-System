@@ -125,7 +125,9 @@ def home(request):
             return redirect('mentor_dashboard')
         elif request.user.is_staff:
             return redirect('teacher_dashboard')
-        
+        elif is_classrep(request.user):   # ✅ FIX HERE
+            return redirect('cr_dashboard')
+
         student = _get_student(request)
         if student:
             return redirect('student_dashboard')
@@ -157,6 +159,7 @@ def login_page(request):
             elif is_class_incharge(user): return redirect('class_incharge_dashboard')
             elif is_mentor(user): return redirect('mentor_dashboard')
             elif user.is_staff: return redirect('teacher_dashboard')
+            elif is_classrep(user):return redirect('cr_dashboard')
             return redirect('student_dashboard')
 
         # Legacy Fallback Logic (Roll No based login)
@@ -240,7 +243,11 @@ def dashboard(request):
         'today_timetable': Timetable.objects.filter(batch=student.batch, day=date.today().strftime('%a'))
     }
     return render(request, 'dashboard.html', context)
+def dashboard_redirect(request):
+    user = request.user
 
+    if user.groups.filter(name='ClassRep').exists():
+        return redirect('cr_dashboard')
 
 @login_required
 def attendance(request):
@@ -251,9 +258,6 @@ def attendance(request):
 
 
 
-# ─────────────────────────────
-# Helper
-# ─────────────────────────────
 def _student_required(request):
     try:
         student = Student.objects.get(user=request.user)
@@ -284,6 +288,19 @@ def _redirect_after_review(user, leave=None):
 # ─────────────────────────────
 # STUDENT VIEWS
 # ─────────────────────────────
+
+def is_student_on_leave(student, check_date):
+    """
+    Returns True if an approved leave request covers the check_date for a student.
+    """
+    return LeaveRequest.objects.filter(
+        student=student,
+        from_date__lte=check_date,
+        to_date__gte=check_date,
+        status='APPROVED'
+    ).exists()
+
+
 @login_required
 def view_students(request):
     if not request.user.is_staff:
@@ -291,10 +308,13 @@ def view_students(request):
 
     students = Student.objects.all().order_by('roll_no')
     return render(request, 'view_students.html', {'students': students})
+
+
 @login_required
 def leave_status(request):
     student, err = _student_required(request)
-    if err: return err
+    if err: 
+        return err
 
     leaves = LeaveRequest.objects.filter(student=student).order_by('-created_at')
     return render(request, 'leave_status.html', {'leaves': leaves})
@@ -303,7 +323,8 @@ def leave_status(request):
 @login_required
 def apply_page(request):
     student, err = _student_required(request)
-    if err: return err
+    if err: 
+        return err
 
     return render(request, 'apply.html')
 
@@ -311,7 +332,8 @@ def apply_page(request):
 @login_required
 def student_defaulter_view(request):
     student, err = _student_required(request)
-    if err: return err
+    if err: 
+        return err
 
     defaulters = DefaulterStudent.objects.filter(
         roll_no=student.roll_no
@@ -365,7 +387,7 @@ def apply_leave_api(request):
             title="New Leave Request",
             message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
             type="leave",
-            url="/teacher/today-leaves/"
+            url=reverse('today_leaves')
         )
 
         if student.mentor:
@@ -373,7 +395,6 @@ def apply_leave_api(request):
 
         if student.class_incharge:
             notif.users.add(student.class_incharge)
-
 
         ActivityLog.objects.create(
             user=request.user,
@@ -423,39 +444,36 @@ def class_incharge_dashboard(request):
 
 
 @login_required
-@role_required('Mentor')
-def mentor_review_leave(request, leave_id, action):
-    leave = get_object_or_404(LeaveRequest, id=leave_id)
+def teacher_dashboard(request):
+    if not request.user.is_staff:
+        return redirect('home')
 
-    if leave.status != 'PENDING':
-        messages.error(request, "This request has already been processed.")
-        return redirect('mentor_dashboard')
+    return render(request, 'teacher_dashboard.html', {
+        'pending_leaves': LeaveRequest.objects.filter(status__icontains='PENDING').count(),
+        'pending_od': ODApplication.objects.filter(status='pending').count()
+    })
 
-    if not request.user.is_superuser and leave.student.mentor != request.user:
-        raise PermissionDenied()
 
-    if action == 'approve':
-        leave.status = 'APPROVED'
-        # Attendance logic for final approval
-        curr = leave.from_date
-        while curr <= leave.to_date:
-            day_name = curr.strftime('%a')
-            entries = Timetable.objects.filter(batch=leave.student.batch, department=leave.student.department, day=day_name)
-            for entry in entries:
-                Attendance.objects.update_or_create(student=leave.student, subject=entry.subject, date=curr, defaults={'status': 'Leave'})
-            curr += timedelta(days=1)
-        msg = "Your leave was approved by Mentor."
-    elif action == 'reject':
-        leave.status = 'REJECTED'
-        msg = "Your leave was rejected by Mentor."
-    else:
+# ─────────────────────────────
+# HIERARCHICAL APPROVAL ENGINE
+# ─────────────────────────────
+
+@login_required
+def review_leave(request, leave_id, action):
+    if action not in ['approve', 'reject']:
         raise PermissionDenied()
 
     user = request.user
 
     try:
         with transaction.atomic():
-            leave = LeaveRequest.objects.select_for_update().get(id=leave_id)
+
+            leave = LeaveRequest.objects.select_related(
+                'student',
+                'student__user',
+                'student__mentor',
+                'student__class_incharge'
+            ).select_for_update().get(id=leave_id)
 
             is_mentor = leave.student.mentor == user
             is_ci = leave.student.class_incharge == user
@@ -463,54 +481,78 @@ def mentor_review_leave(request, leave_id, action):
             if not (is_mentor or is_ci or user.is_superuser):
                 raise PermissionDenied()
 
-            if is_mentor and leave.status != 'PENDING':
-                return _redirect_after_review(user, leave)
-
-            if is_ci and leave.status != 'APPROVED_BY_MENTOR':
+            # Only pending leaves can be reviewed
+            if leave.status != 'PENDING':
                 return _redirect_after_review(user, leave)
 
             if action == 'approve':
 
-                if is_mentor:
-                    leave.status = 'APPROVED_BY_MENTOR'
-                    msg = "Approved by Mentor, pending Class Incharge"
-                else:
-                    leave.status = 'APPROVED'
+                leave.status = 'APPROVED'
+                msg = "Leave approved"
 
-                    curr = leave.from_date
-                    while curr <= leave.to_date:
-                        day = curr.strftime('%a')
-                        timetable = Timetable.objects.filter(
-                            batch=leave.student.batch,
-                            department=leave.student.department,
-                            day=day
-                        )
+                # Auto-create attendance records
+                curr = leave.from_date
 
-                        for t in timetable:
-                            Attendance.objects.update_or_create(
+                while curr <= leave.to_date:
+
+                    timetable = Timetable.objects.filter(
+                        batch=leave.student.batch,
+                        department=leave.student.department,
+                        day=curr.strftime('%a')
+                    ).select_related('subject')
+
+                    if timetable.exists():
+
+                        for slot in timetable:
+
+                            attendance, created = Attendance.objects.get_or_create(
                                 student=leave.student,
-                                subject=t.subject,
+                                subject=slot.subject,
                                 date=curr,
                                 defaults={'status': 'Leave'}
                             )
-                        curr += timedelta(days=1)
 
-                    msg = "Final approval completed"
+                            if not created and attendance.status != 'Leave':
+                                attendance.status = 'Leave'
+                                attendance.save(update_fields=['status'])
+
+                    else:
+                        attendance, created = Attendance.objects.get_or_create(
+                            student=leave.student,
+                            subject=None,
+                            date=curr,
+                            defaults={'status': 'Leave'}
+                        )
+
+                        if not created and attendance.status != 'Leave':
+                            attendance.status = 'Leave'
+                            attendance.save(update_fields=['status'])
+
+                    curr += timedelta(days=1)
 
             else:
                 leave.status = 'REJECTED'
                 msg = "Leave rejected"
 
             leave.reviewed_by = user
+
+            if user.is_superuser:
+                leave.reviewer_role = 'Superuser'
+            elif is_ci:
+                leave.reviewer_role = 'Class Incharge'
+            else:
+                leave.reviewer_role = 'Mentor'
+
             leave.reviewed_at = timezone.now()
             leave.save()
 
-            Notification.objects.create(
+            notification = Notification.objects.create(
                 title="Leave Update",
                 message=msg,
                 type="leave",
-                url="/leave-status/"
-            ).users.add(leave.student.user)
+                url=reverse('leave_status')
+            )
+            notification.users.add(leave.student.user)
 
             ActivityLog.objects.create(
                 user=user,
@@ -523,42 +565,100 @@ def mentor_review_leave(request, leave_id, action):
 
     return _redirect_after_review(user, leave)
 
-
-# ─────────────────────────────
-# ATTENDANCE
-# ─────────────────────────────
 @login_required
 def mark_attendance(request):
     if not request.user.is_staff:
         return HttpResponse('Unauthorized', status=403)
 
-    students = Student.objects.all().order_by('roll_no')
     today = date.today()
+    students = Student.objects.all().order_by('roll_no')
+
+    # Students having approved leave today
+    students_on_leave_ids = set(
+        LeaveRequest.objects.filter(
+            from_date__lte=today,
+            to_date__gte=today,
+            status='APPROVED'
+        ).values_list('student_id', flat=True)
+    )
+
+    # Existing attendance records for today
+    attendance_records = Attendance.objects.filter(
+        date=today
+    ).select_related('student')
+
+    attendance_map = {}
+    for att in attendance_records:
+        if att.student_id not in attendance_map:
+            attendance_map[att.student_id] = att.status
 
     if request.method == 'POST':
-        for s in students:
-            status = request.POST.get(f'status_{s.id}')
-            if status:
-                Attendance.objects.update_or_create(
-                    student=s,
-                    date=today,
-                    defaults={'status': status}
+        for student in students:
+            # Skip students on approved leave
+            if student.id in students_on_leave_ids:
+                continue
+
+            status = request.POST.get(f'status_{student.id}')
+            if not status:
+                continue
+
+            # Update existing attendance records of the student for today
+            updated_count = Attendance.objects.filter(
+                student=student,
+                date=today
+            ).update(status=status)
+
+            # If no attendance entries existed yet, generate them dynamically
+            if updated_count == 0:
+                day = today.strftime('%a')
+                timetable = Timetable.objects.filter(
+                    batch=student.batch,
+                    department=student.department,
+                    day=day
                 )
 
-        messages.success(request, "Attendance marked")
+                if timetable.exists():
+                    for t in timetable:
+                        Attendance.objects.get_or_create(
+                            student=student,
+                            subject=t.subject,
+                            date=today,
+                            defaults={'status': status}
+                        )
+                else:
+                    Attendance.objects.get_or_create(
+                        student=student,
+                        subject=None,
+                        date=today,
+                        defaults={'status': status}
+                    )
+
+        messages.success(request, "Attendance marked successfully")
         return redirect('teacher_dashboard')
 
-    records = Attendance.objects.filter(date=today)
-    att_map = {r.student_id: r.status for r in records}
+    student_data = []
+    for student in students:
+        is_on_leave = student.id in students_on_leave_ids
 
-    return render(request, 'mark_attendance.html', {
-        'student_data': [
-            {'student': s, 'status': att_map.get(s.id, 'Present')}
-            for s in students
-        ]
-    })
+        if is_on_leave:
+            current_status = 'Leave'
+        else:
+            current_status = attendance_map.get(student.id, 'Present')
 
+        student_data.append({
+            'student': student,
+            'status': current_status,
+            'is_on_leave': is_on_leave
+        })
 
+    return render(
+        request,
+        'mark_attendance.html',
+        {
+            'student_data': student_data,
+            'today': today
+        }
+    )
 # ─────────────────────────────
 # TODAY LEAVES
 # ─────────────────────────────
@@ -844,7 +944,7 @@ def upload_defaulters(request):
 
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
-    return render(request, 'defaulter_list.html', {'students': defaulters})
+    return render(request, 'defaulter_list.html', {'students': defaulter_list})
 
 
 @login_required
@@ -1066,7 +1166,7 @@ def view_promotion_status(request):
 # ─────────────────────────────────────────────
 
 @login_required
-@role_required('HOD')
+@role_required('ClassRep')
 def assign_teacher_subject(request):
     # In this schema, Timetable entries define which teacher handles which subject for a batch
     if request.method == 'POST':
@@ -1107,7 +1207,7 @@ def get_subject_students(request, subject_code, batch):
 # ─────────────────────────────────────────────
 
 @login_required
-@role_required('HOD', 'ClassIncharge')
+@role_required('ClassRep')
 def create_circular(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -1150,7 +1250,7 @@ def list_circulars(request):
     return render(request, 'circular_list.html', {'circulars': circulars})
 
 @login_required
-@role_required('HOD')
+@role_required('ClassRep')
 def delete_circular(request, id):
     circular = get_object_or_404(Circular, id=id)
     circular.delete()
@@ -1200,7 +1300,7 @@ def view_activity_logs(request):
 # ─────────────────────────────────────────────
 
 @login_required
-@role_required('HOD')
+@role_required('ClassRep')
 def create_timetable_entry(request):
     if request.method == 'POST':
         day = request.POST.get('day')
@@ -1248,3 +1348,105 @@ def create_timetable_entry(request):
         return redirect('view_timetable')
 
     return render(request, 'create_timetable.html')
+
+
+import pandas as pd
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import GradeUpload, Student, StudentGrade
+
+
+@login_required
+def upload_grades(request):
+    if request.method == 'POST':
+        file = request.FILES.get('file')
+        title = request.POST.get('title')
+        semester = request.POST.get('semester')
+
+        if not file:
+            return render(request, 'upload_grades.html', {'error': 'Please upload a file'})
+
+        upload = GradeUpload.objects.create(
+            title=title,
+            semester=semester,
+            uploaded_file=file,
+            uploaded_by=request.user
+        )
+
+        # READ FILE
+        if file.name.endswith('.csv'):
+            df = pd.read_csv(file, encoding='utf-8-sig')  # FIX BOM issue
+
+        elif file.name.endswith('.xlsx'):
+            df = pd.read_excel(file, engine='openpyxl')
+
+        else:
+            return render(request, 'upload_grades.html', {
+                'error': 'Only CSV or XLSX files allowed'
+            })
+
+        # CLEAN COLUMN NAMES (VERY IMPORTANT)
+        df.columns = df.columns.str.strip()
+
+        print("COLUMNS FOUND:", df.columns.tolist())  # DEBUG
+
+        # FIND register column safely
+        reg_col = None
+        for c in df.columns:
+            if "register" in c.lower():
+                reg_col = c
+                break
+
+        if not reg_col:
+            return render(request, 'upload_grades.html', {
+                'error': 'Register No column not found in file'
+            })
+
+        subject_columns = [c for c in df.columns if c != reg_col and c != "Student Name"]
+
+        for _, row in df.iterrows():
+            reg_no = str(row[reg_col]).strip()
+
+            try:
+                student = Student.objects.get(reg_no__iexact=reg_no)
+
+                for subject_code in subject_columns:
+                    grade = str(row[subject_code]).strip()
+
+                    if grade and grade.lower() != "nan":
+                        StudentGrade.objects.update_or_create(
+                            upload=upload,
+                            student=student,
+                            subject_code=subject_code,
+                            defaults={'grade': grade}
+                        )
+
+            except Student.DoesNotExist:
+                print("❌ Student NOT FOUND:", reg_no)
+
+        return redirect('upload_grades')
+
+    return render(request, 'upload_grades.html')
+
+@login_required
+def student_grades(request):
+    student = request.user.student_profile  # safe direct access
+
+    grades = StudentGrade.objects.filter(
+        student=student
+    ).select_related('upload').order_by('-id')
+
+    return render(request, 'student_grades.html', {
+        'grades': grades
+    })
+
+
+
+
+@login_required
+@role_required('ClassRep')
+def cr_dashboard(request):
+    return render(request, 'cr_dashboard.html')
+
+def is_classrep(user):
+    return user.groups.filter(name='ClassRep').exists()
