@@ -125,9 +125,9 @@ def home(request):
             return redirect('mentor_dashboard')
         elif request.user.is_staff:
             return redirect('teacher_dashboard')
-        elif is_classrep(user):
+        elif is_classrep(request.user):   # ✅ FIX HERE
             return redirect('cr_dashboard')
-        
+
         student = _get_student(request)
         if student:
             return redirect('student_dashboard')
