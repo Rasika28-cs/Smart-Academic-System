@@ -1,0 +1,9 @@
+# Django
+db.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+
+# Media uploads (optional)
+media/
