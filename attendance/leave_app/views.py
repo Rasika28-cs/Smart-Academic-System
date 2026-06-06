@@ -24,8 +24,8 @@ from django.core.exceptions import PermissionDenied
 # Models from your app
 from .models import (
     Student, LeaveRequest, Attendance, Notification, DefaulterStudent,
-    Department, Subject, Timetable, Assignment, AssignmentSubmission,
-    ParentProfile, Exam, Result, Circular, ActivityLog
+    Department, Subject, Timetable, Assignment,
+    ParentProfile,  ActivityLog
 )
 # Models from existing related apps
 from department.models import Staff, Achievement, Winner, Gallery, NewsItem, UpcomingEvent
@@ -988,12 +988,6 @@ def assignment_list(request):
     return render(request, 'assignments.html', {'assignments': data})
 
 
-@login_required
-def student_results(request):
-    student, err = _student_required(request)
-    if err: return err
-    results = Result.objects.filter(student=student).select_related('exam__subject')
-    return render(request, 'results.html', {'results': results})
 
 # OD Integration
 @login_required
@@ -1040,72 +1034,7 @@ def parent_dashboard(request):
 # 1. ASSIGNMENT SUBMISSION SYSTEM #############
 # ─────────────────────────────────────────────
 
-@login_required
-def student_submit_assignment(request, assignment_id):
-    assignment = get_object_or_404(Assignment, id=assignment_id)
-    student = getattr(request.user, 'student_profile', None)
-    
-    if not student or student.batch != assignment.batch:
-        return HttpResponseForbidden("You are not eligible for this assignment.")
 
-    if timezone.now() > assignment.due_date:
-        messages.error(request, "Submission deadline has passed.")
-        return redirect('assignment_list')
-
-    if request.method == 'POST':
-        file = request.FILES.get('submission_file')
-        if not file:
-            messages.error(request, "Please upload a file.")
-            return redirect('assignment_list')
-
-        submission, created = AssignmentSubmission.objects.update_or_create(
-            assignment=assignment,
-            student=student,
-            defaults={'file': file, 'submitted_at': timezone.now()}
-        )
-        
-        ActivityLog.objects.create(
-            user=request.user,
-            action=f"Submitted assignment: {assignment.title}",
-            ip_address=request.META.get('REMOTE_ADDR')
-        )
-        messages.success(request, "Assignment submitted successfully.")
-        return redirect('assignment_list')
-
-    return render(request, 'submit_assignment.html', {'assignment': assignment})
-
-@login_required
-def teacher_view_submissions(request, assignment_id):
-    if not request.user.is_staff:
-        raise PermissionDenied
-    assignment = get_object_or_404(Assignment, id=assignment_id)
-    submissions = assignment.submissions.all().select_related('student')
-    return render(request, 'teacher_submissions.html', {
-        'assignment': assignment,
-        'submissions': submissions
-    })
-
-@login_required
-def teacher_grade_submission(request, submission_id):
-    if not request.user.is_staff:
-        raise PermissionDenied
-    submission = get_object_or_404(AssignmentSubmission, id=submission_id)
-    
-    if request.method == 'POST':
-        submission.marks = request.POST.get('marks')
-        submission.feedback = request.POST.get('feedback')
-        submission.save()
-        
-        notif = Notification.objects.create(
-            title="Assignment Graded",
-            message=f"Your assignment '{submission.assignment.title}' has been graded.",
-            type="academic"
-        )
-        if submission.student.user:
-            notif.users.add(submission.student.user)
-            
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'}, status=400)
 
 # ─────────────────────────────────────────────
 # 2. PARENT PORTAL
@@ -1142,33 +1071,7 @@ def parent_view_notifications(request):
 # 3. SEMESTER & PROMOTION SYSTEM ##############
 # ─────────────────────────────────────────────
 
-@login_required
-@role_required('HOD')
-@transaction.atomic
-def promote_students(request):
-    if request.method == 'POST':
-        current_batch = request.POST.get('current_batch')
-        new_batch = request.POST.get('new_batch')
-        
-        students = Student.objects.filter(batch=current_batch)
-        count = students.count()
-        students.update(batch=new_batch)
-        
-        ActivityLog.objects.create(
-            user=request.user,
-            action=f"Promoted {count} students from {current_batch} to {new_batch}"
-        )
-        messages.success(request, f"Successfully promoted {count} students.")
-        return redirect('hod_dashboard')
-    
-    batches = Student.objects.values_list('batch', flat=True).distinct()
-    return render(request, 'promote_students.html', {'batches': batches})
 
-@login_required
-@role_required('HOD')
-def view_promotion_status(request):
-    stats = Student.objects.values('batch').annotate(student_count=Count('id')).order_by('batch')
-    return render(request, 'promotion_status.html', {'stats': stats})
 
 # ─────────────────────────────────────────────
 # 4. TEACHER SUBJECT MAPPING SYSTEM
@@ -1214,57 +1117,6 @@ def get_subject_students(request, subject_code, batch):
 # ─────────────────────────────────────────────
 # 5. CIRCULAR DISTRIBUTION SYSTEM ################
 # ─────────────────────────────────────────────
-
-@login_required
-@role_required('ClassRep')
-def create_circular(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        content = request.POST.get('content')
-        dept_id = request.POST.get('department')
-        file = request.FILES.get('file')
-        
-        dept = Department.objects.get(id=dept_id) if dept_id else None
-        circular = Circular.objects.create(
-            title=title, content=content, department=dept, file=file
-        )
-        
-        # Notify relevant students
-        target_students = Student.objects.all()
-        if dept:
-            target_students = target_students.filter(department=dept)
-            
-        notif = Notification.objects.create(
-            title="New Circular",
-            message=title,
-            type="circular",
-            url=f"/circulars/{circular.id}/"
-        )
-        
-        user_ids = target_students.values_list('user_id', flat=True)
-        notif.users.add(*user_ids)
-        
-        messages.success(request, "Circular published and notifications sent.")
-        return redirect('list_circulars')
-        
-    departments = Department.objects.all()
-    return render(request, 'create_circular.html', {'departments': departments})
-
-@login_required
-def list_circulars(request):
-    circulars = Circular.objects.all().order_by('-created_at')
-    student = getattr(request.user, 'student_profile', None)
-    if student:
-        circulars = circulars.filter(Q(department=student.department) | Q(department__isnull=True))
-    return render(request, 'circular_list.html', {'circulars': circulars})
-
-@login_required
-@role_required('ClassRep')
-def delete_circular(request, id):
-    circular = get_object_or_404(Circular, id=id)
-    circular.delete()
-    messages.success(request, "Circular deleted.")
-    return redirect('list_circulars')
 
 # ─────────────────────────────────────────────
 # 6. NOTIFICATION ENHANCEMENTS

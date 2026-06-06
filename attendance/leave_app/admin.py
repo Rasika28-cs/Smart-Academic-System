@@ -1,8 +1,8 @@
 from django.contrib import admin
 from .models import (
     Student, LeaveRequest, Attendance, Department, 
-    Subject, Timetable, Assignment, Exam, Result, 
-    Circular, Notification, ParentProfile
+    Subject, Timetable, Assignment, 
+     Notification, ParentProfile
 )
 
 class LeaveRequestAdmin(admin.ModelAdmin):
@@ -26,9 +26,7 @@ admin.site.register(Subject)
 admin.site.register(Attendance)
 admin.site.register(Timetable, TimetableAdmin)
 admin.site.register(Assignment)
-admin.site.register(Exam)
-admin.site.register(Result)
-admin.site.register(Circular)
+
 admin.site.register(Notification)
 admin.site.register(ParentProfile)
 admin.site.register(LeaveRequest, LeaveRequestAdmin)

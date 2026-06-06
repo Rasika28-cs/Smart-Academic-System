@@ -204,49 +204,17 @@ class Assignment(models.Model):
 # ASSIGNMENT SUBMISSION (NEW FIXED)
 # ─────────────────────────────
 
-class AssignmentSubmission(models.Model):
-    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    file = models.FileField(upload_to='submissions/')
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    marks = models.FloatField(null=True, blank=True)
-    feedback = models.TextField(null=True, blank=True)
-
-    class Meta:
-        unique_together = ('assignment', 'student')
 
 
 # ─────────────────────────────
 # EXAM
 # ─────────────────────────────
 
-class Exam(models.Model):
-    TYPE_CHOICES = [
-        ('Internal 1', 'Internal 1'),
-        ('Internal 2', 'Internal 2'),
-        ('Model', 'Model'),
-        ('University', 'University')
-    ]
-
-    name = models.CharField(max_length=100)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    exam_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    date = models.DateField()
-    max_marks = models.IntegerField(default=100)
 
 
 # ─────────────────────────────
 # RESULT (FIXED)
 # ─────────────────────────────
-
-class Result(models.Model):
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    marks_obtained = models.FloatField()
-    is_present = models.BooleanField(default=True)
-
-    class Meta:
-        unique_together = ('exam', 'student')
 
 
 # ─────────────────────────────
@@ -274,14 +242,6 @@ class Notification(models.Model):
 # ─────────────────────────────
 # CIRCULAR
 # ─────────────────────────────
-
-class Circular(models.Model):
-    title = models.CharField(max_length=255)
-    content = models.TextField()
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
-    file = models.FileField(upload_to='circulars/', null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
 
 # ─────────────────────────────
 # DEFAULTERS
