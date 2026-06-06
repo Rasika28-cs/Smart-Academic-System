@@ -448,11 +448,21 @@ def teacher_dashboard(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    return render(request, 'teacher_dashboard.html', {
+    context = {
         'pending_leaves': LeaveRequest.objects.filter(status__icontains='PENDING').count(),
         'pending_od': ODApplication.objects.filter(status='pending').count()
-    })
+    }
 
+    # CI users
+    if request.user.groups.filter(name='CI').exists():
+        return render(request, 'ci_dashboard.html', context)
+
+    # Mentor users
+    elif request.user.groups.filter(name='MENTOR').exists():
+        return render(request, 'mentor_dashboard.html', context)
+
+    # Fallback
+    return redirect('home')
 
 # ─────────────────────────────
 # HIERARCHICAL APPROVAL ENGINE
