@@ -211,25 +211,33 @@ def signup_page(request):
 # ─────────────────────────────────────────────
 # 3. STUDENT MODULES
 # ─────────────────────────────────────────────
-
 @login_required
 def dashboard(request):
     student, err = _student_required(request)
-    if err: return err
+    if err:
+        return err
 
     total_leaves = LeaveRequest.objects.filter(student=student).count()
-    pending_leaves = LeaveRequest.objects.filter(student=student, status__icontains='PENDING').count()
+
+    pending_leaves = LeaveRequest.objects.filter(
+        student=student,
+        status__icontains='PENDING'
+    ).count()
+
     records = Attendance.objects.filter(student=student)
 
     p = records.filter(status='Present').count()
     l = records.filter(status='Leave').count()
     a = records.filter(status='Absent').count()
+
     total_classes = p + l + a
 
-    if total_classes > 0:
-        score = (p * 1) + (l * 0.99) + (a * 0.97)
-        attendance_percent = (score / total_classes) * 100
-    else:
+    # ─────────────────────────────
+    # Attendance Logic (YOUR RULE)
+    # ─────────────────────────────
+    attendance_percent = 100 - ((l + a) * 3)
+
+    if attendance_percent < 0:
         attendance_percent = 0
 
     context = {
@@ -239,9 +247,16 @@ def dashboard(request):
         'attendance_percent': round(attendance_percent, 2),
         'present_classes': p,
         'total_classes': total_classes,
-        'upcoming_assignments': Assignment.objects.filter(batch=student.batch, due_date__gte=timezone.now()),
-        'today_timetable': Timetable.objects.filter(batch=student.batch, day=date.today().strftime('%a'))
+        'upcoming_assignments': Assignment.objects.filter(
+            batch=student.batch,
+            due_date__gte=timezone.now()
+        ),
+        'today_timetable': Timetable.objects.filter(
+            batch=student.batch,
+            day=date.today().strftime('%a')
+        )
     }
+
     return render(request, 'dashboard.html', context)
 def dashboard_redirect(request):
     user = request.user
@@ -720,26 +735,23 @@ def hod_dashboard(request):
     # ─────────────────────────────────────────────
     # STEP 2: Department-Filtered Students
     # ─────────────────────────────────────────────
-    students = Student.objects.filter(department=managed_dept).annotate(
-        total=Count('attendance'),
-        p=Count('attendance', filter=Q(attendance__status='Present')),
-        l=Count('attendance', filter=Q(attendance__status='Leave')),
-        a=Count('attendance', filter=Q(attendance__status='Absent')),
-    ).annotate(
-        weighted_score=ExpressionWrapper(
-            (F('p') * 1.0) + (F('l') * 0.99) + (F('a') * 0.97),
-            output_field=FloatField()
-        )
-    ).annotate(
-        perc=Case(
-            When(
-                total__gt=0,
-                then=(F('weighted_score') / Cast(F('total'), FloatField())) * 100
-            ),
-            default=0.0,
-            output_field=FloatField()
-        )
-    ).order_by('-perc')
+    students = Student.objects.filter(
+    department=managed_dept
+).annotate(
+    total=Count('attendance'),
+    p=Count('attendance', filter=Q(attendance__status='Present')),
+    l=Count('attendance', filter=Q(attendance__status='Leave')),
+    a=Count('attendance', filter=Q(attendance__status='Absent')),
+).annotate(
+    perc=Case(
+        When(
+            total__gt=0,
+            then=100 - ((F('l') + F('a')) * 3)
+        ),
+        default=0.0,
+        output_field=FloatField()
+    )
+).order_by('-perc')
 
     # ─────────────────────────────────────────────
     # STEP 3: Search Filter
