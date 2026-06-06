@@ -962,15 +962,24 @@ def update_action(request, id):
 # ─────────────────────────────────────────────
 # 9. NEW ACADEMIC MODULES
 # ─────────────────────────────────────────────
-
 @login_required
 def view_timetable(request):
     student = _get_student(request)
-    batch = student.batch if student else request.GET.get('batch')
-    data = Timetable.objects.filter(batch=batch).order_by('start_time')
-    return render(request, 'timetable.html', {'timetable': data, 'batch': batch})
 
+    if student:
+        timetable = Timetable.objects.select_related(
+            'department',
+            'subject',
+            'teacher'
+        ).filter(
+            batch=student.batch
+        ).order_by('day', 'start_time')
+    else:
+        timetable = Timetable.objects.none()
 
+    return render(request, 'timetable.html', {
+        'timetable': timetable
+    })
 @login_required
 def assignment_list(request):
     student, err = _student_required(request)
@@ -1028,7 +1037,7 @@ def parent_dashboard(request):
 
 
 # ─────────────────────────────────────────────
-# 1. ASSIGNMENT SUBMISSION SYSTEM
+# 1. ASSIGNMENT SUBMISSION SYSTEM #############
 # ─────────────────────────────────────────────
 
 @login_required
@@ -1130,7 +1139,7 @@ def parent_view_notifications(request):
     return render(request, 'parent_notifications.html', {'notifications': notifications})
 
 # ─────────────────────────────────────────────
-# 3. SEMESTER & PROMOTION SYSTEM
+# 3. SEMESTER & PROMOTION SYSTEM ##############
 # ─────────────────────────────────────────────
 
 @login_required
@@ -1203,7 +1212,7 @@ def get_subject_students(request, subject_code, batch):
     return render(request, 'subject_students.html', {'students': students, 'subject_code': subject_code})
 
 # ─────────────────────────────────────────────
-# 5. CIRCULAR DISTRIBUTION SYSTEM
+# 5. CIRCULAR DISTRIBUTION SYSTEM ################
 # ─────────────────────────────────────────────
 
 @login_required
@@ -1298,29 +1307,42 @@ def view_activity_logs(request):
 # ─────────────────────────────────────────────
 # 8. TIMETABLE CONFLICT PROTECTION VIEW
 # ─────────────────────────────────────────────
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import Timetable, Department, Subject
+from django.contrib.auth.models import User
+
 
 @login_required
 @role_required('ClassRep')
 def create_timetable_entry(request):
+
     if request.method == 'POST':
+
         day = request.POST.get('day')
-        room = request.POST.get('room')
+        room = request.POST.get('room', '').strip()
         start = request.POST.get('start_time')
         end = request.POST.get('end_time')
         teacher_id = request.POST.get('teacher')
         subject_id = request.POST.get('subject')
-        batch = request.POST.get('batch')
+        batch = request.POST.get('batch', '').strip()
         dept_id = request.POST.get('department')
 
-        # Check Teacher Clash
+        # Validation
+        if not all([day, room, start, end, teacher_id, subject_id, batch, dept_id]):
+            messages.error(request, "All fields are required.")
+            return redirect('create_timetable_entry')
+
+        # Teacher Clash Check
         teacher_clash = Timetable.objects.filter(
             day=day,
             teacher_id=teacher_id,
             start_time__lt=end,
             end_time__gt=start
         ).exists()
-        
-        # Check Room Clash
+
+        # Room Clash Check
         room_clash = Timetable.objects.filter(
             day=day,
             room=room,
@@ -1329,27 +1351,47 @@ def create_timetable_entry(request):
         ).exists()
 
         if teacher_clash:
-            messages.error(request, "Teacher is already assigned to another class at this time.")
+            messages.error(
+                request,
+                "Teacher is already assigned to another class during this time."
+            )
+
         elif room_clash:
-            messages.error(request, "Room is already occupied at this time.")
+            messages.error(
+                request,
+                "Room is already occupied during this time."
+            )
+
         else:
+            department = Department.objects.get(id=dept_id)
+
             Timetable.objects.create(
+                department=department,
+                batch=batch,
+                subject_id=subject_id,
+                teacher_id=teacher_id,
                 day=day,
-                room=room,
                 start_time=start,
                 end_time=end,
-                teacher_id=teacher_id,
-                subject_id=subject_id,
-                batch=batch,
-                department_id=dept_id,
+                room=room
             )
-            messages.success(request, "Timetable entry created.")
-            
+
+            messages.success(request, "Timetable entry created successfully.")
+
         return redirect('view_timetable')
 
-    return render(request, 'create_timetable.html')
+    # GET Request
+    departments = Department.objects.all()
+    subjects = Subject.objects.all()
 
+    # If you don't have a Teacher model/role system
+    teachers = User.objects.all()
 
+    return render(request, 'create_timetable.html', {
+        'departments': departments,
+        'subjects': subjects,
+        'teachers': teachers,
+    })
 import pandas as pd
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -1450,3 +1492,42 @@ def cr_dashboard(request):
 
 def is_classrep(user):
     return user.groups.filter(name='ClassRep').exists()
+
+
+
+@login_required
+@role_required('ClassRep')
+def create_assignment(request):
+
+    student = getattr(request.user, 'student_profile', None)
+
+    if not student:
+        messages.error(request, "Student profile not found.")
+        return redirect('cr_dashboard')
+
+    if request.method == 'POST':
+
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        subject_id = request.POST.get('subject')
+        due_date = request.POST.get('due_date')
+        file = request.FILES.get('file')
+
+        Assignment.objects.create(
+            title=title,
+            description=description,
+            subject_id=subject_id,
+            batch=student.batch,
+            due_date=due_date,
+            file=file
+        )
+
+        messages.success(request, "Assignment created successfully.")
+        return redirect('cr_dashboard')
+
+    subjects = Subject.objects.all()
+
+    return render(request, 'create_assignment.html', {
+        'subjects': subjects,
+        'batch': student.batch
+    })

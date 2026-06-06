@@ -3,17 +3,29 @@
 <table border="1">
     <tr>
         <th>Day</th>
-        <th>Subject</th>
+        <th>Department</th>
         <th>Batch</th>
-        <th>Time</th>
+        <th>Subject</th>
+        <th>Teacher</th>
+        <th>Room</th>
+        <th>Start Time</th>
+        <th>End Time</th>
     </tr>
 
     {% for t in timetable %}
     <tr>
         <td>{{ t.day }}</td>
-        <td>{{ t.subject }}</td>
+        <td>{{ t.department.name }}</td>
         <td>{{ t.batch }}</td>
-        <td>{{ t.start_time }} - {{ t.end_time }}</td>
+        <td>{{ t.subject.name }}</td>
+        <td>{{ t.teacher.username }}</td>
+        <td>{{ t.room }}</td>
+        <td>{{ t.start_time }}</td>
+        <td>{{ t.end_time }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="8">No timetable entries found.</td>
     </tr>
     {% endfor %}
 </table>

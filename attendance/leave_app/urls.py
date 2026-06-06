@@ -56,5 +56,9 @@ urlpatterns = [
 path('student/assignments/', views.assignment_list, name='assignment_list'),
 
 path('timetable/create/', views.create_timetable_entry, name='create_timetable_entry'),
-    
+    path(
+    'assignment/create/',
+    views.create_assignment,
+    name='create_assignment'
+),
 ]

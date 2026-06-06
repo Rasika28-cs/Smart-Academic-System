@@ -3,11 +3,62 @@
 <form method="POST">
     {% csrf_token %}
 
-    <input type="text" name="day" placeholder="Day"><br><br>
-    <input type="text" name="room" placeholder="Room"><br><br>
-    <input type="time" name="start_time"><br><br>
-    <input type="time" name="end_time"><br><br>
-    <input type="text" name="batch" placeholder="Batch"><br><br>
+    <label>Day</label><br>
+    <select name="day" required>
+        <option value="Mon">Monday</option>
+        <option value="Tue">Tuesday</option>
+        <option value="Wed">Wednesday</option>
+        <option value="Thu">Thursday</option>
+        <option value="Fri">Friday</option>
+        <option value="Sat">Saturday</option>
+    </select>
+    <br><br>
 
-    <button type="submit">Save</button>
+    <label>Room</label><br>
+    <input type="text" name="room" required>
+    <br><br>
+
+    <label>Start Time</label><br>
+    <input type="time" name="start_time" required>
+    <br><br>
+
+    <label>End Time</label><br>
+    <input type="time" name="end_time" required>
+    <br><br>
+
+    <label>Batch</label><br>
+    <input type="text" name="batch" required>
+    <br><br>
+
+    <label>Teacher</label><br>
+    <select name="teacher" required>
+        {% for teacher in teachers %}
+            <option value="{{ teacher.id }}">
+                {{ teacher.username }}
+            </option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label>Subject</label><br>
+    <select name="subject" required>
+        {% for subject in subjects %}
+            <option value="{{ subject.id }}">
+                {{ subject.name }}
+            </option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label>Department</label><br>
+    <select name="department" required>
+        {% for dept in departments %}
+            <option value="{{ dept.id }}">
+                {{ dept.name }}
+            </option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <button type="submit">Save Timetable</button>
 </form>
