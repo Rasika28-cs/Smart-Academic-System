@@ -956,42 +956,67 @@ def mark_as_read(request, id):
     return JsonResponse({"status": "ok"})
 
 
+
 @login_required
 def upload_defaulters(request):
-    if request.method != 'POST': return JsonResponse({'status': 'error'})
-    file = request.FILES.get('file')
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+    file = request.FILES.get('excel_file')
+
+    if not file:
+        return JsonResponse({'status': 'error', 'message': 'No file uploaded'})
+
     try:
         df = pd.read_excel(file)
         df.columns = df.columns.str.strip()
+
+        required_cols = ['Roll No', 'Name', 'Staff Incharge', 'Dept', 'Year', 'Reason']
+        if not all(col in df.columns for col in required_cols):
+            return JsonResponse({'status': 'error', 'message': 'Invalid Excel format'})
+
         df = df[df['Dept'] == 'CYSE']
+
         for _, row in df.iterrows():
-            DefaulterStudent.objects.create(
-                roll_no=row['Roll No'], name=row['Name'], 
-                staff_incharge=row['Staff Incharge'], department=row['Dept'], 
-                year=row['Year'], reason=row['Reason']
+            DefaulterStudent.objects.get_or_create(
+                roll_no=row['Roll No'],
+                defaults={
+                    "name": row['Name'],
+                    "staff_incharge": row['Staff Incharge'],
+                    "department": row['Dept'],
+                    "year": row['Year'],
+                    "reason": row['Reason']
+                }
             )
+
         return JsonResponse({'status': 'success'})
+
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
 
 
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
-    return render(request, 'defaulter_list.html', {'students': defaulter_list})
+    return render(request, 'defaulter_list.html', {'students': students})
+
 
 
 @login_required
 def update_action(request, id):
-    if request.method != 'POST': return JsonResponse({'status': 'error'})
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
     try:
         data = json.loads(request.body)
-        std = DefaulterStudent.objects.get(id=id)
-        std.action_taken = data.get('action')
-        std.save()
+
+        student = DefaulterStudent.objects.get(id=id)
+        student.action_taken = data.get('action')
+        student.save()
+
         return JsonResponse({'status': 'success'})
-    except Exception as e: return JsonResponse({'status': 'error', 'message': str(e)})
 
-
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
 # ─────────────────────────────────────────────
 # 9. NEW ACADEMIC MODULES
 # ─────────────────────────────────────────────
