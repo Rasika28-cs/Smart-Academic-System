@@ -83,25 +83,21 @@
               {{ student.reason }}
             </td>
 
-           <td class="p-4 text-center">
+            <td class="p-4 text-center">
 
-  {% if student.action_taken and student.action_taken != "" %}
+              {% if student.action_taken %}
+                <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-green-100 text-green-700 rounded-full">
+                  <span class="material-symbols-outlined text-sm">check_circle</span>
+                  {{ student.get_action_taken_display }}
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-amber-100 text-amber-700 rounded-full">
+                  <span class="material-symbols-outlined text-sm">schedule</span>
+                  Pending
+                </span>
+              {% endif %}
 
-    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-green-100 text-green-700 rounded-full">
-      <span class="material-symbols-outlined text-sm">check_circle</span>
-      {{ student.action_taken }}
-    </span>
-
-  {% else %}
-
-    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-amber-100 text-amber-700 rounded-full">
-      <span class="material-symbols-outlined text-sm">schedule</span>
-      Pending
-    </span>
-
-  {% endif %}
-
-</td>
+            </td>
 
           </tr>
           {% endfor %}

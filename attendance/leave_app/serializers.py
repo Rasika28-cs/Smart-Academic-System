@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from .models import Attendance, Result, LeaveRequest, Student
 
-
+class StudentPerformanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Result
+        fields = ['exam', 'marks_obtained']
 
 class AttendanceTrendSerializer(serializers.ModelSerializer):
     class Meta:

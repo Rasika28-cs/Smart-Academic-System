@@ -956,46 +956,28 @@ def mark_as_read(request, id):
     return JsonResponse({"status": "ok"})
 
 
-
 @login_required
 def upload_defaulters(request):
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'Invalid request'})
-
-    file = request.FILES.get('excel_file')
-
-    if not file:
-        return JsonResponse({'status': 'error', 'message': 'No file uploaded'})
-
+    if request.method != 'POST': return JsonResponse({'status': 'error'})
+    file = request.FILES.get('file')
     try:
         df = pd.read_excel(file)
         df.columns = df.columns.str.strip()
-
-        required_cols = ['Roll No', 'Name', 'Staff Incharge', 'Dept', 'Year', 'Reason']
-        if not all(col in df.columns for col in required_cols):
-            return JsonResponse({'status': 'error', 'message': 'Invalid Excel format'})
-
         df = df[df['Dept'] == 'CYSE']
-
         for _, row in df.iterrows():
-            DefaulterStudent.objects.get_or_create(
-                roll_no=row['Roll No'],
-                defaults={
-                    "name": row['Name'],
-                    "staff_incharge": row['Staff Incharge'],
-                    "department": row['Dept'],
-                    "year": row['Year'],
-                    "reason": row['Reason']
-                }
+            DefaulterStudent.objects.create(
+                roll_no=row['Roll No'], name=row['Name'], 
+                staff_incharge=row['Staff Incharge'], department=row['Dept'], 
+                year=row['Year'], reason=row['Reason']
             )
-
         return JsonResponse({'status': 'success'})
-
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
+
+
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
-    return render(request, 'defaulter_list.html', {'students': students})
+    return render(request, 'defaulter_list.html', {'students': defaulter_list})
 
 
 @login_required
@@ -1085,7 +1067,7 @@ def parent_dashboard(request):
         return redirect('login_page')
 
     attendance_records = Attendance.objects.filter(student=student).order_by('-date')[:10]
-    
+    results = Result.objects.filter(student=student).select_related('exam')
 
     return render(request, 'parent_dashboard.html', {
         'student': student,
@@ -1121,7 +1103,7 @@ def parent_view_attendance(request):
 @login_required
 def parent_view_results(request):
     parent = get_object_or_404(ParentProfile, user=request.user)
-    
+    results = Result.objects.filter(student=parent.student).select_related('exam__subject')
     return render(request, 'parent_results.html', {'results': results, 'student': parent.student})
 
 @login_required
