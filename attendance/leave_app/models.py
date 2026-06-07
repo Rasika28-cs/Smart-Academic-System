@@ -273,15 +273,13 @@ class ActivityLog(models.Model):
 # ─────────────────────────────
 
 class ParentProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='parent_profile')
     student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='parent')
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=15)
+    
+   
 
-
-
-from django.db import models
-from django.contrib.auth.models import User
-from leave_app.models import Student   # ✅ IMPORTANT FIX (must import)
+    def __str__(self):
+        return f"{self.user.username} -> Parent of {self.student.name}"  # ✅ IMPORTANT FIX (must import)
 
 
 class GradeUpload(models.Model):

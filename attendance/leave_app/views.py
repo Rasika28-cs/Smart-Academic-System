@@ -207,7 +207,53 @@ def signup_page(request):
         Student.objects.create(user=django_user, name=name, roll_no=roll_no, password=make_password(password))
         return redirect('login_page')
     return render(request, 'signup.html')
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import login
 
+
+def parent_login(request):
+    if request.method == 'POST':
+
+        reg_no = request.POST.get('reg_no')
+        password = request.POST.get('password')
+
+        try:
+            student = Student.objects.get(reg_no=reg_no)
+
+            # 🔥 YOUR RULE:
+            # password must equal reg_no OR student's stored password
+            if password == student.reg_no or check_password(password, student.password):
+
+                user = student.user
+
+                if not user:
+                    user = User.objects.create_user(
+                        username=student.reg_no,
+                        password=student.reg_no,   # 🔥 password = reg_no
+                        first_name=student.name
+                    )
+                    student.user = user
+                    student.save()
+
+                login(request, user)
+
+                ParentProfile.objects.get_or_create(
+                    user=user,
+                    student=student
+                )
+
+                return redirect('parent_dashboard')
+
+            return render(request, 'parent_login.html', {
+                'error': 'Invalid credentials'
+            })
+
+        except Student.DoesNotExist:
+            return render(request, 'parent_login.html', {
+                'error': 'Student not found'
+            })
+
+    return render(request, 'parent_login.html')
 
 # ─────────────────────────────────────────────
 # 3. STUDENT MODULES
@@ -1052,7 +1098,7 @@ def assignment_list(request):
 # OD Integration
 @login_required
 def view_od_status(request):
-    ods = ODApplication.objects.filter(student_user=request.user)
+    ods = ODApplication.objects.filter(student=request.user)
     return render(request, 'od_status.html', {'ods': ods})
 
 @login_required
@@ -1083,23 +1129,140 @@ def dashboard_redirect(request):
     return redirect('login_page')
 
 
+from django.db.models import Count
+
 @login_required
 def parent_dashboard(request):
     try:
-        parent_profile = request.user.parentprofile
-        student = parent_profile.student
-    except Exception:
+        parent = request.user.parent_profile
+        student = parent.student
+    except ParentProfile.DoesNotExist:
         return redirect('login_page')
 
-    attendance_records = Attendance.objects.filter(student=student).order_by('-date')[:10]
-    results = Result.objects.filter(student=student).select_related('exam')
+    # ─────────────────────────
+    # Attendance (optimized)
+    # ─────────────────────────
+    attendance_qs = Attendance.objects.filter(student=student)
+
+    attendance_records = attendance_qs.order_by('-date')[:10]
+
+    total = attendance_qs.count()
+    present = attendance_qs.filter(status='Present').count()
+    leave = attendance_qs.filter(status='Leave').count()
+    absent = attendance_qs.filter(status='Absent').count()
+
+    attendance_percent = max(0, 100 - ((leave + absent) * 3))
+
+    # ─────────────────────────
+    # Leaves
+    # ─────────────────────────
+    leaves = LeaveRequest.objects.filter(student=student).order_by('-created_at')[:5]
+
+    # ─────────────────────────
+    # OD
+    # ─────────────────────────
+    ods = ODApplication.objects.filter(student=student.user).order_by('-id')[:5]
+
+    # ─────────────────────────
+    # Grades
+    # ─────────────────────────
+    grades = StudentGrade.objects.filter(student=student).select_related('upload').order_by('-id')[:10]
+
+    # ─────────────────────────
+    # Defaulters
+    # ─────────────────────────
+    defaulters = DefaulterStudent.objects.filter(
+        roll_no=student.roll_no
+    ).order_by('-year')[:5]
+
+    # ─────────────────────────
+    # Notifications (IMPORTANT FIX)
+    # ─────────────────────────
+    notifications = Notification.objects.filter(
+        users=student.user
+    ).order_by('-created_at')[:10]
 
     return render(request, 'parent_dashboard.html', {
         'student': student,
-        'attendance': attendance_records,
-        'results': results
+
+        # Attendance
+        'attendance_records': attendance_records,
+        'attendance_percent': round(attendance_percent, 2),
+        'present': present,
+        'leave': leave,
+        'absent': absent,
+        'total': total,
+
+        # Modules
+        'leaves': leaves,
+        'ods': ods,
+        'grades': grades,
+        'defaulters': defaulters,
+        'notifications': notifications,
     })
 
+
+@login_required
+def parent_view_attendance(request):
+    parent = request.user.parent_profile
+    student = parent.student
+
+    records = Attendance.objects.filter(student=student).order_by('-date')
+
+    return render(request, 'parent_attendance.html', {
+        'attendance': records,
+        'student': student
+    })
+
+@login_required
+def parent_view_grades(request):
+    parent = request.user.parent_profile
+    student = parent.student
+
+    grades = StudentGrade.objects.filter(student=student).select_related('upload')
+
+    return render(request, 'parent_grades.html', {
+        'grades': grades,
+        'student': student
+    })
+
+
+
+@login_required
+def parent_view_leaves(request):
+    parent = request.user.parent_profile
+    student = parent.student
+
+    leaves = LeaveRequest.objects.filter(student=student).order_by('-created_at')
+
+    return render(request, 'parent_leaves.html', {
+        'leaves': leaves,
+        'student': student
+    })
+
+@login_required
+def parent_view_defaulters(request):
+    parent = request.user.parent_profile
+    student = parent.student
+
+    defaulters = DefaulterStudent.objects.filter(roll_no=student.roll_no)
+
+    return render(request, 'parent_defaulters.html', {
+        'defaulters': defaulters,
+        'student': student
+    })
+
+@login_required
+def parent_view_od(request):
+    parent = request.user.parent_profile
+    student = parent.student
+
+    ods = ODApplication.objects.filter(student=student.user)
+
+    return render(request, 'parent_od.html', {
+        'ods': ods,
+        'student': student
+    })
 
 # ─────────────────────────────────────────────
 # 1. ASSIGNMENT SUBMISSION SYSTEM #############
@@ -1107,29 +1270,7 @@ def parent_dashboard(request):
 
 
 
-# ─────────────────────────────────────────────
-# 2. PARENT PORTAL
-# ─────────────────────────────────────────────
 
-@login_required
-def parent_login_redirect_dashboard(request):
-    try:
-        parent = request.user.parentprofile
-        return render(request, 'parent_dashboard.html', {'student': parent.student})
-    except ParentProfile.DoesNotExist:
-        return redirect('home')
-
-@login_required
-def parent_view_attendance(request):
-    parent = get_object_or_404(ParentProfile, user=request.user)
-    records = Attendance.objects.filter(student=parent.student).order_by('-date')
-    return render(request, 'parent_attendance.html', {'attendance': records, 'student': parent.student})
-
-@login_required
-def parent_view_results(request):
-    parent = get_object_or_404(ParentProfile, user=request.user)
-    results = Result.objects.filter(student=parent.student).select_related('exam__subject')
-    return render(request, 'parent_results.html', {'results': results, 'student': parent.student})
 
 @login_required
 def parent_view_notifications(request):

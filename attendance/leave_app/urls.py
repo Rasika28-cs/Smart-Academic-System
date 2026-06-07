@@ -57,4 +57,10 @@ urlpatterns = [
 
     path('timetable/create/', views.create_timetable_entry, name='create_timetable_entry'),
     path('assignment/create/',views.create_assignment,name='create_assignment'),
+
+       # ───────────────────────── Parent Portal ─────────────────────────
+    path('parent/login/', views.parent_login, name='parent_login'),
+    path('dashboard/', views.dashboard_redirect, name='dashboard_redirect'),
+    path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
+
 ]
