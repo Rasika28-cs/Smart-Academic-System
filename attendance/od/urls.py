@@ -7,4 +7,5 @@ urlpatterns = [
     path('staff/', views.staff_panel, name='staff_panel'),
     path('approve/<int:id>/', views.approve_od, name='approve_od'),
     path('reject/<int:id>/', views.reject_od, name='reject_od'),
+    path('od-status/', views.view_od_status, name='od_status'),
 ]

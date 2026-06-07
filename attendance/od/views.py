@@ -6,7 +6,11 @@ from django.http import HttpResponse
 from .models import ODApplication
 from events.models import Event
 
+@login_required
+def view_od_status(request):
+    ods = ODApplication.objects.filter(student=request.user)
 
+    return render(request, 'od/od_status.html', {'ods': ods})
 # ─────────────────────────────────────────────
 # APPLY OD
 # ─────────────────────────────────────────────
