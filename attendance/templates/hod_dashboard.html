@@ -430,24 +430,20 @@
       <div class="tbl-wrap">
         <table>
           <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Year</th><th>Reason</th><th>Staff Incharge</th><th>Action</th></tr></thead>
-          <tbody>
-            {% for d in defaulter_list %}
-            <tr>
-              <td class="text-muted" style="font-size:11px">{{ forloop.counter }}</td>
-              <td style="font-weight:600">{{ d.name }}</td>
-              <td class="text-muted">{{ d.roll_no }}</td>
-              <td>{{ d.year }}</td>
-              <td>{{ d.reason }}</td>
-              <td>{{ d.staff_incharge }}</td>
-              <td>
-                {% if d.action_taken %}<span class="badge badge-ok">{{ d.action_taken }}</span>
-                {% else %}<span class="badge badge-low">Pending</span>{% endif %}
-              </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="7"><div class="empty"><i class="bi bi-emoji-smile"></i>No defaulter records found 🎉</div></td></tr>
-            {% endfor %}
-          </tbody>
+        <tbody>
+{% for d in defaulter_list %}
+<tr>
+    <td>{{ d.roll_no }}</td>
+    <td>{{ d.name }}</td>
+    <td>{{ d.department }}</td>
+    <td>{{ d.reason }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="4">No defaulters found</td>
+</tr>
+{% endfor %}
+</tbody>
         </table>
       </div>
     </div>

@@ -1,10 +1,10 @@
 from django.contrib import admin
 from .models import (
-    Student, LeaveRequest, Attendance, Department, 
-    Subject, Timetable, Assignment, 
-     Notification, ParentProfile
+    Student, LeaveRequest, Attendance, Department,
+    Subject, Timetable, Assignment,
+    Notification, ParentProfile,
+    DefaulterStudent
 )
-
 class LeaveRequestAdmin(admin.ModelAdmin):
     list_display = ('student', 'from_date', 'to_date', 'status', 'created_at')
     list_filter = ('status', 'from_date')
@@ -26,7 +26,7 @@ admin.site.register(Subject)
 admin.site.register(Attendance)
 admin.site.register(Timetable, TimetableAdmin)
 admin.site.register(Assignment)
-
+admin.site.register(DefaulterStudent)
 admin.site.register(Notification)
 admin.site.register(ParentProfile)
 admin.site.register(LeaveRequest, LeaveRequestAdmin)

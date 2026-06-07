@@ -769,6 +769,7 @@ def hod_dashboard(request):
     # ─────────────────────────────────────────────
     try:
         managed_dept = request.user.managed_dept.first()
+        
     except Exception:
         return HttpResponse("You are not assigned to any department.")
 
@@ -901,7 +902,7 @@ def hod_dashboard(request):
     # ─────────────────────────────────────────────
     # Defaulters (from DefaulterStudent model)
     defaulter_list = DefaulterStudent.objects.filter(
-        department=managed_dept.name
+        department=managed_dept.code
     ).order_by('year', 'roll_no')
 
     # Grade Uploads for this department's students
@@ -911,27 +912,34 @@ def hod_dashboard(request):
     recent_grades = StudentGrade.objects.filter(
         student__department=managed_dept
     ).select_related('student', 'upload').order_by('-id')[:50]
+    
         
     
     return render(request, 'hod_dashboard.html', {
-        'students': students,
-        'names': json.dumps(names),
-        'percentages': json.dumps(percentages),
-        'trend_labels': json.dumps(trend_labels),
-        'trend_values': json.dumps(trend_values),
-        'sub_names': json.dumps(sub_names),
-        'sub_percs': json.dumps(sub_percs),
-        'dist_data': json.dumps(dist_data),
+    'students': students,
+    'managed_dept': managed_dept,
 
-        'total_students': total_students,
-        'above_75_count': above_75_count,
-        'below_75_count': below_75_count,
-        'department_average': round(dept_avg, 1),
+    'names': json.dumps(names),
+    'percentages': json.dumps(percentages),
+    'trend_labels': json.dumps(trend_labels),
+    'trend_values': json.dumps(trend_values),
+    'sub_names': json.dumps(sub_names),
+    'sub_percs': json.dumps(sub_percs),
+    'dist_data': json.dumps(dist_data),
 
-        'search_query': search_query,
-        'selected_date': selected_date,
-        'daily_records': daily_records,
-    })
+    'total_students': total_students,
+    'above_75_count': above_75_count,
+    'below_75_count': below_75_count,
+    'department_average': round(dept_avg, 1),
+
+    'search_query': search_query,
+    'selected_date': selected_date,
+    'daily_records': daily_records,
+
+    'defaulter_list': defaulter_list,
+    'grade_uploads': grade_uploads,
+    'recent_grades': recent_grades,
+})
 
 # ─────────────────────────────────────────────
 # 7. UTILS: QR, CALCULATOR, CSV UPLOADS
