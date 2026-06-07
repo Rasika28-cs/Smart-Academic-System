@@ -53,12 +53,8 @@ urlpatterns = [
 
     path('teacher/timetable/', views.view_timetable, name='view_timetable'),
 
-path('student/assignments/', views.assignment_list, name='assignment_list'),
+    path('student/assignments/', views.assignment_list, name='assignment_list'),
 
-path('timetable/create/', views.create_timetable_entry, name='create_timetable_entry'),
-    path(
-    'assignment/create/',
-    views.create_assignment,
-    name='create_assignment'
-),
+    path('timetable/create/', views.create_timetable_entry, name='create_timetable_entry'),
+    path('assignment/create/',views.create_assignment,name='create_assignment'),
 ]

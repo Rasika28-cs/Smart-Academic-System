@@ -164,14 +164,19 @@
                 </span>
               </td>
               <td class="px-6 py-4">
-                <select class="status-select w-full min-w-[160px] bg-white border border-outline rounded-lg px-3 py-1.5 text-sm font-medium text-on-surface focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-                        onchange="updateAction({{ s.id }}, this.value)">
-                  <option value="None" {% if s.action == "None" %}selected{% endif %}>Pending</option>
-                  <option value="Warning Sent" {% if s.action == "Warning Sent" %}selected{% endif %}>Warning Sent</option>
-                  <option value="Parent Called" {% if s.action == "Parent Called" %}selected{% endif %}>Parent Called</option>
-                  <option value="Suspended" {% if s.action == "Suspended" %}selected{% endif %}>Suspended</option>
-                  <option value="Resolved" {% if s.action == "Resolved" %}selected{% endif %}>Resolved</option>
-                </select>
+                <select onchange="updateAction({{ s.id }}, this.value)">
+
+  <option value="" {% if not s.action_taken %}selected{% endif %}>Pending</option>
+
+  <option value="Warning Sent" {% if s.action_taken == "Warning Sent" %}selected{% endif %}>Warning Sent</option>
+
+  <option value="Parent Called" {% if s.action_taken == "Parent Called" %}selected{% endif %}>Parent Called</option>
+
+  <option value="Suspended" {% if s.action_taken == "Suspended" %}selected{% endif %}>Suspended</option>
+
+  <option value="Resolved" {% if s.action_taken == "Resolved" %}selected{% endif %}>Resolved</option>
+
+</select>
               </td>
             </tr>
             {% empty %}
@@ -199,29 +204,21 @@
     </p>
   </footer>
 
-  <script>
-    function updateAction(studentId, actionValue) {
-        // Show a subtle loading indicator or visual feedback if desired
-        fetch(`/update_action/${studentId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-            body: JSON.stringify({ action: actionValue })
-        })
-        .then(res => {
-          if (res.ok) {
-            console.log("Updated successfully");
-          } else {
-            alert("Error updating action. Please try again.");
-          }
-        })
-        .catch(err => {
-          console.error("Network error:", err);
-          alert("Connection error. Check your internet.");
-        });
-    }
-  </script>
+ <script>
+function updateAction(id, value) {
+    fetch(`/update-action/${id}/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ action: value })
+    })
+    .then(res => res.json())
+    .then(data => console.log(data))
+    .catch(err => alert("Error updating"));
+}
+
+</script>
 </body>
 </html>

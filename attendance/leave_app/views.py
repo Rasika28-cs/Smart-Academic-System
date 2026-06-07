@@ -37,6 +37,7 @@ from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.db import transaction
 from django.contrib import messages
 from .models import LeaveRequest
+from .models import GradeUpload, StudentGrade
 
 def process_leave_decision(request, leave_id, action):
     """
@@ -258,11 +259,7 @@ def dashboard(request):
     }
 
     return render(request, 'dashboard.html', context)
-def dashboard_redirect(request):
-    user = request.user
 
-    if user.groups.filter(name='ClassRep').exists():
-        return redirect('cr_dashboard')
 
 @login_required
 def attendance(request):
@@ -856,6 +853,20 @@ def hod_dashboard(request):
     # ─────────────────────────────────────────────
     # FINAL RENDER
     # ─────────────────────────────────────────────
+    # Defaulters (from DefaulterStudent model)
+    defaulter_list = DefaulterStudent.objects.filter(
+        department=managed_dept.name
+    ).order_by('year', 'roll_no')
+
+    # Grade Uploads for this department's students
+    grade_uploads = GradeUpload.objects.all().order_by('-id')[:5]
+
+    # Recent grades
+    recent_grades = StudentGrade.objects.filter(
+        student__department=managed_dept
+    ).select_related('student', 'upload').order_by('-id')[:50]
+        
+    
     return render(request, 'hod_dashboard.html', {
         'students': students,
         'names': json.dumps(names),
@@ -945,28 +956,46 @@ def mark_as_read(request, id):
     return JsonResponse({"status": "ok"})
 
 
+
 @login_required
 def upload_defaulters(request):
-    if request.method != 'POST': return JsonResponse({'status': 'error'})
-    file = request.FILES.get('file')
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+    file = request.FILES.get('excel_file')
+
+    if not file:
+        return JsonResponse({'status': 'error', 'message': 'No file uploaded'})
+
     try:
         df = pd.read_excel(file)
         df.columns = df.columns.str.strip()
+
+        required_cols = ['Roll No', 'Name', 'Staff Incharge', 'Dept', 'Year', 'Reason']
+        if not all(col in df.columns for col in required_cols):
+            return JsonResponse({'status': 'error', 'message': 'Invalid Excel format'})
+
         df = df[df['Dept'] == 'CYSE']
+
         for _, row in df.iterrows():
-            DefaulterStudent.objects.create(
-                roll_no=row['Roll No'], name=row['Name'], 
-                staff_incharge=row['Staff Incharge'], department=row['Dept'], 
-                year=row['Year'], reason=row['Reason']
+            DefaulterStudent.objects.get_or_create(
+                roll_no=row['Roll No'],
+                defaults={
+                    "name": row['Name'],
+                    "staff_incharge": row['Staff Incharge'],
+                    "department": row['Dept'],
+                    "year": row['Year'],
+                    "reason": row['Reason']
+                }
             )
+
         return JsonResponse({'status': 'success'})
+
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)})
-
-
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
-    return render(request, 'defaulter_list.html', {'students': defaulter_list})
+    return render(request, 'defaulter_list.html', {'students': students})
 
 
 @login_required
@@ -1002,11 +1031,13 @@ def view_timetable(request):
     return render(request, 'timetable.html', {
         'timetable': timetable
     })
+
+
 @login_required
 def assignment_list(request):
     student, err = _student_required(request)
     if err: return err
-    data = Assignment.objects.filter(batch=student.batch).order_by('-due_date')
+    data = Assignment.objects.filter(batch=student.batch,due_date__gte=timezone.now().date() ).order_by('-due_date')
     return render(request, 'assignments.html', {'assignments': data})
 
 
@@ -1017,21 +1048,32 @@ def view_od_status(request):
     ods = ODApplication.objects.filter(student_user=request.user)
     return render(request, 'od_status.html', {'ods': ods})
 
+@login_required
 def dashboard_redirect(request):
     user = request.user
 
-    if not user.is_authenticated:
-        return redirect("login_page")
+    if user.is_superuser:
+        return redirect('hod_dashboard')
 
-    groups = set(user.groups.values_list("name", flat=True))
+    elif user.groups.filter(name='ClassIncharge').exists():
+        return redirect('class_incharge_dashboard')
 
-    if "Mentor" in groups:
-        return redirect("mentor_dashboard")
+    elif user.groups.filter(name='Mentor').exists():
+        return redirect('mentor_dashboard')
 
-    if "ClassIncharge" in groups:
-        return redirect("class_incharge_dashboard")
+    elif user.is_staff:
+        return redirect('teacher_dashboard')
 
-    return redirect("login_page")
+    elif user.groups.filter(name='ClassRep').exists():
+        return redirect('cr_dashboard')
+
+    elif hasattr(user, 'parentprofile'):
+        return redirect('parent_dashboard')
+
+    elif hasattr(user, 'student_profile'):
+        return redirect('student_dashboard')
+
+    return redirect('login_page')
 
 
 @login_required
@@ -1043,7 +1085,7 @@ def parent_dashboard(request):
         return redirect('login_page')
 
     attendance_records = Attendance.objects.filter(student=student).order_by('-date')[:10]
-    results = Result.objects.filter(student=student).select_related('exam')
+    
 
     return render(request, 'parent_dashboard.html', {
         'student': student,
@@ -1079,7 +1121,7 @@ def parent_view_attendance(request):
 @login_required
 def parent_view_results(request):
     parent = get_object_or_404(ParentProfile, user=request.user)
-    results = Result.objects.filter(student=parent.student).select_related('exam__subject')
+    
     return render(request, 'parent_results.html', {'results': results, 'student': parent.student})
 
 @login_required
@@ -1357,8 +1399,6 @@ def student_grades(request):
     })
 
 
-
-
 @login_required
 @role_required('ClassRep')
 def cr_dashboard(request):
@@ -1405,3 +1445,4 @@ def create_assignment(request):
         'subjects': subjects,
         'batch': student.batch
     })
+
