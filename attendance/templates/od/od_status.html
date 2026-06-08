@@ -1,59 +1,241 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>OD Status</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght@300;400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --primary: #2563EB;
+            --secondary: #4F46E5;
+            --bg-page: #F8FAFC;
+            --surface: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --radius: 8px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        body {
+            background-color: var(--bg-page);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::before {
+            content: 'assignment_turned_in';
+            font-family: 'Material Symbols Outlined';
+            font-size: 32px;
+            color: var(--primary);
+        }
+
+        .table-responsive {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .table {
+            margin-bottom: 0;
+            border: none;
+        }
+
+        .table-dark {
+            --bs-table-bg: #1E293B;
+            --bs-table-border-color: #334155;
+        }
+
+        .table thead th {
+            padding: 16px 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: none;
+        }
+
+        .table tbody td {
+            padding: 16px 20px;
+            vertical-align: middle;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9375rem;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #F1F5F9;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .bg-success {
+            background-color: #DCFCE7 !important;
+            color: #166534 !important;
+        }
+
+        .bg-danger {
+            background-color: #FEE2E2 !important;
+            color: #991B1B !important;
+        }
+
+        .bg-warning {
+            background-color: #FEF3C7 !important;
+            color: #92400E !important;
+        }
+
+        .alert-info {
+            background-color: var(--surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            padding: 10px 24px;
+            font-weight: 500;
+            border-radius: var(--radius);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background-color: #1D4ED8;
+            border-color: #1D4ED8;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary::before {
+            content: 'arrow_back';
+            font-family: 'Material Symbols Outlined';
+            font-size: 18px;
+        }
+
+        .od-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
 </head>
-<body>
 
-<div class="container mt-5">
-    <h2 class="mb-4">My OD Applications</h2>
+<body class="min-h-screen flex flex-col">
+    <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50"><a
+            class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline"
+            href="{% url 'student_dashboard' %}"><span class="material-symbols-outlined text-2xl">school</span><span
+                class="hidden sm:inline">Smart Attendance</span></a>
+        <ul class="flex gap-1 ml-auto list-none items-center">
+            <li><a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline"
+                    href="{% url 'student_dashboard' %}">Dashboard</a></li>
+            <li><a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline"
+                    href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+    <div class="container mt-5">
+        <div class="od-section">
+            <h2 class="mb-4">My OD Applications</h2>
 
-    {% if ods %}
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>#</th>
-                    <th>Event</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for od in ods %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ od.event.event_name }}</td>
-                    <td>{{ od.date }}</td>
-                    <td>
-                        {% if od.status == "approved" %}
-                            <span class="badge bg-success">Approved</span>
-                        {% elif od.status == "rejected" %}
-                            <span class="badge bg-danger">Rejected</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+            {% if ods %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for od in ods %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td class="fw-medium">{{ od.event.event_name }}</td>
+                            <td>{{ od.date }}</td>
+                            <td>
+                                {% if od.status == "approved" %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif od.status == "rejected" %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-    {% else %}
-        <div class="alert alert-info">
-            You have not applied for any OD yet.
+            {% else %}
+            <div class="alert alert-info">
+                <span class="material-symbols-outlined d-block mb-2" style="font-size: 48px; opacity: 0.5;">info</span>
+                You have not applied for any OD yet.
+            </div>
+            {% endif %}
         </div>
-    {% endif %}
-
-    <a href="{% url 'student_dashboard' %}" class="btn btn-primary mt-3">
-        Back to Dashboard
-    </a>
-</div>
-
+    </div>
+    <script>
+        // Add subtle interactivity if needed
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = document.querySelectorAll('tbody tr');
+            rows.forEach((row, index) => {
+                row.style.opacity = '0';
+                row.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.opacity = '1';
+                    row.style.transform = 'translateY(0)';
+                }, 50 * index);
+            });
+        });
+    </script>
+    <footer class="mt-auto py-8 text-center border-t border-outline/40">
+        <p class="text-xs text-on-surface-variant/60">© 2026 Smart Academic System • Department of Computer Science and
+            Engineering</p>
+    </footer>
 </body>
+
 </html>

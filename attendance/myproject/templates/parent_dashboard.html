@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parent Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+        <h2>Parent Dashboard</h2>
+        <p class="text-muted">Student Monitoring System</p>
+    </div>
+
+    <!-- STUDENT INFO -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h4>{{ student.name }}</h4>
+        <p>
+            <b>Roll No:</b> {{ student.roll_no }} <br>
+            <b>Department:</b> {{ student.department }} <br>
+            <b>Batch:</b> {{ student.batch }}
+        </p>
+    </div>
+
+    <!-- ATTENDANCE SUMMARY -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h5>Attendance Overview</h5>
+
+        <h2 class="text-primary">{{ attendance_percent }}%</h2>
+
+        <div class="row">
+            <div class="col">Present: <b>{{ present }}</b></div>
+            <div class="col">Leave: <b>{{ leave }}</b></div>
+            <div class="col">Absent: <b>{{ absent }}</b></div>
+            <div class="col">Total: <b>{{ total }}</b></div>
+        </div>
+    </div>
+
+    <!-- RECENT ATTENDANCE -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h5>Recent Attendance</h5>
+
+        <table class="table table-sm">
+            <tr>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+
+            {% for a in attendance_records %}
+            <tr>
+                <td>{{ a.date }}</td>
+                <td>{{ a.status }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2">No records</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- LEAVES -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h5>Leave Status</h5>
+
+        {% for l in leaves %}
+            <div class="border p-2 mb-2 rounded">
+                <b>{{ l.from_date }} → {{ l.to_date }}</b><br>
+                Status: <span class="badge bg-info">{{ l.status }}</span>
+            </div>
+        {% empty %}
+            <p>No leave records</p>
+        {% endfor %}
+    </div>
+
+    <!-- OD STATUS -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h5>OD Status</h5>
+
+        {% for o in ods %}
+            <div class="border p-2 mb-2 rounded">
+                Status: <b>{{ o.status }}</b>
+            </div>
+        {% empty %}
+            <p>No OD records</p>
+        {% endfor %}
+    </div>
+
+    <!-- GRADES -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h5>Grades</h5>
+
+        <table class="table table-sm">
+            <tr>
+                <th>Subject</th>
+                <th>Grade</th>
+            </tr>
+
+            {% for g in grades %}
+            <tr>
+                <td>{{ g.subject_code }}</td>
+                <td><span class="badge bg-success">{{ g.grade }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2">No grades</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- DEFAULTERS -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h5>Defaulters</h5>
+
+        {% for d in defaulters %}
+            <div class="alert alert-danger p-2">
+                <b>{{ d.year }}</b> - {{ d.reason }}
+            </div>
+        {% empty %}
+            <p>No defaulter records</p>
+        {% endfor %}
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="card shadow-sm p-3 mb-3">
+        <h5>Notifications</h5>
+
+        {% for n in notifications %}
+            <div class="alert alert-secondary p-2">
+                <b>{{ n.title }}</b><br>
+                {{ n.message }}
+            </div>
+        {% empty %}
+            <p>No notifications</p>
+        {% endfor %}
+    </div>
+
+</div>
+
+</body>
+</html>

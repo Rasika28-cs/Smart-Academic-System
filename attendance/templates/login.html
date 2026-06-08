@@ -1,17 +1,23 @@
-<html lang="en"><head></head><body class="min-h-screen flex flex-col">{% load static %}
+<html lang="en">
+
+<head></head>
+
+<body class="min-h-screen flex flex-col">{% load static %}
 
 
 
-  <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Login - Smart Academic System</title>
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Google Fonts: Inter -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Login - Smart Academic System</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+  <!-- Material Symbols -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <script id="tailwind-config">
     tailwind.config = {
       theme: {
         extend: {
@@ -35,106 +41,155 @@
       }
     }
   </script>
-<style>
+  <style>
     body {
       background-color: #F8FAFC;
       font-family: 'Inter', sans-serif;
     }
+
     .material-symbols-outlined {
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       vertical-align: middle;
     }
+
     .login-card {
       box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1), 0 20px 25px -5px rgb(0 0 0 / 0.05);
     }
+
     input:focus {
       border-color: #2563EB !important;
       ring-color: #2563EB !important;
     }
   </style>
-<!-- Top Navigation Bar -->
-<nav class="h-16 bg-white border-b border-outline flex items-center px-4 md:px-8 shrink-0">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
-<span class="material-symbols-outlined text-2xl">school</span>
-</div>
-<div>
-<h1 class="text-onSurface font-bold text-lg leading-tight">Smart Academic System</h1>
-<p class="text-[10px] text-onSurfaceMuted uppercase tracking-wider font-semibold">CSE Department</p>
-</div>
-</div>
-<div class="ml-auto hidden sm:flex items-center gap-6">
-<a class="text-sm font-medium text-onSurfaceMuted hover:text-primary transition-colors" href="{% url 'home' %}">Home</a>
-<a class="text-sm font-semibold text-primary" href="#">Login</a>
-</div>
-</nav>
-<!-- Main Content -->
-<main class="flex-grow flex items-center justify-center p-6">
-<div class="w-full max-w-[440px]">
-<div class="login-card bg-surface rounded-2xl border border-outline p-8 md:p-10">
-<!-- Header -->
-<div class="text-center mb-8">
-<h2 class="text-2xl font-bold text-onSurface">Welcome back</h2>
-<p class="text-onSurfaceMuted mt-2 text-sm">Please enter your credentials to access your account</p>
-</div>
-<!-- Error Alert -->
+  <!-- Top Navigation Bar -->
+  <nav class="h-16 bg-white border-b border-outline flex items-center px-4 md:px-8 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+        <span class="material-symbols-outlined text-2xl">school</span>
+      </div>
+      <div>
+        <h1 class="text-onSurface font-bold text-lg leading-tight">Smart Academic System</h1>
+        <p class="text-[10px] text-onSurfaceMuted uppercase tracking-wider font-semibold">CSE Department</p>
+      </div>
+    </div>
+    <div class="ml-auto hidden sm:flex items-center gap-6">
+      <a class="text-sm font-medium text-onSurfaceMuted hover:text-primary transition-colors"
+        href="{% url 'home' %}">Home</a>
+      <a class="text-sm font-semibold text-primary" href="#">Login</a>
+    </div>
+  </nav>
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center p-6">
+    <div class="w-full max-w-[440px]">
+      <div class="login-card bg-surface rounded-2xl border border-outline p-8 md:p-10">
+        <!-- Header -->
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-onSurface">Welcome back</h2>
+          <p class="text-onSurfaceMuted mt-2 text-sm">Please enter your credentials to access your account</p>
+        </div>
+        <!-- Error Alert -->
         {% if error %}
         <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-<span class="material-symbols-outlined text-error text-[20px]">error</span>
-<p class="text-sm text-red-800 font-medium leading-tight">{{ error }}</p>
-</div>
+          <span class="material-symbols-outlined text-error text-[20px]">error</span>
+          <p class="text-sm text-red-800 font-medium leading-tight">{{ error }}</p>
+        </div>
         {% endif %}
 
         <!-- Form -->
-<form action="{% url 'login_page' %}" class="space-y-5" method="POST">
+        <form action="{% url 'login_page' %}" class="space-y-5" method="POST">
           {% csrf_token %}
-          <input name="next" type="hidden" value="{{ request.GET.next }}"/>
-<div class="space-y-1.5">
-<label class="text-sm font-semibold text-onSurface ml-1" for="username">Roll Number / Username</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-onSurfaceMuted text-lg">person</span>
-<input class="w-full pl-10 pr-4 py-3 bg-white border border-outline rounded-xl text-sm transition-all focus:ring-4 focus:ring-primary/10 outline-none" id="username" name="username" placeholder="Roll no or username" required="" type="text"/>
-</div>
-</div>
-<div class="space-y-1.5">
-<label class="text-sm font-semibold text-onSurface ml-1" for="password">Password</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-onSurfaceMuted text-lg">lock</span>
-<input class="w-full pl-10 pr-4 py-3 bg-white border border-outline rounded-xl text-sm transition-all focus:ring-4 focus:ring-primary/10 outline-none" id="password" name="password" placeholder="Your password" required="" type="password"/>
-</div>
-</div>
-<button class="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group" type="submit">
+          <input name="next" type="hidden" value="{{ request.GET.next }}" />
+          <div class="space-y-1.5">
+            <label class="text-sm font-semibold text-onSurface ml-1" for="username">Roll Number / Username</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-onSurfaceMuted text-lg">person</span>
+              <input
+                class="w-full pl-10 pr-4 py-3 bg-white border border-outline rounded-xl text-sm transition-all focus:ring-4 focus:ring-primary/10 outline-none"
+                id="username" name="username" placeholder="Roll no or username" required="" type="text" />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-sm font-semibold text-onSurface ml-1" for="password">
+              Password
+            </label>
+
+            <div class="relative">
+              <!-- Lock Icon -->
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-onSurfaceMuted text-lg">
+                lock
+              </span>
+
+              <!-- Password Input -->
+              <input
+                class="w-full pl-10 pr-12 py-3 bg-white border border-outline rounded-xl text-sm transition-all focus:ring-4 focus:ring-primary/10 outline-none"
+                id="password" name="password" placeholder="Your password" required type="password" />
+
+              <!-- Eye Button -->
+              <button type="button" id="togglePassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-onSurfaceMuted hover:text-primary">
+                <span id="eyeIcon" class="material-symbols-outlined text-lg">
+                  visibility
+                </span>
+              </button>
+            </div>
+          </div>
+          <button
+            class="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group"
+            type="submit">
             Login
-            <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
-</button>
-</form>
-<!-- Role Indicators -->
-<div class="mt-10 border-t border-outline pt-6">
-<p class="text-center text-[11px] font-bold text-onSurfaceMuted uppercase tracking-widest mb-4">Authorized Portals</p>
-<div class="flex flex-wrap justify-center gap-2">
-<div class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
-<span class="material-symbols-outlined text-[16px]">school</span> Student
+            <span
+              class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+        </form>
+        <!-- Role Indicators -->
+        <div class="mt-10 border-t border-outline pt-6">
+          <p class="text-center text-[11px] font-bold text-onSurfaceMuted uppercase tracking-widest mb-4">Authorized
+            Portals</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            <div
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
+              <span class="material-symbols-outlined text-[16px]">school</span> Student
             </div>
-<div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">
-<span class="material-symbols-outlined text-[16px]">record_voice_over</span> Faculty
+            <div
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-semibold">
+              <span class="material-symbols-outlined text-[16px]">record_voice_over</span> Faculty
             </div>
-<div class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">
-<span class="material-symbols-outlined text-[16px]">shield_person</span> Admin/HOD
+            <div
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">
+              <span class="material-symbols-outlined text-[16px]">shield_person</span> Admin/HOD
             </div>
-</div>
-</div>
-</div>
-<!-- Quick Links (Optional) -->
-<p class="text-center mt-6 text-sm text-onSurfaceMuted">
-        Having trouble? <a class="text-primary font-semibold hover:underline" href="#">Contact Administrator</a>
-</p>
-</div>
-</main>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 <!-- Footer -->
-<footer class="mt-auto py-8 px-4 text-center border-t border-outline bg-white">
-<div class="max-w-4xl mx-auto">
-<p class="text-sm text-onSurfaceMuted font-medium">© 2026 Smart Academic System. All rights reserved.</p>
-<p class="text-xs text-onSurfaceMuted/60 mt-1">Department of Computer Science and Engineering</p>
-</div>
-</footer>
-</body></html>
+  <footer class="mt-auto py-8 text-center border-t border-slate-200">
+    <p class="text-xs text-slate-500 font-medium">
+      &copy; 2026 Smart Academic System • Department of Computer Science and Engineering
+    </p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const passwordInput = document.getElementById("password");
+      const toggleButton = document.getElementById("togglePassword");
+      const eyeIcon = document.getElementById("eyeIcon");
+
+      toggleButton.addEventListener("click", function () {
+        if (passwordInput.type === "password") {
+          passwordInput.type = "text";
+          eyeIcon.textContent = "visibility_off";
+        } else {
+          passwordInput.type = "password";
+          eyeIcon.textContent = "visibility";
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

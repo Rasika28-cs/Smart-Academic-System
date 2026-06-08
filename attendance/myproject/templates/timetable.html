@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+ <meta charset="utf-8" />
+ <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+ <title>Academic Timetable | CSE Department</title>
+ <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+  rel="stylesheet" />
+ <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+  rel="stylesheet" />
+ <script id="tailwind-config">
+  tailwind.config = {
+   darkMode: "class",
+   theme: {
+    extend: {
+     colors: {
+      "on-primary-fixed": "#00174b",
+      "surface-dim": "#d9d9e5",
+      "outline": "#737686",
+      "on-primary-container": "#eeefff",
+      "surface-container": "#ededf9",
+      "outline-variant": "#c3c6d7",
+      "on-surface": "#191b23",
+      "primary-container": "#2563eb",
+      "primary": "#004ac6",
+      "on-primary": "#ffffff",
+      "on-surface-variant": "#434655",
+      "surface-container-low": "#f3f3fe",
+      "surface-container-lowest": "#ffffff",
+      "background": "#f8fafc",
+      "surface": "#f8fafc",
+     },
+     fontFamily: { sans: ["Inter", "sans-serif"] },
+    }
+   }
+  }
+ </script>
+ <style>
+  .material-symbols-outlined {
+   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+   display: inline-block;
+   vertical-align: middle;
+  }
+
+  body {
+   font-family: 'Inter', sans-serif;
+   min-height: max(884px, 100dvh);
+  }
+ </style>
+</head>
+
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+
+ <!-- Top Navigation -->
+ <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
+  <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'dashboard' %}">
+   <span class="material-symbols-outlined text-2xl">school</span>
+   <span class="hidden sm:inline">Smart Academic System</span>
+  </a>
+  <ul class="flex gap-1 ml-auto list-none items-center">
+   <li>
+    <a class="px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline hover:bg-slate-100 transition"
+     href="{% url 'dashboard' %}">Dashboard</a>
+   </li>
+   <li>
+    <a class="px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline hover:bg-red-50 transition"
+     href="{% url 'logout' %}">Logout</a>
+   </li>
+  </ul>
+ </nav>
+
+ <!-- Page Header -->
+ <section class="bg-surface border-b border-slate-200 pt-12 pb-8">
+  <div class="max-w-7xl mx-auto px-4 md:px-8">
+   <div class="flex items-center gap-2 text-primary mb-2">
+    <span class="material-symbols-outlined">calendar_today</span>
+    <span class="text-xs font-semibold uppercase tracking-wider">Academic Schedule</span>
+   </div>
+   <h1 class="text-2xl md:text-4xl font-bold text-on-surface tracking-tight">Weekly Timetable</h1>
+   <p class="mt-2 text-sm text-on-surface-variant max-w-2xl">
+    Overview of all scheduled lectures, lab sessions, and academic events for the current semester.
+   </p>
+  </div>
+ </section>
+
+ <!-- Main Content -->
+ <main class="flex-grow max-w-7xl mx-auto w-full px-4 md:px-8 py-10">
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+   <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-2">
+    <span class="material-symbols-outlined text-primary">calendar_month</span>
+    <h2 class="text-xl font-bold text-primary">Timetable</h2>
+   </div>
+
+   <div class="overflow-x-auto">
+    <table class="w-full min-w-[900px] text-sm">
+     <thead class="bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
+      <tr>
+       <th class="px-4 py-4 text-left">Day</th>
+       <th class="px-4 py-4 text-left">Department</th>
+       <th class="px-4 py-4 text-left">Batch</th>
+       <th class="px-4 py-4 text-left">Subject</th>
+       <th class="px-4 py-4 text-left">Teacher</th>
+       <th class="px-4 py-4 text-left">Room</th>
+       <th class="px-4 py-4 text-left">Start Time</th>
+       <th class="px-4 py-4 text-left">End Time</th>
+      </tr>
+     </thead>
+     <tbody>
+      {% for t in timetable %}
+      <tr class="border-t border-slate-100 hover:bg-surface-container-low transition">
+       <td class="px-4 py-4 font-medium">{{ t.day }}</td>
+       <td class="px-4 py-4">{{ t.department.name }}</td>
+       <td class="px-4 py-4">{{ t.batch }}</td>
+       <td class="px-4 py-4 font-semibold text-primary">{{ t.subject.name }}</td>
+       <td class="px-4 py-4">{{ t.teacher.username }}</td>
+       <td class="px-4 py-4">{{ t.room }}</td>
+       <td class="px-4 py-4">{{ t.start_time }}</td>
+       <td class="px-4 py-4">{{ t.end_time }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+       <td colspan="8" class="py-16 text-center text-on-surface-variant">No timetable entries found.</td>
+      </tr>
+      {% endfor %}
+     </tbody>
+    </table>
+   </div>
+
+  </div>
+ </main>
+
+ <!-- Footer -->
+ <footer class="mt-auto py-8 text-center border-t border-slate-200">
+  <p class="text-xs text-slate-500 font-medium">
+   &copy; 2026 Smart Academic System • Department of Computer Science and Engineering
+  </p>
+ </footer>
+
+</body>
+
+</html>
