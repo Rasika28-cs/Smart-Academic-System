@@ -1010,45 +1010,83 @@ def mark_as_read(request, id):
     return JsonResponse({"status": "ok"})
 
 
-
 @login_required
 def upload_defaulters(request):
     if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid request'
+        })
 
     file = request.FILES.get('excel_file')
 
     if not file:
-        return JsonResponse({'status': 'error', 'message': 'No file uploaded'})
+        return JsonResponse({
+            'status': 'error',
+            'message': 'No file uploaded'
+        })
 
     try:
         df = pd.read_excel(file)
         df.columns = df.columns.str.strip()
 
-        required_cols = ['Roll No', 'Name', 'Staff Incharge', 'Dept', 'Year', 'Reason']
-        if not all(col in df.columns for col in required_cols):
-            return JsonResponse({'status': 'error', 'message': 'Invalid Excel format'})
+        required_cols = [
+            'Roll No',
+            'Name',
+            'Staff Incharge',
+            'Dept',
+            'Year',
+            'Reason'
+        ]
 
-        df = df[df['Dept'] == 'CYSE']
+        if not all(col in df.columns for col in required_cols):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid Excel format'
+            })
+
+        # Clean department values
+        df['Dept'] = (
+            df['Dept']
+            .fillna('')
+            .astype(str)
+            .str.strip()
+            .str.upper()
+        )
+
+        print("Departments found:", df['Dept'].unique())
+
+        # Match CYSE, CYSE (CS), cyse, etc.
+        df = df[df['Dept'].str.contains('CYSE', na=False)]
+
+        print("Rows after filter:", len(df))
+
+        uploaded_count = 0
 
         for _, row in df.iterrows():
-            DefaulterStudent.objects.get_or_create(
-                roll_no=row['Roll No'],
+            DefaulterStudent.objects.update_or_create(
+                roll_no=str(row['Roll No']).strip(),
                 defaults={
-                    "name": row['Name'],
-                    "staff_incharge": row['Staff Incharge'],
-                    "department": row['Dept'],
-                    "year": row['Year'],
-                    "reason": row['Reason']
+                    'name': str(row['Name']).strip(),
+                    'staff_incharge': str(row['Staff Incharge']).strip(),
+                    'department': str(row['Dept']).strip(),
+                    'year': int(row['Year']),
+                    'reason': str(row['Reason']).strip()
                 }
             )
+            uploaded_count += 1
 
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{uploaded_count} records uploaded'
+        })
 
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
-
-
+        print("Upload Error:", str(e))
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        })
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
     return render(request, 'defaulter_list.html', {'students': students})
