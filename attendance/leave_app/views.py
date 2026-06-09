@@ -901,8 +901,10 @@ def hod_dashboard(request):
     # FINAL RENDER
     # ─────────────────────────────────────────────
     # Defaulters (from DefaulterStudent model)
+    dept_code = managed_dept.code.strip()
+
     defaulter_list = DefaulterStudent.objects.filter(
-        department=managed_dept.code
+        department__icontains=dept_code
     ).order_by('year', 'roll_no')
 
     # Grade Uploads for this department's students
