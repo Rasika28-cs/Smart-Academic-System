@@ -5,7 +5,10 @@ import pandas as pd
 import qrcode
 from datetime import date, datetime, timedelta
 from functools import wraps
-
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -943,6 +946,85 @@ def hod_dashboard(request):
     'recent_grades': recent_grades,
 })
 
+
+from reportlab.platypus import SimpleDocTemplate, Table
+from django.http import HttpResponse
+
+@login_required
+@role_required('HOD')
+def attendance_report_pdf(request):
+
+    managed_dept = request.user.managed_dept.first()
+
+    students = Student.objects.filter(department=managed_dept)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+
+    doc = SimpleDocTemplate(response)
+
+    data = [[
+        'Roll No',
+        'Name',
+        'Department'
+    ]]
+
+    for s in students:
+        data.append([
+            s.roll_no,
+            s.name,
+            managed_dept.code
+        ])
+
+    table = Table(data)
+
+    doc.build([table])
+
+    return response
+
+
+from reportlab.platypus import SimpleDocTemplate, Table
+from django.http import HttpResponse
+
+@login_required
+@role_required('HOD')
+def defaulter_report_pdf(request):
+
+    managed_dept = request.user.managed_dept.first()
+
+    defaulters = DefaulterStudent.objects.filter(
+        department__icontains=managed_dept.code
+    )
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="defaulter_report.pdf"'
+
+    doc = SimpleDocTemplate(response)
+
+    data = [[
+        'Roll No',
+        'Name',
+        'Year',
+        'Reason',
+        'Staff Incharge',
+        'Action'
+    ]]
+
+    for d in defaulters:
+        data.append([
+            d.roll_no,
+            d.name,
+            str(d.year),
+            d.reason,
+            d.staff_incharge,
+            d.action_taken or '-'
+        ])
+
+    table = Table(data)
+
+    doc.build([table])
+
+    return response
 # ─────────────────────────────────────────────
 # 7. UTILS: QR, CALCULATOR, CSV UPLOADS
 # ─────────────────────────────────────────────

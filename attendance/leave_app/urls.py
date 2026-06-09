@@ -62,5 +62,16 @@ urlpatterns = [
     path('parent/login/', views.parent_login, name='parent_login'),
     path('dashboard/', views.dashboard_redirect, name='dashboard_redirect'),
     path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
+            path(
+            'hod/attendance-report-pdf/',
+            views.attendance_report_pdf,
+            name='attendance_report_pdf'
+        ),
+
+        path(
+            'hod/defaulter-report-pdf/',
+            views.defaulter_report_pdf,
+            name='defaulter_report_pdf'
+        ),
 
 ]
