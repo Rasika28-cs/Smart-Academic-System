@@ -433,14 +433,17 @@
         <tbody>
 {% for d in defaulter_list %}
 <tr>
-    <td>{{ d.roll_no }}</td>
+    <td>{{ forloop.counter }}</td>
     <td>{{ d.name }}</td>
-    <td>{{ d.department }}</td>
+    <td>{{ d.roll_no }}</td>
+    <td>{{ d.year }}</td>
     <td>{{ d.reason }}</td>
+    <td>{{ d.staff_incharge }}</td>
+    <td>{{ d.action_taken|default:"-" }}</td>
 </tr>
 {% empty %}
 <tr>
-    <td colspan="4">No defaulters found</td>
+    <td colspan="7">No defaulters found</td>
 </tr>
 {% endfor %}
 </tbody>
