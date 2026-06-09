@@ -21,7 +21,7 @@ urlpatterns = [
     # Leave APIs
     
     path('api/apply_leave/', views.apply_leave_api, name='apply_leave_api'),
-   path('leave/review/<int:leave_id>/<str:action>/', views.review_leave, name='review_leave'),
+    path('leave/review/<int:leave_id>/<str:action>/', views.review_leave, name='review_leave'),
     # Dashboards
     path('mentor/dashboard/', views.mentor_dashboard, name='mentor_dashboard'),
     path('class-incharge/', views.class_incharge_dashboard, name='class_incharge_dashboard'),
@@ -57,21 +57,15 @@ urlpatterns = [
 
     path('timetable/create/', views.create_timetable_entry, name='create_timetable_entry'),
     path('assignment/create/',views.create_assignment,name='create_assignment'),
+    path('assignments/manage/', views.manage_assignments, name='manage_assignments'),
+    path('assignments/edit/<int:assignment_id>/', views.edit_assignment, name='edit_assignment'),
+    path('assignments/delete/<int:assignment_id>/', views.delete_assignment, name='delete_assignment'),
+
 
        # ───────────────────────── Parent Portal ─────────────────────────
     path('parent/login/', views.parent_login, name='parent_login'),
     path('dashboard/', views.dashboard_redirect, name='dashboard_redirect'),
     path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
-            path(
-            'hod/attendance-report-pdf/',
-            views.attendance_report_pdf,
-            name='attendance_report_pdf'
-        ),
-
-        path(
-            'hod/defaulter-report-pdf/',
-            views.defaulter_report_pdf,
-            name='defaulter_report_pdf'
-        ),
-
+    path('hod/attendance-report-pdf/', views.attendance_report_pdf, name='attendance_report_pdf'),
+    path('hod/defaulter-report-pdf/', views.defaulter_report_pdf, name='defaulter_report_pdf'),
 ]

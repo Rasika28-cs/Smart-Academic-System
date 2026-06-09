@@ -41,6 +41,7 @@ from django.db import transaction
 from django.contrib import messages
 from .models import LeaveRequest
 from .models import GradeUpload, StudentGrade
+from .models import Notification
 
 def process_leave_decision(request, leave_id, action):
     """
@@ -1148,16 +1149,51 @@ def upload_defaulters(request):
         uploaded_count = 0
 
         for _, row in df.iterrows():
+
+            roll_no_str = str(row['Roll No']).strip()
+            reason_str = str(row['Reason']).strip()
+
+            existing_defaulter = DefaulterStudent.objects.filter(
+                roll_no=roll_no_str
+            ).first()
+
+            should_notify = False
+
+            if not existing_defaulter:
+                should_notify = True
+
+            elif existing_defaulter.reason != reason_str:
+                should_notify = True
+
             DefaulterStudent.objects.update_or_create(
-                roll_no=str(row['Roll No']).strip(),
+                roll_no=roll_no_str,
                 defaults={
                     'name': str(row['Name']).strip(),
                     'staff_incharge': str(row['Staff Incharge']).strip(),
                     'department': str(row['Dept']).strip(),
                     'year': int(row['Year']),
-                    'reason': str(row['Reason']).strip()
+                    'reason': reason_str
                 }
             )
+
+            if should_notify:
+                try:
+                    student_obj = Student.objects.get(
+                        roll_no=roll_no_str
+                    )
+
+                    notif = Notification.objects.create(
+                        title="Defaulter Alert",
+                        message=f"You have been marked as a defaulter. Reason: {reason_str}",
+                        type="defaulter",
+                        url=reverse('student_defaulter')
+                    )
+
+                    notif.users.add(student_obj.user)
+
+                except Student.DoesNotExist:
+                    pass
+
             uploaded_count += 1
 
         return JsonResponse({
@@ -1171,6 +1207,8 @@ def upload_defaulters(request):
             'status': 'error',
             'message': str(e)
         })
+    
+
 def defaulter_list(request):
     students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
     return render(request, 'defaulter_list.html', {'students': students})
@@ -1223,7 +1261,76 @@ def assignment_list(request):
     data = Assignment.objects.filter(batch=student.batch,due_date__gte=timezone.now().date() ).order_by('-due_date')
     return render(request, 'assignments.html', {'assignments': data})
 
+@login_required
+@role_required('ClassRep')
+def manage_assignments(request):
+    student = request.user.student_profile
 
+    assignments = Assignment.objects.filter(
+        batch=student.batch
+    ).order_by('-created_at')
+
+    return render(request, 'manage_assignments.html', {
+        'assignments': assignments
+    })
+
+@login_required
+@role_required('ClassRep')
+def edit_assignment(request, assignment_id):
+
+    student = request.user.student_profile
+
+    assignment = get_object_or_404(
+        Assignment,
+        id=assignment_id,
+        batch=student.batch
+    )
+
+    if request.method == 'POST':
+
+        assignment.title = request.POST.get('title')
+        assignment.description = request.POST.get('description')
+        assignment.subject_id = request.POST.get('subject')
+        assignment.due_date = request.POST.get('due_date')
+
+        if request.FILES.get('file'):
+            assignment.file = request.FILES.get('file')
+
+        assignment.save()
+
+        messages.success(request, "Assignment updated successfully.")
+        return redirect('manage_assignments')
+
+    subjects = Subject.objects.all()
+
+    return render(
+        request,
+        'create_assignment.html',
+        {
+            'assignment': assignment,
+            'subjects': Subject.objects.all(),
+            'batch': student.batch,
+            'page_title': 'Edit Assignment',
+            'button_text': 'Update Assignment'
+        }
+    )
+
+@login_required
+@role_required('ClassRep')
+def delete_assignment(request, assignment_id):
+
+    student = request.user.student_profile
+
+    assignment = get_object_or_404(
+        Assignment,
+        id=assignment_id,
+        batch=student.batch
+    )
+
+    assignment.delete()
+
+    messages.success(request, "Assignment deleted successfully.")
+    return redirect('manage_assignments')
 
 # OD Integration
 @login_required
@@ -1310,6 +1417,8 @@ def parent_dashboard(request):
     # ─────────────────────────
     notifications = Notification.objects.filter(
         users=student.user
+    ).exclude(
+        type__in=['assignment']
     ).order_by('-created_at')[:10]
 
     return render(request, 'parent_dashboard.html', {
@@ -1406,7 +1515,11 @@ def parent_view_od(request):
 def parent_view_notifications(request):
     parent = get_object_or_404(ParentProfile, user=request.user)
     # Parents see notifications sent to their child's user account
-    notifications = Notification.objects.filter(users=parent.student.user).order_by('-created_at')
+    notifications = Notification.objects.filter(
+        users=parent.student.user
+    ).exclude(
+        type__in=['assignment']
+    ).order_by('-created_at')    
     return render(request, 'parent_notifications.html', {'notifications': notifications})
 
 # ─────────────────────────────────────────────
@@ -1640,6 +1753,8 @@ def upload_grades(request):
 
         subject_columns = [c for c in df.columns if c != reg_col and c != "Student Name"]
 
+        notified_student_ids = set()
+
         for _, row in df.iterrows():
             reg_no = str(row[reg_col]).strip()
 
@@ -1656,6 +1771,19 @@ def upload_grades(request):
                             subject_code=subject_code,
                             defaults={'grade': grade}
                         )
+
+                # Send only one notification per student
+                if student.id not in notified_student_ids and student.user:
+
+                    notif = Notification.objects.create(
+                        title="Grade Published",
+                        message=f"Grades have been uploaded for {title}.",
+                        type="grade",
+                        url=reverse('student_grades')
+                    )
+
+                    notif.users.add(student.user)
+                    notified_student_ids.add(student.id)
 
             except Student.DoesNotExist:
                 print("❌ Student NOT FOUND:", reg_no)
@@ -1705,7 +1833,8 @@ def create_assignment(request):
         due_date = request.POST.get('due_date')
         file = request.FILES.get('file')
 
-        Assignment.objects.create(
+        # Create assignment
+        new_assignment = Assignment.objects.create(
             title=title,
             description=description,
             subject_id=subject_id,
@@ -1714,7 +1843,32 @@ def create_assignment(request):
             file=file
         )
 
-        messages.success(request, "Assignment created successfully.")
+        # Notify students in this batch
+        batch_students = Student.objects.filter(
+            batch=student.batch
+        ).select_related('user')
+
+        target_users = [
+            s.user for s in batch_students
+            if s.user
+        ]
+
+        if target_users:
+
+            assign_notif = Notification.objects.create(
+                title="New Assignment",
+                message=f"{title} has been posted.",
+                type="assignment",
+                url=reverse('assignment_list')
+            )
+
+            assign_notif.users.add(*target_users)
+
+        messages.success(
+            request,
+            "Assignment created successfully and students notified."
+        )
+
         return redirect('cr_dashboard')
 
     subjects = Subject.objects.all()

@@ -1,0 +1,27 @@
+<h2>Manage Assignments</h2>
+
+<table>
+    <tr>
+        <th>Title</th>
+        <th>Due Date</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for a in assignments %}
+    <tr>
+        <td>{{ a.title }}</td>
+        <td>{{ a.due_date }}</td>
+
+        <td>
+            <a href="{% url 'edit_assignment' a.id %}">
+                Edit
+            </a>
+
+            <a href="{% url 'delete_assignment' a.id %}"
+               onclick="return confirm('Delete this assignment?')">
+                Delete
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

@@ -1,14 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Create Assignment - Smart Academic System</title>
 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ page_title|default:"Create Assignment" }} - Smart Academic System</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
 
   <style>
     body {
@@ -42,38 +44,38 @@
     }
 
     .input-field {
-    width: 100%;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    background: white;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      background: white;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
     }
 
     .input-field:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     }
 
     .form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
     }
   </style>
 </head>
+
 <body>
 
   <!-- Top Navigation -->
   <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
-    <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline"
-       href="{% url 'cr_dashboard' %}">
+    <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'cr_dashboard' %}">
       <span class="material-symbols-outlined text-2xl">school</span>
       <span class="hidden sm:inline">Smart Academic System</span>
     </a>
@@ -81,13 +83,13 @@
     <ul class="flex gap-1 ml-auto list-none items-center">
       <li>
         <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline"
-           href="{% url 'dashboard' %}">
+          href="{% url 'dashboard' %}">
           Dashboard
         </a>
       </li>
       <li>
         <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline"
-           href="{% url 'logout' %}">
+          href="{% url 'logout' %}">
           Logout
         </a>
       </li>
@@ -100,7 +102,7 @@
     <div class="mb-8">
       <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
         <span class="material-symbols-outlined text-blue-600">edit_document</span>
-        Create Assignment
+        {{ page_title|default:"Create Assignment" }}
       </h1>
       <p class="text-slate-500 text-sm mt-1">
         Post new assignments for your students and set submission deadlines
@@ -115,13 +117,16 @@
         <!-- Title -->
         <div>
           <label class="form-label" for="title">Title</label>
-          <input type="text" name="title" id="title" class="input-field" placeholder="Enter assignment title" required>
+          <input type="text" name="title" id="title" value="{{ assignment.title|default:'' }}" class="input-field"
+            placeholder="Enter assignment title" required>
         </div>
 
         <!-- Description -->
         <div>
           <label class="form-label" for="description">Description</label>
-          <textarea name="description" id="description" rows="4" class="input-field resize-none" placeholder="Provide detailed instructions for the students..." required></textarea>
+          <textarea name="description" id="description" rows="4" class="input-field resize-none"
+            placeholder="Provide detailed instructions for the students..."
+            required>{{ assignment.description|default:'' }}</textarea>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -131,9 +136,9 @@
             <select name="subject" id="subject" class="input-field" required>
               <option value="" disabled selected>Select Subject</option>
               {% for subject in subjects %}
-                <option value="{{ subject.id }}">
-                  {{ subject.name }}
-                </option>
+              <option value="{{ subject.id }}" {% if assignment and assignment.subject.id == subject.id %} selected {% endif %}>
+                {{ subject.name }}
+              </option>
               {% endfor %}
             </select>
           </div>
@@ -141,7 +146,8 @@
           <!-- Batch -->
           <div>
             <label class="form-label" for="batch">Batch</label>
-            <input type="text" id="batch" value="{{ batch }}" class="input-field bg-slate-50 cursor-not-allowed" readonly>
+            <input type="text" id="batch" value="{{ batch }}" class="input-field bg-slate-50 cursor-not-allowed"
+              readonly>
           </div>
         </div>
 
@@ -150,24 +156,29 @@
           <div>
             <label class="form-label" for="due_date">Due Date</label>
             <div class="relative">
-              <input type="datetime-local" name="due_date" id="due_date" class="input-field" required>
+              <input type="datetime-local" name="due_date" id="due_date"
+                value="{% if assignment %}{{ assignment.due_date|date:'Y-m-d\\TH:i' }}{% endif %}" class="input-field"
+                required>
             </div>
           </div>
 
           <!-- File Upload -->
           <div>
             <label class="form-label" for="file">Assignment File (Optional)</label>
-            <input type="file" name="file" id="file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all">
+            <input type="file" name="file" id="file"
+              class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all">
           </div>
         </div>
 
         <!-- Actions -->
         <div class="pt-4 border-t border-slate-100 flex justify-end gap-3">
-          <a href="{% url 'cr_dashboard' %}" class="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all no-underline">
+          <a href="{% url 'cr_dashboard' %}"
+            class="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all no-underline">
             Cancel
           </a>
-          <button type="submit" class="px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
-            Create Assignment
+          <button type="submit"
+            class="px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+            {{ button_text|default:"Create Assignment" }}
           </button>
         </div>
       </form>
@@ -181,4 +192,5 @@
     </p>
   </footer>
 </body>
+
 </html>

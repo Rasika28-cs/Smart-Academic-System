@@ -199,24 +199,6 @@ class Assignment(models.Model):
     file = models.FileField(upload_to='assignments/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-
-# ─────────────────────────────
-# ASSIGNMENT SUBMISSION (NEW FIXED)
-# ─────────────────────────────
-
-
-
-# ─────────────────────────────
-# EXAM
-# ─────────────────────────────
-
-
-
-# ─────────────────────────────
-# RESULT (FIXED)
-# ─────────────────────────────
-
-
 # ─────────────────────────────
 # NOTIFICATION
 # ─────────────────────────────
@@ -237,11 +219,6 @@ class Notification(models.Model):
     users = models.ManyToManyField(User, related_name='notifications')
     read_by = models.ManyToManyField(User, related_name='read_notifications', blank=True)
     url = models.CharField(max_length=255, blank=True)
-
-
-# ─────────────────────────────
-# CIRCULAR
-# ─────────────────────────────
 
 # ─────────────────────────────
 # DEFAULTERS
