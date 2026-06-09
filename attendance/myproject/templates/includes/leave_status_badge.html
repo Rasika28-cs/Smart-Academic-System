@@ -1,0 +1,27 @@
+{# Leave status pill badge. Expects: status (leave.status string) #}
+{% if status == "PENDING_MENTOR" %}
+<span class="status-badge status-pending-mentor">
+  <span class="material-symbols-outlined text-sm">schedule</span>
+  Awaiting Mentor
+</span>
+{% elif status == "PENDING_CLASSINCHARGE" or status == "APPROVED_BY_MENTOR" %}
+<span class="status-badge status-pending-ci">
+  <span class="material-symbols-outlined text-sm">hourglass_top</span>
+  Mentor Approved, Awaiting CI
+</span>
+{% elif status == "APPROVED" %}
+<span class="status-badge status-approved">
+  <span class="material-symbols-outlined text-sm">check_circle</span>
+  Approved
+</span>
+{% elif status == "REJECTED" or status == "REJECTED_BY_MENTOR" %}
+<span class="status-badge status-rejected">
+  <span class="material-symbols-outlined text-sm">cancel</span>
+  Rejected
+</span>
+{% else %}
+<span class="status-badge status-pending-mentor">
+  <span class="material-symbols-outlined text-sm">help</span>
+  {{ status }}
+</span>
+{% endif %}

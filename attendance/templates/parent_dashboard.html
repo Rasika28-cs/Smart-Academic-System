@@ -1,141 +1,313 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parent Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --secondary: #4F46E5;
+            --background: #F8FAFC;
+            --surface: #FFFFFF;
+            --text: #0F172A;
+            --muted: #64748B;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fade .25s ease;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        aside {
+            background: var(--surface);
+            border-right: 1px solid #E2E8F0;
+        }
+
+        aside button {
+            font-weight: 700;
+            color: var(--muted);
+            border-radius: 12px;
+            transition: .2s;
+            border: none;
+        }
+
+        aside button:hover {
+            background: #EFF6FF;
+            color: var(--primary);
+        }
+
+        .bg-white {
+            background: var(--surface) !important;
+            border: 1px solid #E2E8F0;
+            border-radius: 18px !important;
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, .05),
+                0 10px 25px rgba(37, 99, 235, .08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #F8FAFC;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        tr:hover {
+            background: #F8FAFC;
+        }
+
+        .stat-card {
+            transition: .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .text-gray-500 {
+            color: var(--muted) !important;
+        }
+
+        .text-3xl {
+            color: var(--primary);
+        }
+
+        .defaulter {
+            background: #FEF2F2;
+            border-left: 4px solid #EF4444;
+            border-radius: 12px;
+        }
+
+        .success {
+            background: #ECFDF5;
+            border-left: 4px solid #10B981;
+            border-radius: 12px;
+        }
+
+        @media(max-width:768px) {
+
+            aside {
+                width: 90px !important;
+            }
+
+            aside button {
+                font-size: 12px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body class="bg-slate-100">
 
-<div class="container mt-4">
+    <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
 
-    <!-- HEADER -->
-    <div class="mb-4">
-        <h2>Parent Dashboard</h2>
-        <p class="text-muted">Student Monitoring System</p>
-    </div>
+        <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'dashboard' %}">
+            <span class="material-symbols-outlined text-2xl">school</span>
+            <span class="hidden sm:inline">Smart Academic System</span>
+        </a>
 
-    <!-- STUDENT INFO -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h4>{{ student.name }}</h4>
-        <p>
-            <b>Roll No:</b> {{ student.roll_no }} <br>
-            <b>Department:</b> {{ student.department }} <br>
-            <b>Batch:</b> {{ student.batch }}
-        </p>
-    </div>
+        <ul class="flex gap-1 ml-auto list-none items-center">
 
-    <!-- ATTENDANCE SUMMARY -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h5>Attendance Overview</h5>
+            <li class="relative">
+                <button onclick="toggleNotifications()" class="relative p-2 rounded-xl hover:bg-slate-100 transition">
 
-        <h2 class="text-primary">{{ attendance_percent }}%</h2>
+                    <span class="material-symbols-outlined text-slate-600">
+                        notifications
+                    </span>
 
-        <div class="row">
-            <div class="col">Present: <b>{{ present }}</b></div>
-            <div class="col">Leave: <b>{{ leave }}</b></div>
-            <div class="col">Absent: <b>{{ absent }}</b></div>
-            <div class="col">Total: <b>{{ total }}</b></div>
-        </div>
-    </div>
+                    {% if notifications %}
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                    {% endif %}
+                </button>
 
-    <!-- RECENT ATTENDANCE -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h5>Recent Attendance</h5>
+                <div id="notificationPanel"
+                    class="hidden absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl p-4">
 
-        <table class="table table-sm">
-            <tr>
-                <th>Date</th>
-                <th>Status</th>
-            </tr>
+                    <h3 class="font-bold text-slate-800 mb-3">
+                        Notifications
+                    </h3>
 
-            {% for a in attendance_records %}
-            <tr>
-                <td>{{ a.date }}</td>
-                <td>{{ a.status }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="2">No records</td></tr>
-            {% endfor %}
-        </table>
-    </div>
+                    {% for n in notifications %}
+                    <div class="border-b border-slate-100 py-3">
+                        <p class="font-semibold">{{ n.title }}</p>
+                        <p class="text-sm text-slate-500">{{ n.message }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-slate-500">No notifications available.</p>
+                    {% endfor %}
+                </div>
+            </li>
+           
+            <li>
+                <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline"
+                    href="{% url 'logout' %}">
+                    Logout
+                </a>
+            </li>
 
-    <!-- LEAVES -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h5>Leave Status</h5>
+        </ul>
 
-        {% for l in leaves %}
-            <div class="border p-2 mb-2 rounded">
-                <b>{{ l.from_date }} → {{ l.to_date }}</b><br>
-                Status: <span class="badge bg-info">{{ l.status }}</span>
+    </nav>
+
+    <div class="flex min-h-[calc(100vh-64px)]">
+
+        <aside class="w-64 bg-white border-r p-4">
+            <button onclick="showSection('dashboard')"
+                class="w-full text-left p-3 hover:bg-slate-100 rounded">Dashboard</button>
+            <button onclick="showSection('attendance')"
+                class="w-full text-left p-3 hover:bg-slate-100 rounded">Attendance</button>
+            <button onclick="showSection('grades')"
+                class="w-full text-left p-3 hover:bg-slate-100 rounded">Grades</button>
+            <button onclick="showSection('leave')" class="w-full text-left p-3 hover:bg-slate-100 rounded">Leave &
+                OD</button>
+        </aside>
+
+        <main class="flex-1 p-6">
+
+            <div id="dashboard" class="section active">
+
+                <div class="bg-white rounded-lg shadow p-5 mb-6">
+                    <h2 class="text-2xl font-bold">{{ student.name }}</h2>
+                    <p>{{ student.roll_no }} • {{ student.department }}</p>
+                    <p>Batch: {{ student.batch }}</p>
+                </div>
+
+                <div class="grid md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-5 stat-card">
+                        <div class="text-gray-500">Attendance</div>
+                        <div class="text-3xl font-bold">{{ attendance_percent }}%</div>
+                    </div>
+                    <div class="bg-white p-5 stat-card">
+                        <div class="text-gray-500">Present</div>
+                        <div class="text-3xl font-bold">{{ present }}</div>
+                    </div>
+                    <div class="bg-white p-5 stat-card">
+                        <div class="text-gray-500">Absent</div>
+                        <div class="text-3xl font-bold">{{ absent }}</div>
+                    </div>
+                    <div class="bg-white p-5 stat-card">
+                        <div class="text-gray-500">Leave</div>
+                        <div class="text-3xl font-bold">{{ leave }}</div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-5">
+                    <h3 class="font-bold text-lg mb-4">Defaulter Alerts</h3>
+                    {% for d in defaulters %}
+                    <div class="defaulter p-4 mb-3">
+                        <strong>{{ d.year }}</strong><br>
+                        {{ d.reason }}
+                    </div>
+                    {% empty %}
+                    <div class="success p-4">
+                        No defaulter records.
+                    </div>
+                    {% endfor %}
+                </div>
+
             </div>
-        {% empty %}
-            <p>No leave records</p>
-        {% endfor %}
-    </div>
 
-    <!-- OD STATUS -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h5>OD Status</h5>
-
-        {% for o in ods %}
-            <div class="border p-2 mb-2 rounded">
-                Status: <b>{{ o.status }}</b>
+            <div id="attendance" class="section">
+                <div class="bg-white rounded-lg shadow p-5">
+                    <h2 class="font-bold text-xl mb-4">Attendance Records</h2>
+                    <table class="w-full">
+                        <tr class="border-b">
+                            <th class="text-left p-2">Date</th>
+                            <th class="text-left p-2">Status</th>
+                        </tr>
+                        {% for a in attendance_records %}
+                        <tr class="border-b">
+                            <td class="p-2">{{ a.date }}</td>
+                            <td class="p-2">{{ a.status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
             </div>
-        {% empty %}
-            <p>No OD records</p>
-        {% endfor %}
-    </div>
 
-    <!-- GRADES -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h5>Grades</h5>
-
-        <table class="table table-sm">
-            <tr>
-                <th>Subject</th>
-                <th>Grade</th>
-            </tr>
-
-            {% for g in grades %}
-            <tr>
-                <td>{{ g.subject_code }}</td>
-                <td><span class="badge bg-success">{{ g.grade }}</span></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="2">No grades</td></tr>
-            {% endfor %}
-        </table>
-    </div>
-
-    <!-- DEFAULTERS -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h5>Defaulters</h5>
-
-        {% for d in defaulters %}
-            <div class="alert alert-danger p-2">
-                <b>{{ d.year }}</b> - {{ d.reason }}
+            <div id="grades" class="section">
+                <div class="bg-white rounded-lg shadow p-5">
+                    <h2 class="font-bold text-xl mb-4">Grades</h2>
+                    {% for g in grades %}
+                    <div class="flex justify-between border-b py-3">
+                        <span>{{ g.subject_code }}</span>
+                        <span>{{ g.grade }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
-        {% empty %}
-            <p>No defaulter records</p>
-        {% endfor %}
-    </div>
 
-    <!-- NOTIFICATIONS -->
-    <div class="card shadow-sm p-3 mb-3">
-        <h5>Notifications</h5>
+            <div id="leave" class="section">
+                <div class="bg-white rounded-lg shadow p-5">
+                    <h2 class="font-bold text-xl mb-4">Leave & OD</h2>
 
-        {% for n in notifications %}
-            <div class="alert alert-secondary p-2">
-                <b>{{ n.title }}</b><br>
-                {{ n.message }}
+                    <h3 class="font-semibold mb-2">Leave Applications</h3>
+                    {% for l in leaves %}
+                    <div class="border-b py-2">{{ l.from_date }} → {{ l.to_date }} ({{ l.status }})</div>
+                    {% endfor %}
+
+                    <h3 class="font-semibold mt-6 mb-2">OD Records</h3>
+                    {% for o in ods %}
+                    <div class="border-b py-2">{{ o.status }}</div>
+                    {% endfor %}
+                </div>
             </div>
-        {% empty %}
-            <p>No notifications</p>
-        {% endfor %}
+
+        </main>
     </div>
 
-</div>
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+        function toggleNotifications() {
+            document.getElementById('notificationPanel').classList.toggle('hidden');
+        }
+    </script>
 
 </body>
+
 </html>
