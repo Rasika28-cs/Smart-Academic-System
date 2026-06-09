@@ -1418,7 +1418,7 @@ def parent_dashboard(request):
     notifications = Notification.objects.filter(
         users=student.user
     ).exclude(
-        type__in=['assignment']
+        type__in=['assignment', 'assignment_reminder']
     ).order_by('-created_at')[:10]
 
     return render(request, 'parent_dashboard.html', {
@@ -1507,10 +1507,6 @@ def parent_view_od(request):
 # 1. ASSIGNMENT SUBMISSION SYSTEM #############
 # ─────────────────────────────────────────────
 
-
-
-
-
 @login_required
 def parent_view_notifications(request):
     parent = get_object_or_404(ParentProfile, user=request.user)
@@ -1518,7 +1514,7 @@ def parent_view_notifications(request):
     notifications = Notification.objects.filter(
         users=parent.student.user
     ).exclude(
-        type__in=['assignment']
+        type__in=['assignment', 'assignment_reminder']
     ).order_by('-created_at')    
     return render(request, 'parent_notifications.html', {'notifications': notifications})
 
