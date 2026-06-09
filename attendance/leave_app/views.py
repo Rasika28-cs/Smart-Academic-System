@@ -1074,16 +1074,30 @@ def upload_attendance(request):
 
 @login_required
 def get_notifications(request):
-    notifications = Notification.objects.filter(users=request.user).order_by('-created_at')
+
+    # 🔥 ADD THIS HERE (expiry cutoff logic)
+    cutoff = timezone.now() - timedelta(days=7)
+
+    # 🔥 FILTER HERE (this is the important part)
+    notifications = Notification.objects.filter(
+        users=request.user,
+        created_at__gte=cutoff   # only last 30 days
+    ).order_by('-created_at')
+
     unread = notifications.exclude(read_by=request.user)
+
     data = {
         "total": unread.count(),
         "notifications": [{
-            "id": n.id, "title": n.title, "message": n.message, 
-            "time": n.created_at.strftime("%d %b %I:%M %p"), 
-            "url": n.url, "read": request.user in n.read_by.all()
+            "id": n.id,
+            "title": n.title,
+            "message": n.message,
+            "time": n.created_at.strftime("%d %b %I:%M %p"),
+            "url": n.url,
+            "read": request.user in n.read_by.all()
         } for n in notifications[:10]]
     }
+
     return JsonResponse(data)
 
 
