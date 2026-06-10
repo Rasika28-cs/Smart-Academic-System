@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
-
+from leave_app.models import Notification
+from django.contrib.auth.models import User
 from .models import ODApplication
 from events.models import Event
 
@@ -14,7 +15,6 @@ def view_od_status(request):
 # ─────────────────────────────────────────────
 # APPLY OD
 # ─────────────────────────────────────────────
-
 @require_POST
 @login_required
 def apply_od(request, event_id):
@@ -30,7 +30,6 @@ def apply_od(request, event_id):
     if already_applied:
         return redirect('event_list')
 
-    # Auto-approve if fewer than 8 approved for that date
     count = ODApplication.objects.filter(
         date=event.event_date,
         status='approved'
@@ -38,15 +37,26 @@ def apply_od(request, event_id):
 
     status = 'approved' if count < 8 else 'pending'
 
-    ODApplication.objects.create(
+    od = ODApplication.objects.create(
         student=user,
         event=event,
         date=event.event_date,
         status=status,
     )
 
-    return redirect('event_list')
+    # Notify staff
+    staff_users = User.objects.filter(is_staff=True)
 
+    notif = Notification.objects.create(
+        title="New OD Request",
+        message=f"{user.username} applied for OD: {event.event_name}",
+        type="od",
+        url="/od/staff/"
+    )
+
+    notif.users.set(staff_users)
+
+    return redirect('event_list')
 
 # ─────────────────────────────────────────────
 # STAFF PANEL (TEACHER)
@@ -64,7 +74,6 @@ def staff_panel(request):
 # ─────────────────────────────────────────────
 # APPROVE OD
 # ─────────────────────────────────────────────
-
 @require_POST
 @login_required
 def approve_od(request, id):
@@ -72,15 +81,24 @@ def approve_od(request, id):
         return HttpResponse('Unauthorized', status=403)
 
     app = get_object_or_404(ODApplication, id=id)
+
     app.status = 'approved'
     app.save()
-    return redirect('staff_panel')
 
+    notif = Notification.objects.create(
+        title="OD Approved",
+        message=f"Your OD request for {app.event.event_name} has been approved.",
+        type="od",
+        url="/od/status/"
+    )
+
+    notif.users.add(app.student)
+
+    return redirect('staff_panel')
 
 # ─────────────────────────────────────────────
 # REJECT OD
 # ─────────────────────────────────────────────
-
 @require_POST
 @login_required
 def reject_od(request, id):
@@ -88,10 +106,20 @@ def reject_od(request, id):
         return HttpResponse('Unauthorized', status=403)
 
     app = get_object_or_404(ODApplication, id=id)
+
     app.status = 'rejected'
     app.save()
-    return redirect('staff_panel')
 
+    notif = Notification.objects.create(
+        title="OD Rejected",
+        message=f"Your OD request for {app.event.event_name} has been rejected.",
+        type="od",
+        url="/od/status/"
+    )
+
+    notif.users.add(app.student)
+
+    return redirect('staff_panel')
 
 # ─────────────────────────────────────────────
 # OD DASHBOARD
@@ -101,18 +129,3 @@ def reject_od(request, id):
 def dashboard(request):
     return render(request, 'od/dashboard.html')
 
-
-from django.contrib.auth.models import User
-from leave_app.models import Notification
-
-def create_od_notification(request, event):
-    staff_users = User.objects.filter(is_staff=True)
-
-    notif = Notification.objects.create(
-        title="New OD Request",
-        message=f"{request.user.username} applied OD for {event.event_name}",
-        type="od",
-        url="/od/staff/"
-    )
-
-    notif.users.set(staff_users)
