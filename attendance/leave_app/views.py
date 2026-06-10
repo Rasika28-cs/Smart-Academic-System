@@ -654,7 +654,14 @@ def mark_attendance(request):
         return HttpResponse('Unauthorized', status=403)
 
     today = date.today()
+
+    # Batch Filter
+    batch = request.GET.get('batch')
+
     students = Student.objects.all().order_by('roll_no')
+
+    if batch:
+        students = students.filter(batch=batch)
 
     # Students having approved leave today
     students_on_leave_ids = set(
@@ -671,29 +678,33 @@ def mark_attendance(request):
     ).select_related('student')
 
     attendance_map = {}
+
     for att in attendance_records:
         if att.student_id not in attendance_map:
             attendance_map[att.student_id] = att.status
 
     if request.method == 'POST':
+
         for student in students:
+
             # Skip students on approved leave
             if student.id in students_on_leave_ids:
                 continue
 
             status = request.POST.get(f'status_{student.id}')
+
             if not status:
                 continue
 
-            # Update existing attendance records of the student for today
             updated_count = Attendance.objects.filter(
                 student=student,
                 date=today
             ).update(status=status)
 
-            # If no attendance entries existed yet, generate them dynamically
             if updated_count == 0:
+
                 day = today.strftime('%a')
+
                 timetable = Timetable.objects.filter(
                     batch=student.batch,
                     department=student.department,
@@ -701,6 +712,7 @@ def mark_attendance(request):
                 )
 
                 if timetable.exists():
+
                     for t in timetable:
                         Attendance.objects.get_or_create(
                             student=student,
@@ -708,7 +720,9 @@ def mark_attendance(request):
                             date=today,
                             defaults={'status': status}
                         )
+
                 else:
+
                     Attendance.objects.get_or_create(
                         student=student,
                         subject=None,
@@ -719,6 +733,35 @@ def mark_attendance(request):
         messages.success(request, "Attendance marked successfully")
         return redirect('teacher_dashboard')
 
+    student_data = []
+
+    for student in students:
+
+        is_on_leave = student.id in students_on_leave_ids
+
+        if is_on_leave:
+            current_status = 'Leave'
+        else:
+            current_status = attendance_map.get(student.id, 'Present')
+
+        student_data.append({
+            'student': student,
+            'status': current_status,
+            'is_on_leave': is_on_leave
+        })
+
+    return render(
+        request,
+        'mark_attendance.html',
+        {
+            'student_data': student_data,
+            'today': today,
+            'batches': Student.objects.values_list(
+                'batch', flat=True
+            ).distinct().order_by('batch'),
+            'selected_batch': batch,
+        }
+    )
     student_data = []
     for student in students:
         is_on_leave = student.id in students_on_leave_ids
