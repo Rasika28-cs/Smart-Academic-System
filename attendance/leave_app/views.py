@@ -696,11 +696,13 @@ def mark_attendance(request):
             if not status:
                 continue
 
+            # Update existing attendance records
             updated_count = Attendance.objects.filter(
                 student=student,
                 date=today
             ).update(status=status)
 
+            # Create attendance if not exists
             if updated_count == 0:
 
                 day = today.strftime('%a')
@@ -760,29 +762,6 @@ def mark_attendance(request):
                 'batch', flat=True
             ).distinct().order_by('batch'),
             'selected_batch': batch,
-        }
-    )
-    student_data = []
-    for student in students:
-        is_on_leave = student.id in students_on_leave_ids
-
-        if is_on_leave:
-            current_status = 'Leave'
-        else:
-            current_status = attendance_map.get(student.id, 'Present')
-
-        student_data.append({
-            'student': student,
-            'status': current_status,
-            'is_on_leave': is_on_leave
-        })
-
-    return render(
-        request,
-        'mark_attendance.html',
-        {
-            'student_data': student_data,
-            'today': today
         }
     )
 # ─────────────────────────────

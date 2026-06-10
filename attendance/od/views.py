@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
-from leave_app.models import Notification
+from leave_app.models import Notification, Student
 from django.contrib.auth.models import User
 from .models import ODApplication
 from events.models import Event
+
 
 @login_required
 def view_od_status(request):
@@ -67,10 +68,25 @@ def staff_panel(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    applications = ODApplication.objects.filter(status='pending').select_related('student', 'event')
-    return render(request, 'od/staff.html', {'applications': applications})
+    batch = request.GET.get('batch')
 
+    applications = ODApplication.objects.filter(
+        status='pending'
+    ).select_related('student', 'event')
 
+    if batch:
+        applications = applications.filter(
+            student__student_profile__batch=batch
+        )
+
+    return render(request, 'od/staff.html', {
+        'applications': applications,
+        'batches': Student.objects.values_list(
+            'batch',
+            flat=True
+        ).distinct().order_by('batch'),
+        'selected_batch': batch,
+    })
 # ─────────────────────────────────────────────
 # APPROVE OD
 # ─────────────────────────────────────────────
