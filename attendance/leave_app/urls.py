@@ -35,7 +35,7 @@ urlpatterns = [
     path('teacher/today-leaves/', views.today_leaves, name='today_leaves'),
 
     # Uploads
-    path('upload/attendance/', views.upload_attendance, name='upload_attendance'),
+    path('upload/admissions/', views.upload_new_admissions, name='upload_new_admissions'),
     path('upload/defaulters/', views.upload_defaulters, name='upload_defaulters'),
     path('upload-grades/', views.upload_grades, name='upload_grades'),
     path('student-grades/', views.student_grades, name='student_grades'),

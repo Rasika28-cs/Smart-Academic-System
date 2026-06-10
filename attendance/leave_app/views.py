@@ -1075,53 +1075,67 @@ def generate_qr(request):
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
+import io
+import csv
+from django.contrib import messages
+from django.shortcuts import render
+from .models import Student, Department
+
+
 @login_required
-def upload_attendance(request):
+def upload_new_admissions(request):
     if request.method == 'POST':
         file = request.FILES.get('file')
 
         if not file:
             messages.error(request, 'No file uploaded')
-        else:
+            return render(request, 'upload.html')
+
+        try:
+            # ✅ handle encoding safely
             try:
-                decoded = file.read().decode('utf-8').splitlines()
+                decoded = io.TextIOWrapper(file.file, encoding='utf-8')
+                reader = csv.DictReader(decoded)
+            except:
+                decoded = io.TextIOWrapper(file.file, encoding='latin-1')
                 reader = csv.DictReader(decoded)
 
-                count = 0
+            count = 0
 
-                for row in reader:
-                    roll_no = row.get('student_roll')
-                    batch = row.get('batch')
-                    r_date = row.get('date')
-                    status = row.get('status')
+            for row in reader:
+                name = row.get('name')
+                roll_no = row.get('roll_no')
+                reg_no = row.get('reg_no')
+                batch = row.get('batch')
+                dept_name = row.get('department')
 
-                    try:
-                        std = Student.objects.get(
-                            roll_no=roll_no,
-                            batch=batch
-                        )
+                try:
+                    dept = Department.objects.get(name=dept_name)
 
-                        Attendance.objects.update_or_create(
-                            student=std,
-                            date=r_date,
-                            defaults={'status': status}
-                        )
+                    Student.objects.update_or_create(
+                        roll_no=roll_no,
+                        defaults={
+                            'name': name,
+                            'reg_no': reg_no,
+                            'batch': batch,
+                            'department': dept
+                        }
+                    )
 
-                        count += 1
+                    count += 1
 
-                    except Student.DoesNotExist:
-                        continue
+                except Department.DoesNotExist:
+                    continue
 
-                messages.success(
-                    request,
-                    f'{count} attendance records processed.'
-                )
+            messages.success(
+                request,
+                f'{count} students admitted successfully.'
+            )
 
-            except Exception as e:
-                messages.error(request, f'Error: {str(e)}')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
 
     return render(request, 'upload.html')
-
 # ─────────────────────────────────────────────
 # 8. NOTIFICATIONS & DEFAULTERS (LEGACY)
 # ─────────────────────────────────────────────
