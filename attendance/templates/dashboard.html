@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 
-<html lang="en"><head></head><body class="flex min-h-screen">{% load static %}
+<html lang="en">
+
+<head></head>
+
+<body class="flex min-h-screen">{% load static %}
 
 
 
-  <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Student Dashboard - Smart Academic System</title>
-<link href="{% static 'assets/favicon.ico' %}" rel="icon" type="image/x-icon"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<style>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <title>Student Dashboard - Smart Academic System</title>
+  <link href="{% static 'assets/favicon.ico' %}" rel="icon" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <style>
     :root {
       --primary: #2563EB;
       --primary-hover: #1D4ED8;
@@ -23,19 +30,23 @@
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     }
+
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
       overflow-x: hidden;
     }
+
     .material-symbols-outlined {
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       vertical-align: middle;
     }
+
     .sidebar {
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
     .glass-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -43,9 +54,11 @@
       box-shadow: var(--shadow);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
     .glass-card:hover {
       box-shadow: var(--shadow-lg);
     }
+
     .nav-link {
       display: flex;
       align-items: center;
@@ -56,34 +69,42 @@
       font-weight: 500;
       transition: all 0.2s;
     }
-    .nav-link:hover, .nav-link.active {
+
+    .nav-link:hover,
+    .nav-link.active {
       background: rgba(37, 99, 235, 0.08);
       color: var(--primary);
     }
+
     .nav-link.active .material-symbols-outlined {
       font-variation-settings: 'FILL' 1;
     }
+
     .nav-link.logout:hover {
       background: #FEF2F2;
       color: #DC2626;
     }
+
     .stat-card {
       padding: 1.5rem;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
     }
+
     .progress-bar-container {
       height: 10px;
       background: #E2E8F0;
       border-radius: 999px;
       overflow: hidden;
     }
+
     .progress-bar-fill {
       height: 100%;
       border-radius: 999px;
       transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
     .action-tile {
       display: flex;
       flex-direction: column;
@@ -99,11 +120,13 @@
       text-align: center;
       gap: 0.75rem;
     }
+
     .action-tile:hover {
       border-color: var(--primary);
       background: rgba(37, 99, 235, 0.04);
       transform: translateY(-4px);
     }
+
     .action-tile span.icon-box {
       width: 48px;
       height: 48px;
@@ -115,331 +138,352 @@
       color: var(--primary);
       transition: all 0.2s;
     }
+
     .action-tile:hover span.icon-box {
       background: var(--primary);
       color: white;
     }
+
     .defaulter-card {
       background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
       border: 1px solid #FECDD3;
     }
+
     .defaulter-card:hover {
       border-color: #F43F5E;
     }
   </style>
-<!-- Sidebar Overlay -->
-<div class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity duration-300 lg:hidden" id="sidebarOverlay"></div>
-<!-- Sidebar -->
-<aside class="fixed inset-y-0 left-0 w-72 bg-white border-r border-slate-200 z-50 sidebar -translate-x-full lg:translate-x-0 overflow-y-auto" id="sidebar">
-<div class="h-full flex flex-col p-6">
-<div class="flex items-center gap-3 mb-10 px-2">
-<div class="bg-blue-600 p-2 rounded-xl text-white">
-<span class="material-symbols-outlined text-2xl">school</span>
-</div>
-<span class="font-extrabold text-xl tracking-tight text-slate-900">Smart Academic</span>
-</div>
-<nav class="flex-1 space-y-1">
-<a class="nav-link active" href="{% url 'student_dashboard' %}">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="">Dashboard</span>
-</a>
-<a class="nav-link" href="{% url 'attendance' %}">
-<span class="material-symbols-outlined">calendar_today</span>
-<span class="">Attendance</span>
-</a>
-<a class="nav-link" href="{% url 'apply_page' %}">
-<span class="material-symbols-outlined">edit_note</span>
-<span class="">Apply Leave</span>
-</a>
-<a class="nav-link" href="{% url 'leave_status' %}">
-<span class="material-symbols-outlined">list_alt</span>
-<span class="">Leave Status</span>
-</a>
-<a class="nav-link" href="{% url 'calculator' %}">
-<span class="material-symbols-outlined">calculate</span>
-<span class="">Calculator</span>
-</a>
-<a class="nav-link" href="{% url 'event_list' %}">
-<span class="material-symbols-outlined">celebration</span>
-<span class="">Events</span>
-</a>
-</nav>
-<div class="mt-auto pt-6 border-t border-slate-100">
-<a class="nav-link logout" href="{% url 'logout' %}">
-<span class="material-symbols-outlined">logout</span>
-<span class="">Logout</span>
-</a>
-</div>
-</div>
-</aside>
-<!-- Main Content -->
-<main class="flex-1 flex flex-col min-w-0 lg:ml-72">
-<!-- Top Nav -->
-<header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-<button aria-label="Toggle Menu" class="lg:hidden p-2 hover:bg-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" id="sidebarToggle">
-<span class="material-symbols-outlined">menu</span>
-</button>
-<div class="flex items-center gap-4 ml-auto">
+  <!-- Sidebar Overlay -->
+  <div class="fixed inset-0 bg-black/50 z-40 hidden opacity-0 transition-opacity duration-300 lg:hidden"
+    id="sidebarOverlay"></div>
+  <!-- Sidebar -->
+  <aside
+    class="fixed inset-y-0 left-0 w-72 bg-white border-r border-slate-200 z-50 sidebar -translate-x-full lg:translate-x-0 overflow-y-auto"
+    id="sidebar">
+    <div class="h-full flex flex-col p-6">
+      <div class="flex items-center gap-3 mb-10 px-2">
+        <div class="bg-blue-600 p-2 rounded-xl text-white">
+          <span class="material-symbols-outlined text-2xl">school</span>
+        </div>
+        <span class="font-extrabold text-xl tracking-tight text-slate-900">Smart Academic</span>
+      </div>
+      <nav class="flex-1 space-y-1">
+        <a class="nav-link active" href="{% url 'student_dashboard' %}">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span class="">Dashboard</span>
+        </a>
+        <a class="nav-link" href="{% url 'attendance' %}">
+          <span class="material-symbols-outlined">calendar_today</span>
+          <span class="">Attendance</span>
+        </a>
+        <a class="nav-link" href="{% url 'apply_page' %}">
+          <span class="material-symbols-outlined">edit_note</span>
+          <span class="">Apply Leave</span>
+        </a>
+        <a class="nav-link" href="{% url 'leave_status' %}">
+          <span class="material-symbols-outlined">list_alt</span>
+          <span class="">Leave Status</span>
+        </a>
+        <a class="nav-link" href="{% url 'calculator' %}">
+          <span class="material-symbols-outlined">calculate</span>
+          <span class="">Calculator</span>
+        </a>
+        <a class="nav-link" href="{% url 'event_list' %}">
+          <span class="material-symbols-outlined">celebration</span>
+          <span class="">Events</span>
+        </a>
+      </nav>
+      <div class="mt-auto pt-6 border-t border-slate-100">
+        <a class="nav-link logout" href="{% url 'logout' %}">
+          <span class="material-symbols-outlined">logout</span>
+          <span class="">Logout</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col min-w-0 lg:ml-72">
+    <!-- Top Nav -->
+    <header
+      class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+      <button aria-label="Toggle Menu"
+        class="lg:hidden p-2 hover:bg-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        id="sidebarToggle">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="flex items-center gap-4 ml-auto">
 
-    <!-- Student Details -->
-    <div class="hidden sm:flex flex-col items-end">
-        <span class="text-sm font-semibold text-slate-900">
+        <!-- Student Details -->
+        <div class="hidden sm:flex flex-col items-end">
+          <span class="text-sm font-semibold text-slate-900">
             {{ student.name }}
-        </span>
-        <span class="text-xs text-slate-500 uppercase tracking-wider">
+          </span>
+          <span class="text-xs text-slate-500 uppercase tracking-wider">
             {{ student.roll_no }}
-        </span>
-    </div>
+          </span>
+        </div>
 
-    <!-- Avatar -->
-    <div class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-blue-600 font-bold">
-        {{ student.name|slice:":1" }}
-    </div>
+        <!-- Avatar -->
+        <div
+          class="w-10 h-10 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-blue-600 font-bold">
+          {{ student.name|slice:":1" }}
+        </div>
 
-    <!-- Notification Bell -->
-    <div class="relative">
-        <button id="notificationBtn"
-                class="relative p-2 rounded-full hover:bg-slate-100 transition">
+        <!-- Notification Bell -->
+        <div class="relative">
+          <button id="notificationBtn" class="relative p-2 rounded-full hover:bg-slate-100 transition">
 
             <span class="material-symbols-outlined text-slate-700">
-                notifications
+              notifications
             </span>
 
             <span id="notificationCount"
-                  class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                0
+              class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              0
             </span>
-        </button>
+          </button>
 
-        <div id="notificationDropdown"
-             class="hidden absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
+          <div id="notificationDropdown"
+            class="hidden absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
 
             <div class="p-3 font-semibold border-b bg-slate-50">
-                Notifications
+              Notifications
             </div>
 
             <div id="notificationList" class="max-h-80 overflow-y-auto"></div>
 
+          </div>
         </div>
-    </div>
 
-</div>
-</header>
-<div class="p-6 lg:p-10 max-w-6xl mx-auto w-full space-y-8">
-<!-- Welcome Section -->
-<section>
-<h1 class="text-3xl font-bold text-slate-900">Hello, {{ student.name }}! 👋</h1>
-<p class="text-slate-500 mt-1">Here's what's happening with your academics today.</p>
-</section><div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8 mb-8">
-<!-- Widget 1: Attendance Circle -->
-<div class="glass-card p-6 flex flex-col items-center justify-center text-center">
-<div class="flex items-center gap-2 mb-4 w-full justify-start">
-<span class="material-symbols-outlined text-blue-600">donut_large</span>
-<h2 class="text-lg font-bold text-slate-900">Academic Progress</h2>
-</div>
-<div class="relative inline-flex items-center justify-center mb-4">
-<svg class="w-32 h-32 transform -rotate-90">
-<circle class="text-slate-100" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="12"></circle>
-<circle class="{% if attendance_percent >= 75 %}text-emerald-500{% elif attendance_percent >= 60 %}text-amber-500{% else %}text-red-500{% endif %} transition-all duration-1000" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.42" stroke-dashoffset="calc(364.42 - (364.42 * {{ attendance_percent }}) / 100)" stroke-linecap="round" stroke-width="12"></circle>
-</svg>
-<span class="absolute text-2xl font-extrabold text-slate-900">{{ attendance_percent }}%</span>
-</div>
-<p class="text-sm text-slate-500">Overall class presence</p>
-</div>
-<!-- Widget 2: Today's Timetable -->
-<div class="glass-card p-6 flex flex-col">
-<div class="flex items-center gap-2 mb-4">
-<span class="material-symbols-outlined text-blue-600">schedule</span>
-<h2 class="text-lg font-bold text-slate-900">Today's Timetable</h2>
-</div>
-<div class="space-y-3 overflow-y-auto max-h-[200px] pr-2">
-      {% if today_timetable %}
-        {% for slot in today_timetable %}
-        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-<div class="flex-1">
-<p class="text-sm font-bold text-slate-900">{{ slot.subject.name }}</p>
-<p class="text-xs text-slate-500">{{ slot.teacher.get_full_name|default:slot.teacher.username }}</p>
-</div>
-<div class="text-right">
-<p class="text-xs font-semibold text-blue-600">{{ slot.start_time }} - {{ slot.end_time }}</p>
-</div>
-</div>
-        {% endfor %}
-      {% else %}
-        <div class="flex flex-col items-center justify-center py-8 text-slate-400">
-<span class="material-symbols-outlined text-4xl mb-2">event_busy</span>
-<p class="text-sm">No classes scheduled today</p>
-</div>
-      {% endif %}
+      </div>
+    </header>
+    <div class="p-6 lg:p-10 max-w-6xl mx-auto w-full space-y-8">
+      <!-- Welcome Section -->
+      <section>
+        <h1 class="text-3xl font-bold text-slate-900">Hello, {{ student.name }}! 👋</h1>
+        <p class="text-slate-500 mt-1">Here's what's happening with your academics today.</p>
+      </section>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8 mb-8">
+        <!-- Widget 1: Attendance Circle -->
+        <div class="glass-card p-6 flex flex-col items-center justify-center text-center">
+          <div class="flex items-center gap-2 mb-4 w-full justify-start">
+            <span class="material-symbols-outlined text-blue-600">donut_large</span>
+            <h2 class="text-lg font-bold text-slate-900">Academic Progress</h2>
+          </div>
+          <div class="relative inline-flex items-center justify-center mb-4">
+            <svg class="w-32 h-32 transform -rotate-90">
+              <circle class="text-slate-100" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor"
+                stroke-width="12"></circle>
+              <circle
+                class="{% if attendance_percent >= 75 %}text-emerald-500{% elif attendance_percent >= 60 %}text-amber-500{% else %}text-red-500{% endif %} transition-all duration-1000"
+                cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.42"
+                stroke-dashoffset="calc(364.42 - (364.42 * {{ attendance_percent }}) / 100)" stroke-linecap="round"
+                stroke-width="12"></circle>
+            </svg>
+            <span class="absolute text-2xl font-extrabold text-slate-900">{{ attendance_percent }}%</span>
+          </div>
+          <p class="text-sm text-slate-500">Overall class presence</p>
+        </div>
+        <!-- Widget 2: Today's Timetable -->
+        <div class="glass-card p-6 flex flex-col">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-blue-600">schedule</span>
+            <h2 class="text-lg font-bold text-slate-900">Today's Timetable</h2>
+          </div>
+          <div class="space-y-3 overflow-y-auto max-h-[200px] pr-2">
+            {% if today_timetable %}
+            {% for slot in today_timetable %}
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div class="flex-1">
+                <p class="text-sm font-bold text-slate-900">{{ slot.subject.name }}</p>
+                <p class="text-xs text-slate-500">{{ slot.teacher.get_full_name|default:slot.teacher.username }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs font-semibold text-blue-600">{{ slot.start_time }} - {{ slot.end_time }}</p>
+              </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="flex flex-col items-center justify-center py-8 text-slate-400">
+              <span class="material-symbols-outlined text-4xl mb-2">event_busy</span>
+              <p class="text-sm">No classes scheduled today</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <!-- Widget 3: Upcoming Assignments -->
+        <div class="glass-card p-6 flex flex-col">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-blue-600">assignment_turned_in</span>
+            <h2 class="text-lg font-bold text-slate-900">Assignments</h2>
+          </div>
+          <div class="space-y-3 overflow-y-auto max-h-[200px] pr-2">
+            {% if upcoming_assignments %}
+            {% for task in upcoming_assignments %}
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div>
+                <p class="text-sm font-bold text-slate-900">{{ task.title }}</p>
+                <p class="text-xs text-slate-400 italic">Due: {{ task.due_date }}</p>
+              </div>
+              <button class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                <span class="material-symbols-outlined">download</span>
+              </button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="flex flex-col items-center justify-center py-8 text-slate-400">
+              <span class="material-symbols-outlined text-4xl mb-2">task</span>
+              <p class="text-sm">All caught up!</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-500 font-medium text-sm">Applied Leaves</span>
+            <span class="material-symbols-outlined text-blue-500">description</span>
+          </div>
+          <span class="text-3xl font-bold text-slate-900">{{ total_leaves }}</span>
+          <span class="text-xs text-slate-400">Total requests submitted</span>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-500 font-medium text-sm">Pending Approval</span>
+            <span class="material-symbols-outlined text-amber-500">pending_actions</span>
+          </div>
+          <span class="text-3xl font-bold text-slate-900">{{ pending_leaves }}</span>
+          <span class="text-xs text-slate-400">Currently in review</span>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-slate-500 font-medium text-sm">Attendance</span>
+            <span
+              class="material-symbols-outlined {% if attendance_percent < 75 %}text-red-500{% else %}text-emerald-500{% endif %}">analytics</span>
+          </div>
+          <span class="text-3xl font-bold text-slate-900">{{ attendance_percent }}%</span>
+          <span class="text-xs {% if attendance_percent < 75 %}text-red-400{% else %}text-emerald-400{% endif %}">
+            {% if attendance_percent < 75 %}Below requirements{% else %}Maintaining well{% endif %} </span>
+        </div>
+      </div>
+      <!-- Attendance Overview -->
+      <div class="glass-card p-6">
+        <div class="flex items-center gap-2 mb-6">
+          <span class="material-symbols-outlined text-blue-600">query_stats</span>
+          <h2 class="text-lg font-bold text-slate-900">Attendance Overview</h2>
+        </div>
+        <div class="space-y-4">
+          <div class="flex justify-between items-end">
+            <div>
+              <p class="text-sm text-slate-500">Current Status</p>
+              <p class="text-lg font-semibold text-slate-900">{{ present_classes }} present <span
+                  class="text-slate-400 text-base font-normal">out of {{ total_classes }}</span></p>
+            </div>
+            <div class="text-right">
+              <span class="text-2xl font-bold text-blue-600">{{ attendance_percent }}%</span>
+            </div>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill {% if attendance_percent < 75 %}bg-red-500{% else %}bg-blue-600{% endif %}"
+              style="width: {{ attendance_percent }}%"></div>
+          </div>
+
+          {% if attendance_percent < 75 %} <div
+            class="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-red-700">
+            <span class="material-symbols-outlined">warning</span>
+            <p class="text-sm font-medium">Warning: Your attendance is below the 75% threshold. Please prioritize your
+              classes.</p>
+        </div>
+        {% else %}
+        <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700">
+          <span class="material-symbols-outlined">check_circle</span>
+          <p class="text-sm font-medium">Great job! You're meeting the attendance requirements.</p>
+        </div>
+        {% endif %}
+      </div>
     </div>
-</div>
-<!-- Widget 3: Upcoming Assignments -->
-<div class="glass-card p-6 flex flex-col">
-<div class="flex items-center gap-2 mb-4">
-<span class="material-symbols-outlined text-blue-600">assignment_turned_in</span>
-<h2 class="text-lg font-bold text-slate-900">Assignments</h2>
-</div>
-<div class="space-y-3 overflow-y-auto max-h-[200px] pr-2">
-      {% if upcoming_assignments %}
-        {% for task in upcoming_assignments %}
-        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-<div>
-<p class="text-sm font-bold text-slate-900">{{ task.title }}</p>
-<p class="text-xs text-slate-400 italic">Due: {{ task.due_date }}</p>
-</div>
-<button class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-<span class="material-symbols-outlined">download</span>
-</button>
-</div>
-        {% endfor %}
-      {% else %}
-        <div class="flex flex-col items-center justify-center py-8 text-slate-400">
-<span class="material-symbols-outlined text-4xl mb-2">task</span>
-<p class="text-sm">All caught up!</p>
-</div>
-      {% endif %}
-    </div>
-</div>
-</div>
-<!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<div class="glass-card stat-card">
-<div class="flex items-center justify-between mb-2">
-<span class="text-slate-500 font-medium text-sm">Applied Leaves</span>
-<span class="material-symbols-outlined text-blue-500">description</span>
-</div>
-<span class="text-3xl font-bold text-slate-900">{{ total_leaves }}</span>
-<span class="text-xs text-slate-400">Total requests submitted</span>
-</div>
-<div class="glass-card stat-card">
-<div class="flex items-center justify-between mb-2">
-<span class="text-slate-500 font-medium text-sm">Pending Approval</span>
-<span class="material-symbols-outlined text-amber-500">pending_actions</span>
-</div>
-<span class="text-3xl font-bold text-slate-900">{{ pending_leaves }}</span>
-<span class="text-xs text-slate-400">Currently in review</span>
-</div>
-<div class="glass-card stat-card">
-<div class="flex items-center justify-between mb-2">
-<span class="text-slate-500 font-medium text-sm">Attendance</span>
-<span class="material-symbols-outlined {% if attendance_percent < 75 %}text-red-500{% else %}text-emerald-500{% endif %}">analytics</span>
-</div>
-<span class="text-3xl font-bold text-slate-900">{{ attendance_percent }}%</span>
-<span class="text-xs {% if attendance_percent < 75 %}text-red-400{% else %}text-emerald-400{% endif %}">
-            {% if attendance_percent < 75 %}Below requirements{% else %}Maintaining well{% endif %}
+    <!-- Quick Actions -->
+    <section>
+      <div class="flex items-center gap-2 mb-6">
+        <span class="material-symbols-outlined text-blue-600">bolt</span>
+        <h2 class="text-lg font-bold text-slate-900">Quick Actions</h2>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"><a class="action-tile"
+          href="{% url 'apply_page' %}">
+          <span class="icon-box"><span class="material-symbols-outlined">edit_square</span></span>
+          <span class="text-sm font-semibold">Apply Leave</span>
+        </a>
+        <a class="action-tile" href="{% url 'leave_status' %}">
+          <span class="icon-box"><span class="material-symbols-outlined">assignment</span></span>
+          <span class="text-sm font-semibold">Leave Status</span>
+        </a>
+        <a class="action-tile" href="{% url 'od_status' %}">
+          <span class="icon-box">
+            <span class="material-symbols-outlined">event_note</span>
           </span>
-</div>
-</div>
-<!-- Attendance Overview -->
-<div class="glass-card p-6">
-<div class="flex items-center gap-2 mb-6">
-<span class="material-symbols-outlined text-blue-600">query_stats</span>
-<h2 class="text-lg font-bold text-slate-900">Attendance Overview</h2>
-</div>
-<div class="space-y-4">
-<div class="flex justify-between items-end">
-<div>
-<p class="text-sm text-slate-500">Current Status</p>
-<p class="text-lg font-semibold text-slate-900">{{ present_classes }} present <span class="text-slate-400 text-base font-normal">out of {{ total_classes }}</span></p>
-</div>
-<div class="text-right">
-<span class="text-2xl font-bold text-blue-600">{{ attendance_percent }}%</span>
-</div>
-</div>
-<div class="progress-bar-container">
-<div class="progress-bar-fill {% if attendance_percent < 75 %}bg-red-500{% else %}bg-blue-600{% endif %}" style="width: {{ attendance_percent }}%"></div>
-</div>
+          <span class="text-sm font-semibold">OD Status</span>
+        </a>
+        <a class="action-tile" href="{% url 'attendance' %}">
+          <span class="icon-box"><span class="material-symbols-outlined">calendar_month</span></span>
+          <span class="text-sm font-semibold">Attendance</span>
+        </a>
+        <a class="action-tile" href="{% url 'calculator' %}">
+          <span class="icon-box"><span class="material-symbols-outlined">calculate</span></span>
+          <span class="text-sm font-semibold">Calculator</span>
+        </a>
+        <a class="action-tile" href="{% url 'view_timetable' %}">
+          <span class="icon-box">
+            <span class="material-symbols-outlined">calendar_month</span>
+          </span>
+          <span class="text-sm font-semibold">View Timetable</span>
+        </a>
 
-          {% if attendance_percent < 75 %}
-          <div class="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-red-700">
-<span class="material-symbols-outlined">warning</span>
-<p class="text-sm font-medium">Warning: Your attendance is below the 75% threshold. Please prioritize your classes.</p>
-</div>
-          {% else %}
-          <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700">
-<span class="material-symbols-outlined">check_circle</span>
-<p class="text-sm font-medium">Great job! You're meeting the attendance requirements.</p>
-</div>
-          {% endif %}
+        <a class="action-tile" href="{% url 'assignment_list' %}">
+          <span class="icon-box">
+            <span class="material-symbols-outlined">assignment</span>
+          </span>
+          <span class="text-sm font-semibold">View Assignments</span>
+        </a>
+        <a class="action-tile" href="{% url 'create_event' %}">
+          <span class="icon-box"><span class="material-symbols-outlined">person_add</span></span>
+          <span class="text-sm font-semibold">Create Event</span>
+        </a>
+        <a class="action-tile" href="{% url 'event_list' %}">
+          <span class="icon-box"><span class="material-symbols-outlined">auto_awesome</span></span>
+          <span class="text-sm font-semibold">Apply OD</span>
+        </a>
+        <a class="action-tile" href="{% url 'student_grades' %}">
+          <span class="icon-box">
+            <span class="material-symbols-outlined">grade</span>
+          </span>
+          <span class="text-sm font-semibold">My Grades</span>
+        </a>
+      </div>
+    </section>
+    <!-- Defaulter Status Section -->
+    <a class="block glass-card defaulter-card p-6 overflow-hidden relative group" href="{% url 'student_defaulter' %}">
+      <div class="flex items-center justify-between relative z-10">
+        <div class="flex items-center gap-4">
+          <div class="bg-red-100 p-3 rounded-2xl text-red-600">
+            <span class="material-symbols-outlined text-2xl">report_problem</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Defaulter Status</h3>
+            <p class="text-slate-600 text-sm">Check critical status and disciplinary actions</p>
+          </div>
         </div>
-</div>
-<!-- Quick Actions -->
-<section>
-<div class="flex items-center gap-2 mb-6">
-<span class="material-symbols-outlined text-blue-600">bolt</span>
-<h2 class="text-lg font-bold text-slate-900">Quick Actions</h2>
-</div>
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"><a class="action-tile" href="{% url 'apply_page' %}">
-<span class="icon-box"><span class="material-symbols-outlined">edit_square</span></span>
-<span class="text-sm font-semibold">Apply Leave</span>
-</a>
-<a class="action-tile" href="{% url 'leave_status' %}">
-<span class="icon-box"><span class="material-symbols-outlined">assignment</span></span>
-<span class="text-sm font-semibold">Leave Status</span>
-</a>
-<a class="action-tile" href="{% url 'od_status' %}">
-    <span class="icon-box">
-        <span class="material-symbols-outlined">event_note</span>
-    </span>
-    <span class="text-sm font-semibold">OD Status</span>
-</a>
-<a class="action-tile" href="{% url 'attendance' %}">
-<span class="icon-box"><span class="material-symbols-outlined">calendar_month</span></span>
-<span class="text-sm font-semibold">Attendance</span>
-</a>
-<a class="action-tile" href="{% url 'calculator' %}">
-<span class="icon-box"><span class="material-symbols-outlined">calculate</span></span>
-<span class="text-sm font-semibold">Calculator</span>
-</a>
-<a class="action-tile" href="{% url 'view_timetable' %}">
-    <span class="icon-box">
-        <span class="material-symbols-outlined">calendar_month</span>
-    </span>
-    <span class="text-sm font-semibold">View Timetable</span>
-</a>
-
-<a class="action-tile" href="{% url 'assignment_list' %}">
-    <span class="icon-box">
-        <span class="material-symbols-outlined">assignment</span>
-    </span>
-    <span class="text-sm font-semibold">View Assignments</span>
-</a>
-<a class="action-tile" href="{% url 'create_event' %}">
-<span class="icon-box"><span class="material-symbols-outlined">person_add</span></span>
-<span class="text-sm font-semibold">Create Event</span>
-</a>
-<a class="action-tile" href="{% url 'event_list' %}">
-<span class="icon-box"><span class="material-symbols-outlined">auto_awesome</span></span>
-<span class="text-sm font-semibold">Apply OD</span>
-</a>
-<a class="action-tile" href="{% url 'student_grades' %}">
-  <span class="icon-box">
-    <span class="material-symbols-outlined">grade</span>
-  </span>
-  <span class="text-sm font-semibold">My Grades</span>
-</a>
-</div>
-</section>
-<!-- Defaulter Status Section -->
-<a class="block glass-card defaulter-card p-6 overflow-hidden relative group" href="{% url 'student_defaulter' %}">
-<div class="flex items-center justify-between relative z-10">
-<div class="flex items-center gap-4">
-<div class="bg-red-100 p-3 rounded-2xl text-red-600">
-<span class="material-symbols-outlined text-2xl">report_problem</span>
-</div>
-<div>
-<h3 class="text-lg font-bold text-slate-900">Defaulter Status</h3>
-<p class="text-slate-600 text-sm">Check critical status and disciplinary actions</p>
-</div>
-</div>
-<span class="material-symbols-outlined text-slate-400 group-hover:translate-x-2 transition-transform">arrow_forward_ios</span>
-</div>
-<!-- Decorative bg icon -->
-<span class="material-symbols-outlined absolute -right-6 -bottom-6 text-9xl text-red-500/5 rotate-12">warning</span>
-</a>
-</div>
-</main>
-<script>
+        <span
+          class="material-symbols-outlined text-slate-400 group-hover:translate-x-2 transition-transform">arrow_forward_ios</span>
+      </div>
+      <!-- Decorative bg icon -->
+      <span
+        class="material-symbols-outlined absolute -right-6 -bottom-6 text-9xl text-red-500/5 rotate-12">warning</span>
+    </a>
+    </div>
+  </main>
+  <script>
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -496,32 +540,40 @@
       }
     });
   </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const btn = document.getElementById("notificationBtn");
-    const dropdown = document.getElementById("notificationDropdown");
+      const btn = document.getElementById("notificationBtn");
+      const dropdown = document.getElementById("notificationDropdown");
 
-    btn.addEventListener("click", () => {
+      btn.addEventListener("click", () => {
         dropdown.classList.toggle("hidden");
-    });
+      });
 
-    function loadNotifications() {
+      function loadNotifications() {
         fetch("/notifications/unread/")
-            .then(response => response.json())
-            .then(data => {
+          .then(response => response.json())
+          .then(data => {
 
-                document.getElementById("notificationCount").innerText = data.total;
+            const badge = document.getElementById("notificationCount");
 
-                const container = document.getElementById("notificationList");
+            badge.innerText = data.total;
 
-                if (!data.notifications.length) {
-                    container.innerHTML =
-                        '<div class="p-4 text-center text-gray-500">No notifications</div>';
-                    return;
-                }
+            if (data.total > 0) {
+              badge.classList.remove("hidden");
+            } else {
+              badge.classList.add("hidden");
+            }
+            
+            const container = document.getElementById("notificationList");
 
-                container.innerHTML = data.notifications.map(n => `
+            if (!data.notifications.length) {
+              container.innerHTML =
+                '<div class="p-4 text-center text-gray-500">No notifications</div>';
+              return;
+            }
+
+            container.innerHTML = data.notifications.map(n => `
                     <a href="${n.url || '#'}"
                        class="block p-4 hover:bg-gray-50">
                         <div class="font-semibold">${n.title}</div>
@@ -529,13 +581,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div class="text-xs text-gray-400 mt-2">${n.time}</div>
                     </a>
                 `).join('');
-            })
-            .catch(err => console.error("Notification Error:", err));
-    }
+          })
+          .catch(err => console.error("Notification Error:", err));
+      }
 
-    loadNotifications();
+      loadNotifications();
 
-    setInterval(loadNotifications, 30000);
-});
-</script>
-</body></html>
+      setInterval(loadNotifications, 30000);
+    });
+  </script>
+</body>
+
+</html>
