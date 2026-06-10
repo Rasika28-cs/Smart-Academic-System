@@ -368,9 +368,20 @@ def view_students(request):
     if not request.user.is_staff:
         return redirect('home')
 
-    students = Student.objects.all().order_by('roll_no')
-    return render(request, 'view_students.html', {'students': students})
+    batch = request.GET.get('batch')
 
+    students = Student.objects.all().order_by('roll_no')
+
+    if batch:
+        students = students.filter(batch=batch)
+
+    return render(request, 'view_students.html', {
+        'students': students,
+        'batches': Student.objects.values_list(
+            'batch', flat=True
+        ).distinct().order_by('batch'),
+        'selected_batch': batch,
+    })
 
 @login_required
 def leave_status(request):

@@ -43,6 +43,18 @@
 <body>
 
 <!-- HEADER -->
+ <form method="get" class="mb-3">
+    <select name="batch" onchange="this.form.submit()">
+        <option value="">All Batches</option>
+
+        {% for b in batches %}
+        <option value="{{ b }}"
+            {% if selected_batch == b %}selected{% endif %}>
+            {{ b }}
+        </option>
+        {% endfor %}
+    </select>
+</form>
 <nav class="h-16 bg-white border-b flex items-center px-6 sticky top-0 z-50">
   <a href="{% url 'dashboard' %}" class="flex items-center gap-2 font-bold text-blue-600">
     <span class="material-symbols-outlined">school</span>
