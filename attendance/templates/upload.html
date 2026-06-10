@@ -250,10 +250,29 @@
         Upload File
       </button>
 
-      <div class="text-center text-xs text-on-surface-variant mt-4 leading-relaxed">
-        Required CSV format:<br/>
-        <code class="bg-slate-100 px-1.5 py-0.5 rounded text-primary font-medium">roll_no, date, status</code>
-      </div>
+     <div class="text-center text-xs text-on-surface-variant mt-4 leading-relaxed">
+    <p class="font-medium mb-2">Required CSV Format</p>
+
+    <code class="bg-slate-100 px-2 py-1 rounded text-primary font-medium block mb-2">
+        student_roll,batch,date,status
+    </code>
+
+    <p class="mb-2">Example:</p>
+
+    <pre class="bg-slate-100 p-2 rounded text-left inline-block">
+student_roll,batch,date,status
+CSE001,2024-2028,2026-06-10,Present
+CSE002,2024-2028,2026-06-10,Absent
+CSE003,2025-2029,2026-06-10,Present
+    </pre>
+
+    <ul class="mt-2 text-left inline-block">
+        <li>• <strong>student_roll</strong> → Student Roll Number</li>
+        <li>• <strong>batch</strong> → Must match student batch (e.g., 2024-2028)</li>
+        <li>• <strong>date</strong> → Format: YYYY-MM-DD</li>
+        <li>• <strong>status</strong> → Present or Absent</li>
+    </ul>
+</div>
     </form>
   </div>
 

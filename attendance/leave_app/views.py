@@ -1079,27 +1079,48 @@ def generate_qr(request):
 def upload_attendance(request):
     if request.method == 'POST':
         file = request.FILES.get('file')
+
         if not file:
             messages.error(request, 'No file uploaded')
         else:
             try:
                 decoded = file.read().decode('utf-8').splitlines()
                 reader = csv.DictReader(decoded)
+
                 count = 0
+
                 for row in reader:
                     roll_no = row.get('student_roll')
+                    batch = row.get('batch')
                     r_date = row.get('date')
                     status = row.get('status')
+
                     try:
-                        std = Student.objects.get(roll_no=roll_no)
-                        Attendance.objects.update_or_create(student=std, date=r_date, defaults={'status': status})
+                        std = Student.objects.get(
+                            roll_no=roll_no,
+                            batch=batch
+                        )
+
+                        Attendance.objects.update_or_create(
+                            student=std,
+                            date=r_date,
+                            defaults={'status': status}
+                        )
+
                         count += 1
-                    except Student.DoesNotExist: continue
-                messages.success(request, f'{count} records processed.')
+
+                    except Student.DoesNotExist:
+                        continue
+
+                messages.success(
+                    request,
+                    f'{count} attendance records processed.'
+                )
+
             except Exception as e:
                 messages.error(request, f'Error: {str(e)}')
-    return render(request, 'upload.html')
 
+    return render(request, 'upload.html')
 
 # ─────────────────────────────────────────────
 # 8. NOTIFICATIONS & DEFAULTERS (LEGACY)
