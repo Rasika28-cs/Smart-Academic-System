@@ -1257,11 +1257,28 @@ def upload_defaulters(request):
     
 
 def defaulter_list(request):
-    students = DefaulterStudent.objects.all().order_by('year', 'roll_no')
-    return render(request, 'defaulter_list.html', {'students': students})
+    batch = request.GET.get('batch')
 
+    students = DefaulterStudent.objects.all().order_by(
+        'year',
+        'roll_no'
+    )
 
+    if batch:
+        students = students.filter(
+            roll_no__in=Student.objects.filter(
+                batch=batch
+            ).values_list('roll_no', flat=True)
+        )
 
+    return render(request, 'defaulter_list.html', {
+        'students': students,
+        'batches': Student.objects.values_list(
+            'batch',
+            flat=True
+        ).distinct().order_by('batch'),
+        'selected_batch': batch,
+    })
 @login_required
 def update_action(request, id):
     if request.method != 'POST':
