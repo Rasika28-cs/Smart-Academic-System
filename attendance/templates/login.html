@@ -62,22 +62,36 @@
     }
   </style>
   <!-- Top Navigation Bar -->
-  <nav class="h-16 bg-white border-b border-outline flex items-center px-4 md:px-8 shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
-        <span class="material-symbols-outlined text-2xl">school</span>
-      </div>
-      <div>
-        <h1 class="text-onSurface font-bold text-lg leading-tight">Smart Academic System</h1>
-        <p class="text-[10px] text-onSurfaceMuted uppercase tracking-wider font-semibold">CSE Department</p>
-      </div>
-    </div>
-    <div class="ml-auto hidden sm:flex items-center gap-6">
-      <a class="text-sm font-medium text-onSurfaceMuted hover:text-primary transition-colors"
-        href="{% url 'home' %}">Home</a>
-      <a class="text-sm font-semibold text-primary" href="#">Login</a>
-    </div>
-  </nav>
+  <!-- Top Navigation -->
+<nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
+
+  <!-- Brand -->
+  <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'home' %}">
+    <span class="material-symbols-outlined text-2xl">school</span>
+
+    <!-- hidden on mobile, shows on sm+ -->
+    <span class="hidden sm:inline">Smart Academic System</span>
+  </a>
+
+  <!-- Right side links -->
+  <ul class="flex gap-1 ml-auto list-none items-center">
+
+    <li>
+      <a class="px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline hover:bg-slate-100 transition"
+         href="{% url 'home' %}">
+        Home
+      </a>
+    </li>
+
+    <li>
+      <a class="px-3 py-2 rounded-lg text-[13px] font-medium text-blue-600 no-underline hover:bg-blue-50 transition"
+         href="#">
+        Login
+      </a>
+    </li>
+
+  </ul>
+</nav>
   <!-- Main Content -->
   <main class="flex-grow flex items-center justify-center p-6">
     <div class="w-full max-w-[440px]">
