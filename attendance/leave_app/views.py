@@ -1160,7 +1160,7 @@ def get_notifications(request):
             "id": n.id,
             "title": n.title,
             "message": n.message,
-            "time": n.created_at.strftime("%d %b %I:%M %p"),
+            "time": timezone.localtime(n.created_at).strftime("%d %b %I:%M %p"),
             "url": n.url,
             "read": request.user in n.read_by.all()
         } for n in notifications[:10]]

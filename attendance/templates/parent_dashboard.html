@@ -22,6 +22,7 @@
             font-family: 'Nunito', sans-serif;
             background: var(--background);
             color: var(--text);
+            overflow-x: hidden;
         }
 
         .section {
@@ -45,68 +46,23 @@
             }
         }
 
-        aside {
-            background: var(--surface);
-            border-right: 1px solid #E2E8F0;
+        /* Sidebar Styling */
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+            z-index: 100;
         }
 
-        aside button {
-            font-weight: 700;
-            color: var(--muted);
-            border-radius: 12px;
-            transition: .2s;
-            border: none;
-        }
-
-        aside button:hover {
+        .sidebar-btn.active {
             background: #EFF6FF;
             color: var(--primary);
+            border-right: 4px solid var(--primary);
         }
 
-        .bg-white {
-            background: var(--surface) !important;
+        .bg-white-card {
+            background: var(--surface);
             border: 1px solid #E2E8F0;
-            border-radius: 18px !important;
-            box-shadow:
-                0 1px 3px rgba(0, 0, 0, .05),
-                0 10px 25px rgba(37, 99, 235, .08);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #F8FAFC;
-            color: var(--muted);
-            font-weight: 700;
-        }
-
-        th,
-        td {
-            padding: 14px;
-            border-bottom: 1px solid #E2E8F0;
-        }
-
-        tr:hover {
-            background: #F8FAFC;
-        }
-
-        .stat-card {
-            transition: .2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .text-gray-500 {
-            color: var(--muted) !important;
-        }
-
-        .text-3xl {
-            color: var(--primary);
+            border-radius: 18px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .05), 0 10px 25px rgba(37, 99, 235, .08);
         }
 
         .defaulter {
@@ -121,177 +77,308 @@
             border-radius: 12px;
         }
 
-        @media(max-width:768px) {
+        /* Hide scrollbar for clean look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
 
-            aside {
-                width: 90px !important;
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                height: 100%;
             }
 
-            aside button {
-                font-size: 12px;
+            .sidebar.open {
+                transform: translateX(0);
             }
-
-            .grid {
-                grid-template-columns: 1fr 1fr !important;
-            }
-
         }
     </style>
 </head>
 
-<body class="bg-slate-100">
+<body class="bg-slate-50">
 
-    <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
+    <!-- Navbar -->
+    <!-- Navbar -->
+    <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-4 md:px-8 gap-4 sticky top-0 z-50">
 
-        <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'dashboard' %}">
+        <!-- Mobile Menu Toggle -->
+        <button onclick="toggleSidebar()" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+
+        <!-- Logo -->
+        <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline"
+            href="{% url 'parent_dashboard' %}">
             <span class="material-symbols-outlined text-2xl">school</span>
             <span class="hidden sm:inline">Smart Academic System</span>
         </a>
 
+        <!-- Right Side -->
         <ul class="flex gap-1 ml-auto list-none items-center">
 
-            <li class="relative">
-                <button onclick="toggleNotifications()" class="relative p-2 rounded-xl hover:bg-slate-100 transition">
-
-                    <span class="material-symbols-outlined text-slate-600">
-                        notifications
-                    </span>
-
-                    {% if notifications %}
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-                    {% endif %}
-                </button>
-
-                <div id="notificationPanel"
-                    class="hidden absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl p-4">
-
-                    <h3 class="font-bold text-slate-800 mb-3">
-                        Notifications
-                    </h3>
-
-                    {% for n in notifications %}
-                    <div class="border-b border-slate-100 py-3">
-                        <p class="font-semibold">{{ n.title }}</p>
-                        <p class="text-sm text-slate-500">{{ n.message }}</p>
-                    </div>
-                    {% empty %}
-                    <p class="text-slate-500">No notifications available.</p>
-                    {% endfor %}
-                </div>
-            </li>
-           
+            <!-- Logout -->
             <li>
-                <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline"
+                <a class="px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 no-underline"
                     href="{% url 'logout' %}">
                     Logout
                 </a>
             </li>
 
-        </ul>
+            <!-- Notifications -->
+            <li class="relative">
+                <button onclick="toggleNotifications()" class="relative p-2 rounded-xl hover:bg-slate-100 transition">
+                    <span class="material-symbols-outlined text-slate-600">
+                        notifications
+                    </span>
 
+                    {% if notifications %}
+                    <span
+                        class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full">
+                        {{ notifications|length }}
+                    </span>
+                    {% endif %}
+                </button>
+
+                <div id="notificationPanel"
+                    class="hidden absolute right-0 top-12 w-[95vw] max-w-sm sm:w-80 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 z-50">
+                    <h3 class="font-bold text-slate-800 mb-3">Notifications</h3>
+
+                    <div class="max-h-60 overflow-y-auto no-scrollbar">
+                        {% for n in notifications %}
+                        <div class="border-b border-slate-100 py-3">
+                            <p class="font-semibold text-sm">{{ n.title }}</p>
+                            <p class="text-xs text-slate-500">{{ n.message }}</p>
+                        </div>
+                        {% empty %}
+                        <p class="text-slate-500 text-sm">
+                            No notifications available.
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </li>
+
+
+
+        </ul>
     </nav>
 
-    <div class="flex min-h-[calc(100vh-64px)]">
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/20 z-40 hidden md:hidden"></div>
 
-        <aside class="w-64 bg-white border-r p-4">
-            <button onclick="showSection('dashboard')"
-                class="w-full text-left p-3 hover:bg-slate-100 rounded">Dashboard</button>
-            <button onclick="showSection('attendance')"
-                class="w-full text-left p-3 hover:bg-slate-100 rounded">Attendance</button>
-            <button onclick="showSection('grades')"
-                class="w-full text-left p-3 hover:bg-slate-100 rounded">Grades</button>
-            <button onclick="showSection('leave')" class="w-full text-left p-3 hover:bg-slate-100 rounded">Leave &
-                OD</button>
+    <div class="flex min-h-[calc(100vh-64px)] relative">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 bg-white border-r border-slate-200 p-4 shrink-0 overflow-y-auto">
+            <nav class="space-y-1">
+                <button onclick="showSection('dashboard', this)"
+                    class="sidebar-btn active w-full flex items-center gap-3 px-4 py-3 text-left font-bold rounded-xl transition">
+                    <span class="material-symbols-outlined">dashboard</span> Dashboard
+                </button>
+                <button onclick="showSection('attendance', this)"
+                    class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 text-left font-bold rounded-xl transition">
+                    <span class="material-symbols-outlined">calendar_month</span> Attendance
+                </button>
+                <button onclick="showSection('grades', this)"
+                    class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 text-left font-bold rounded-xl transition">
+                    <span class="material-symbols-outlined">grade</span> Grades
+                </button>
+                <button onclick="showSection('leave', this)"
+                    class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 text-left font-bold rounded-xl transition">
+                    <span class="material-symbols-outlined">event_busy</span> Leave & OD
+                </button>
+            </nav>
         </aside>
 
-        <main class="flex-1 p-6">
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 max-w-full overflow-x-hidden">
 
+            <!-- Dashboard Section -->
             <div id="dashboard" class="section active">
-
-                <div class="bg-white rounded-lg shadow p-5 mb-6">
-                    <h2 class="text-2xl font-bold">{{ student.name }}</h2>
-                    <p>{{ student.roll_no }} • {{ student.department }}</p>
-                    <p>Batch: {{ student.batch }}</p>
-                </div>
-
-                <div class="grid md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white p-5 stat-card">
-                        <div class="text-gray-500">Attendance</div>
-                        <div class="text-3xl font-bold">{{ attendance_percent }}%</div>
-                    </div>
-                    <div class="bg-white p-5 stat-card">
-                        <div class="text-gray-500">Present</div>
-                        <div class="text-3xl font-bold">{{ present }}</div>
-                    </div>
-                    <div class="bg-white p-5 stat-card">
-                        <div class="text-gray-500">Absent</div>
-                        <div class="text-3xl font-bold">{{ absent }}</div>
-                    </div>
-                    <div class="bg-white p-5 stat-card">
-                        <div class="text-gray-500">Leave</div>
-                        <div class="text-3xl font-bold">{{ leave }}</div>
+                <div class="bg-white-card p-6 mb-8 border-l-8 border-l-blue-600">
+                    <h2 class="text-2xl font-extrabold text-slate-800">{{ student.name|default:"Student Name" }}</h2>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-slate-500 font-medium">
+                        <span>{{ student.roll_no|default:"Roll No" }}</span>
+                        <span class="hidden md:inline">•</span>
+                        <span>{{ student.department|default:"Department" }}</span>
+                        <span class="hidden md:inline">•</span>
+                        <span>Batch: {{ student.batch|default:"2021-25" }}</span>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h3 class="font-bold text-lg mb-4">Defaulter Alerts</h3>
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white-card p-5">
+                        <div class="text-slate-500 text-sm font-bold uppercase tracking-wider">Attendance</div>
+                        <div class="text-3xl font-black text-blue-600">{{ attendance_percent|default:"0" }}%</div>
+                    </div>
+                    <div class="bg-white-card p-5">
+                        <div class="text-slate-500 text-sm font-bold uppercase tracking-wider">Present</div>
+                        <div class="text-3xl font-black text-emerald-500">{{ present|default:"0" }}</div>
+                    </div>
+                    <div class="bg-white-card p-5">
+                        <div class="text-slate-500 text-sm font-bold uppercase tracking-wider">Absent</div>
+                        <div class="text-3xl font-black text-rose-500">{{ absent|default:"0" }}</div>
+                    </div>
+                    <div class="bg-white-card p-5">
+                        <div class="text-slate-500 text-sm font-bold uppercase tracking-wider">Leave/OD</div>
+                        <div class="text-3xl font-black text-amber-500">{{ leave|default:"0" }}</div>
+                    </div>
+                </div>
+
+                <!-- Defaulter Alerts Section -->
+                <div class="bg-white-card p-6">
+                    <h3 class="font-extrabold text-lg mb-4 flex items-center gap-2 text-slate-800">
+                        <span class="material-symbols-outlined text-rose-500">warning</span>
+                        Defaulter Alerts
+                    </h3>
+
                     {% for d in defaulters %}
                     <div class="defaulter p-4 mb-3">
-                        <strong>{{ d.year }}</strong><br>
-                        {{ d.reason }}
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined text-rose-600">warning</span>
+                            <h4 class="font-bold text-rose-700">
+                                Defaulter Record
+                            </h4>
+                        </div>
+
+                        <div class="space-y-2 text-sm">
+                            <p>
+                                <span class="font-semibold text-slate-700">
+                                    Reason:
+                                </span>
+                                <span class="text-slate-600">
+                                    {{ d.reason }}
+                                </span>
+                            </p>
+
+                            <p>
+                                <span class="font-semibold text-slate-700">
+                                    Action Taken:
+                                </span>
+                                <span class="text-slate-600">
+                                    {{ d.action_taken|default:"No action recorded" }}
+                                </span>
+                            </p>
+                        </div>
                     </div>
                     {% empty %}
-                    <div class="success p-4">
-                        No defaulter records.
+                    <div class="success p-4 flex items-center gap-3">
+                        <span class="material-symbols-outlined text-emerald-600">
+                            check_circle
+                        </span>
+                        <p class="text-emerald-700 font-semibold">
+                            No defaulter records. All good!
+                        </p>
                     </div>
                     {% endfor %}
                 </div>
-
             </div>
 
+            <!-- Attendance Section -->
             <div id="attendance" class="section">
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h2 class="font-bold text-xl mb-4">Attendance Records</h2>
-                    <table class="w-full">
-                        <tr class="border-b">
-                            <th class="text-left p-2">Date</th>
-                            <th class="text-left p-2">Status</th>
-                        </tr>
-                        {% for a in attendance_records %}
-                        <tr class="border-b">
-                            <td class="p-2">{{ a.date }}</td>
-                            <td class="p-2">{{ a.status }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-            </div>
-
-            <div id="grades" class="section">
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h2 class="font-bold text-xl mb-4">Grades</h2>
-                    {% for g in grades %}
-                    <div class="flex justify-between border-b py-3">
-                        <span>{{ g.subject_code }}</span>
-                        <span>{{ g.grade }}</span>
+                <div class="bg-white-card p-6">
+                    <h2 class="font-extrabold text-xl mb-6">Attendance Records</h2>
+                    <div class="overflow-x-auto border rounded-xl">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="p-4 text-slate-600 font-bold border-b">Date</th>
+                                    <th class="p-4 text-slate-600 font-bold border-b">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for a in attendance_records %}
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="p-4 border-b">{{ a.date }}</td>
+                                    <td class="p-4 border-b">
+                                        <span
+                                            class="px-3 py-1 rounded-full text-xs font-bold uppercase {% if a.status == 'Present' %}bg-emerald-100 text-emerald-700{% else %}bg-rose-100 text-rose-700{% endif %}">
+                                            {{ a.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="p-4 text-center text-slate-500">No records found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
 
+            <!-- Grades Section -->
+            <div id="grades" class="section">
+                <div class="bg-white-card p-6">
+                    <h2 class="font-extrabold text-xl mb-6">Academic Performance</h2>
+                    <div class="space-y-3">
+                        {% for g in grades %}
+                        <div
+                            class="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <span class="font-bold text-slate-700">{{ g.subject_code }}</span>
+                            <span class="px-4 py-1 bg-blue-600 text-white rounded-lg font-black">{{ g.grade }}</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-slate-500">No grades posted yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leave & OD Section -->
             <div id="leave" class="section">
-                <div class="bg-white rounded-lg shadow p-5">
-                    <h2 class="font-bold text-xl mb-4">Leave & OD</h2>
+                <div class="bg-white-card p-6">
+                    <h2 class="font-extrabold text-xl mb-6">Leave & On-Duty (OD)</h2>
 
-                    <h3 class="font-semibold mb-2">Leave Applications</h3>
-                    {% for l in leaves %}
-                    <div class="border-b py-2">{{ l.from_date }} → {{ l.to_date }} ({{ l.status }})</div>
-                    {% endfor %}
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-bold text-slate-500 uppercase text-xs mb-4">Leave Applications</h3>
+                            <div class="space-y-3">
+                                {% for l in leaves %}
+                                <div class="p-4 border border-slate-100 rounded-xl bg-white shadow-sm">
+                                    <p class="font-bold text-slate-700">{{ l.from_date }} to {{ l.to_date }}</p>
+                                    <span
+                                        class="text-sm font-bold {% if l.status == 'Approved' %}text-emerald-500{% else %}text-amber-500{% endif %}">
+                                        Status: {{ l.status }}
+                                    </span>
+                                </div>
+                                {% empty %}
+                                <p class="text-sm text-slate-400 italic">No leave applications.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
 
-                    <h3 class="font-semibold mt-6 mb-2">OD Records</h3>
-                    {% for o in ods %}
-                    <div class="border-b py-2">{{ o.status }}</div>
-                    {% endfor %}
+                        {% for o in ods %}
+                        <div class="p-4 border border-slate-100 rounded-xl bg-white shadow-sm space-y-2">
+
+                            <p>
+                                <span class="font-semibold text-slate-700">Event:</span>
+                                <span class="text-slate-600">{{ o.event.event_name }}</span>
+                            </p>
+
+                            <p>
+                                <span class="font-semibold text-slate-700">Organization:</span>
+                                <span class="text-slate-600">{{ o.event.college_name }}</span>
+                            </p>
+
+                            <p>
+                                <span class="font-semibold text-slate-700">Date:</span>
+                                <span class="text-slate-600">{{ o.date }}</span>
+                            </p>
+
+                            <p>
+                                <span class="font-semibold text-slate-700">Status:</span>
+                                <span class="font-bold text-blue-500">{{ o.status }}</span>
+                            </p>
+
+                        </div>
+                        {% empty %}
+                        <p class="text-sm text-slate-400 italic">No OD records found.</p>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
@@ -299,12 +386,43 @@
     </div>
 
     <script>
-        function showSection(id) {
+        // Section Switching Logic
+        function showSection(id, btn) {
+            // Hide all sections
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            // Show selected section
             document.getElementById(id).classList.add('active');
+
+            // Update button styles
+            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // On mobile, close sidebar after clicking
+            if (window.innerWidth < 768) {
+                toggleSidebar();
+            }
         }
+
+        // Sidebar Toggle for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('hidden');
+        }
+
+        // Notifications Toggle
         function toggleNotifications() {
-            document.getElementById('notificationPanel').classList.toggle('hidden');
+            const panel = document.getElementById('notificationPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        // Close notifications when clicking outside
+        window.onclick = function (event) {
+            if (!event.target.closest('.relative')) {
+                const panel = document.getElementById('notificationPanel');
+                if (panel) panel.classList.add('hidden');
+            }
         }
     </script>
 

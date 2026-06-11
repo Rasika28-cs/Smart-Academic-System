@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 
 from .models import Event
 from od.models import ODApplication
-
+from leave_app.models import Student
+from leave_app.models import Notification
 
 # ─────────────────────────────────────────────
 # EVENT LIST
@@ -11,7 +12,9 @@ from od.models import ODApplication
 
 @login_required
 def event_list(request):
-    events = Event.objects.all()
+    events = Event.objects.filter(
+        batch=request.user.student_profile.batch
+    )
     event_data = []
 
     for event in events:
@@ -41,13 +44,22 @@ def event_list(request):
 @login_required
 def create_event(request):
     if request.method == 'POST':
+
         Event.objects.create(
             event_name=request.POST.get('event_name'),
             college_name=request.POST.get('college_name'),
             event_date=request.POST.get('event_date'),
             brochure=request.FILES.get('brochure'),
             created_by=request.user,
+            batch=request.user.student_profile.batch
         )
+
         return redirect('event_list')
 
-    return render(request, 'od/create_event.html')
+    return render(
+        request,
+        'od/create_event.html',
+        {
+            'batch': request.user.student_profile.batch
+        }
+    )

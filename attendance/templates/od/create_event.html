@@ -125,6 +125,23 @@
 </div>
 </div>
 <div class="space-y-1.5">
+    <label class="block text-sm font-semibold text-text-main">
+        Batch
+    </label>
+
+    <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">
+            groups
+        </span>
+
+        <input
+            type="text"
+            value="{{ batch }}"
+            readonly
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-outline rounded-lg text-sm cursor-not-allowed">
+    </div>
+</div>
+<div class="space-y-1.5">
 <label class="block text-sm font-semibold text-text-main">Event Brochure (Optional)</label>
 <label class="group cursor-pointer flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-outline rounded-lg bg-background hover:bg-blue-50 hover:border-primary transition-all duration-200" for="brochureInput">
 <div class="flex flex-col items-center justify-center pt-5 pb-6">
