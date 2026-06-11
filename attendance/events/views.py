@@ -45,13 +45,26 @@ def event_list(request):
 def create_event(request):
     if request.method == 'POST':
 
-        Event.objects.create(
+        event = Event.objects.create(
             event_name=request.POST.get('event_name'),
             college_name=request.POST.get('college_name'),
             event_date=request.POST.get('event_date'),
             brochure=request.FILES.get('brochure'),
             created_by=request.user,
             batch=request.user.student_profile.batch
+        )
+
+        students = Student.objects.filter(batch=event.batch)
+
+        notification = Notification.objects.create(
+            title="New OD Event Available",
+            message=f"{event.event_name} at {event.college_name} on {event.event_date}",
+            type="od",
+            url="/od/events/"
+        )
+
+        notification.users.set(
+            [student.user for student in students if student.user]
         )
 
         return redirect('event_list')
