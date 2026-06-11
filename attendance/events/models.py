@@ -9,9 +9,7 @@ class Event(models.Model):
     batch = models.CharField(max_length=20)   # NEW
 
     brochure = models.FileField(
-        upload_to='brochures/',
-        blank=True,
-        null=True
+        upload_to='brochures/'
     )
 
     created_by = models.ForeignKey(
