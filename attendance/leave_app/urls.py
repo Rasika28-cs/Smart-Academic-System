@@ -158,5 +158,7 @@ urlpatterns = [
         views.parent_dashboard,
         name='parent_dashboard'
     ),
+     # Utilities
+    path('calculator/', views.calculator, name='calculator'),
 
-]
+]   
