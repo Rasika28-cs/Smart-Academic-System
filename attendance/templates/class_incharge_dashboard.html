@@ -555,8 +555,7 @@
                     <p>Approve or reject On-Duty requests</p>
                 </div>
             </a>
-        </div>
-        <div class="tiles">
+        
             <!-- Upload Defaulters -->
             <a class="tile" href="{% url 'defaulter_list' %}">
                 <div class="tile-icon tile-green">
@@ -564,23 +563,14 @@
                 </div>
                 <div>
                     <h3>Upload Defaulters</h3>
-                    <p>Upload Excel file of defaulter students</p>
+                    <p>Upload Excel file of defaulter students and Manage follow-up actions</p>
                 </div>
             </a>
 
-            <!-- View Defaulters -->
-            <a class="tile" href="{% url 'defaulter_list' %}">
-                <div class="tile-icon tile-red">
-                    <span class="material-symbols-outlined">report_problem</span>
-                </div>
-                <div>
-                    <h3>View Defaulters</h3>
-                    <p>Manage defaulter list and follow-up actions</p>
-                </div>
-            </a>
-            <a href="{% url 'upload_grades' %}" class="tile">
-                <div class="tile-icon tile-green">
-                    <i class="bi bi-file-earmark-arrow-up-fill"></i>
+            <!-- Upload Grades -->
+            <a class="tile" href="{% url 'upload_grades' %}" >
+                <div class="tile-icon tile-blue">
+                    <span class="material-symbols-outlined">cloud_upload</span>
                 </div>
 
                 <div>

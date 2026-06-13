@@ -71,19 +71,7 @@
 </head>
 
 <body class="min-h-screen flex flex-col">
-  <form method="get" class="mb-3">
-    <select name="batch" onchange="this.form.submit()">
-        <option value="">All Batches</option>
-
-        {% for b in batches %}
-        <option value="{{ b }}"
-            {% if selected_batch == b %}selected{% endif %}>
-            {{ b }}
-        </option>
-        {% endfor %}
-    </select>
-</form>
-  <!-- Top Navigation (Standardized from attendance.html) -->
+    <!-- Top Navigation (Standardized from attendance.html) -->
   <nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
     <a href="{% url 'dashboard' %}" class="flex items-center gap-2 font-bold text-primary text-lg no-underline">
       <span class="material-symbols-outlined text-2xl">school</span>
@@ -107,15 +95,38 @@
   <!-- Main Content -->
   <main class="flex-1 py-8 px-4 md:px-6 max-w-6xl mx-auto w-full">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-on-surface flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary">gavel</span>
-        Defaulter List
-      </h1>
-      <p class="text-on-surface-variant text-sm mt-1">
-        Manage and track actions for students with attendance shortages
-      </p>
-    </div>
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
+
+  <!-- Title -->
+  <div>
+    <h1 class="text-2xl font-bold text-on-surface flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">gavel</span>
+      Defaulter List
+    </h1>
+
+    <p class="text-on-surface-variant text-sm mt-1">
+      Manage and track actions for students with attendance shortages.
+    </p>
+  </div>
+
+  <!-- Batch Filter -->
+  <form method="get">
+    <select
+      name="batch"
+      onchange="this.form.submit()"
+      class="border border-outline rounded-lg px-7 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+    >
+      <option value="">All Batches</option>
+
+      {% for b in batches %}
+      <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>
+        {{ b }}
+      </option>
+      {% endfor %}
+    </select>
+  </form>
+
+</div>
 
     <!-- Upload Section -->
     <section class="bg-surface border border-outline rounded-xl p-6 mb-8 table-container">
