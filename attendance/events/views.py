@@ -59,7 +59,7 @@ def create_event(request):
         notification = Notification.objects.create(
             title="New OD Event Available",
             message=f"{event.event_name} at {event.college_name} on {event.event_date}",
-            type="od",
+            type="events",
             url="/events/events/"
         )
 

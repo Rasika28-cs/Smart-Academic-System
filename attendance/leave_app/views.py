@@ -1376,7 +1376,7 @@ def parent_dashboard(request):
         "grades": StudentGrade.objects.filter(student=student).select_related("upload").order_by("-id")[:10],
         "defaulters": DefaulterStudent.objects.filter(roll_no=student.roll_no).order_by("-year")[:5],
         "notifications": Notification.objects.filter(users=student.user)
-            .exclude(type__in=["assignment", "assignment_reminder"])
+            .exclude(type__in=["assignment", "assignment_reminder", "events"])
             .order_by("-created_at")[:10],
     })
 
