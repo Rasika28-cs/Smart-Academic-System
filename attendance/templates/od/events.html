@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Events - Smart Attendance</title>
-<!-- Tailwind for layout utilities, though primary styles in <style> -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<script id="tailwind-config">
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <title>Events - Smart Attendance</title>
+  <!-- Tailwind for layout utilities, though primary styles in <style> -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
       theme: {
@@ -34,7 +38,7 @@
       }
     }
   </script>
-<style>
+  <style>
     :root {
       --primary: #2563eb;
       --secondary: #4f46e5;
@@ -108,7 +112,7 @@
       display: flex;
       flex-direction: column;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
     }
 
     .event-card:hover {
@@ -272,130 +276,161 @@
       .sa-page {
         padding: 1.5rem 1rem;
       }
+
       .events-grid {
         grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
-<!-- Top Navigation -->
-<nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
-<a class="flex items-center gap-2 font-bold text-primary text-lg no-underline" href="{% url 'student_dashboard' %}">
-<span class="material-symbols-outlined text-2xl">school</span>
-<span class="hidden sm:inline">Smart Attendance</span>
-</a>
-<ul class="flex gap-1 ml-auto list-none items-center">
-<li>
-<a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline" href="{% url 'student_dashboard' %}">
+  <!-- Top Navigation -->
+  <nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
+    <a class="flex items-center gap-2 font-bold text-primary text-lg no-underline" href="{% url 'student_dashboard' %}">
+      <span class="material-symbols-outlined text-2xl">school</span>
+      <span class="hidden sm:inline">Smart Attendance</span>
+    </a>
+    <ul class="flex gap-1 ml-auto list-none items-center">
+      <li>
+        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline"
+          href="{% url 'student_dashboard' %}">
           Dashboard
         </a>
-</li>
-<li>
-<a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline" href="{% url 'logout' %}">
+      </li>
+      <li>
+        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline"
+          href="{% url 'logout' %}">
           Logout
         </a>
-</li>
-</ul>
-</nav>
-<main class="flex-1">
-<div class="sa-page">
-<div class="page-header">
-<h1>🎉 Discover Events</h1>
-<p>Browse and apply for upcoming on-duty (OD) activities</p>
+      </li>
+    </ul>
+  </nav>
+  <main class="flex-1">
+    <div class="sa-page">
+      <div class="page-header">
+        <h1>🎉 Discover Events</h1>
+        <p>Browse and apply for upcoming on-duty (OD) activities</p>
+      </div>
+
+      {% if event_data %}
+      <div class="events-grid">
+        {% for item in event_data %}
+        {% with event=item.event count=item.count applied=item.applied %}
+        <div class="event-card">
+          <div class="event-brochure-container">
+            {% if event.brochure %}
+            <a href="{{ event.brochure.url }}" target="_blank" title="View Brochure">
+              <img src="{{ event.brochure.url }}" alt="{{ event.event_name }}" class="event-brochure">
+            </a>
+            {% else %}
+            <div class="event-placeholder">
+              <span class="material-symbols-outlined"
+                style="font-size: 3rem; color: var(--primary); opacity: 0.4;">event</span>
+            </div>
+            {% endif %}
+          </div>
+          <div class="event-body">
+            <div class="event-title">{{ event.event_name }}</div>
+            <div class="event-meta">
+              <div class="event-meta-row">
+                <span class="material-symbols-outlined">corporate_fare</span>
+                <span>{{ event.college_name }}</span>
+              </div>
+              <div class="event-meta-row">
+                <span class="material-symbols-outlined">calendar_today</span>
+                <span>{{ event.event_date }}</span>
+              </div>
+            </div>
+            <div class="slot-bar-wrap">
+              <div class="slot-label">
+                <span style="color: {% if count >= 8 %}#ef4444{% else %}#10b981{% endif %};">
+                  {% if count >= 8 %}
+                  Fully Booked
+                  {% else %}
+                  Availability
+                  {% endif %}
+                </span>
+                <span class="text-on-surface-variant">{{ count }}/8 slots</span>
+              </div>
+              <div class="slot-track">
+                <div class="slot-fill {% if count >= 8 %}full{% endif %}" style="width: {% widthratio count 8 100 %}%;">
+                </div>
+              </div>
+            </div>
+<div class="flex gap-2 mb-3">
+    <a href="{% url 'edit_event' event.id %}"
+       class="sa-btn sa-btn-warning"
+       style="width:50%;">
+        <span class="material-symbols-outlined">edit</span>
+        Edit
+    </a>
+
+    <form action="{% url 'delete_event' event.id %}"
+          method="POST"
+          style="width:50%;"
+          onsubmit="return confirm('Delete this event?');">
+        {% csrf_token %}
+        <button type="submit"
+                class="sa-btn"
+                style="background:#ef4444;color:white;width:100%;">
+            <span class="material-symbols-outlined">delete</span>
+            Delete
+        </button>
+    </form>
 </div>
 
-  {% if event_data %}
-  <div class="events-grid">
-    {% for item in event_data %}
-    {% with event=item.event count=item.count applied=item.applied %}
-    <div class="event-card">
-<div class="event-brochure-container">
-        {% if event.brochure %}
-          <img alt="{{ event.event_name }}" class="event-brochure" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOk48YGwUIz7ZZNVfsZjaNc8z90yfDn-iOiSbTi4Zfv9XV3zORl8umwNAe_3nkfTCNdC00IhA0KYkANHLq266W2SMW_0Ru1k9v0zuAMNqTU-YUNSg8H0wCs71Cxxs4bOvqUy8Ke4gWzQdL0MZQMdsc2Rydu6h5rpSki8NejlvuXIan_YsPABMIwYlARptwfKWk0eskMKVgtd8R4pzjfRWaERbUQLRmANBK_GRwZqH0ldeC3Vf_3KozlJzEDay1Ud_HKGyjYrEmO0pX"/>
-        {% else %}
-          <div class="event-placeholder">
-<span class="material-symbols-outlined" style="font-size: 3rem; color: var(--primary); opacity: 0.4;">event</span>
-</div>
-        {% endif %}
-      </div>
-<div class="event-body">
-<div class="event-title">{{ event.event_name }}</div>
-<div class="event-meta">
-<div class="event-meta-row">
-<span class="material-symbols-outlined">corporate_fare</span>
-<span>{{ event.college_name }}</span>
-</div>
-<div class="event-meta-row">
-<span class="material-symbols-outlined">calendar_today</span>
-<span>{{ event.event_date }}</span>
-</div>
-</div>
-<div class="slot-bar-wrap">
-<div class="slot-label">
-<span style="color: {% if count >= 8 %}#ef4444{% else %}#10b981{% endif %};">
-              {% if count >= 8 %}
-                Fully Booked
+            <div class="mt-auto">
+              {% if applied %}
+              <button class="sa-btn sa-btn-disabled" disabled="">
+                <span class="material-symbols-outlined">check_circle</span>
+                Applied
+              </button>
               {% else %}
-                Availability
-              {% endif %}
-            </span>
-<span class="text-on-surface-variant">{{ count }}/8 slots</span>
-</div>
-<div class="slot-track">
-<div class="slot-fill {% if count >= 8 %}full{% endif %}" style="width: {% widthratio count 8 100 %}%;">
-</div>
-</div>
-</div>
-<div class="mt-auto">
-          {% if applied %}
-            <button class="sa-btn sa-btn-disabled" disabled="">
-<span class="material-symbols-outlined">check_circle</span>
-              Applied
-            </button>
-          {% else %}
-            <form action="{% url 'apply_od' event.id %}" method="POST">
-              {% csrf_token %}
-              {% if count < 8 %}
-                <button class="sa-btn sa-btn-primary" type="submit">
-<span class="material-symbols-outlined">send</span>
+              <form action="{% url 'apply_od' event.id %}" method="POST">
+                {% csrf_token %}
+                {% if count < 8 %} <button class="sa-btn sa-btn-primary" type="submit">
+                  <span class="material-symbols-outlined">send</span>
                   Apply for OD
-                </button>
-              {% else %}
-                <button class="sa-btn sa-btn-warning" type="submit">
-<span class="material-symbols-outlined">hourglass_empty</span>
-                  Join Waitlist
-                </button>
+                  </button>
+                  {% else %}
+                  <button class="sa-btn sa-btn-warning" type="submit">
+                    <span class="material-symbols-outlined">hourglass_empty</span>
+                    Join Waitlist
+                  </button>
+                  {% endif %}
+              </form>
               {% endif %}
-            </form>
-          {% endif %}
+            </div>
+          </div>
         </div>
-</div>
-</div>
-    {% endwith %}
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="empty-state">
-<div class="empty-icon">
-<span class="material-symbols-outlined" style="font-size: 4rem;">event_busy</span>
-</div>
-<h3 class="font-bold text-lg mb-2">No Events Found</h3>
-<p class="text-on-surface-variant">There are currently no active events. Please check back later or contact your administrator.</p>
-</div>
-  {% endif %}
-</div>
-</main>
-<!-- Footer -->
-<footer class="bg-surface border-t border-outline text-center py-6 px-4">
-<p class="text-xs text-on-surface-variant">
-    © 2026 Smart Academic System • Department of Computer Science and Engineering
-  </p>
-</footer>
-<script>
-  // Soft scroll or interactions can be added here
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('Events page initialized');
-  });
-</script>
-</body></html>
+        {% endwith %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined" style="font-size: 4rem;">event_busy</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2">No Events Found</h3>
+        <p class="text-on-surface-variant">There are currently no active events. Please check back later or contact your
+          administrator.</p>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+  <!-- Footer -->
+  <footer class="bg-surface border-t border-outline text-center py-6 px-4">
+    <p class="text-xs text-on-surface-variant">
+      © 2026 Smart Academic System • Department of Computer Science and Engineering
+    </p>
+  </footer>
+  <script>
+    // Soft scroll or interactions can be added here
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Events page initialized');
+    });
+  </script>
+</body>
+
+</html>

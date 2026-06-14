@@ -254,14 +254,9 @@ def login_page(request):
     return render(request, "login.html")
 
 
-@login_required
 def logout_view(request):
-    # POST-only logout prevents CSRF-based logouts via GET
-    if request.method == "POST":
-        logger.info("User %s logged out", request.user.username)
-        logout(request)
-    return redirect("login_page")
-
+    logout(request)
+    return redirect('login_page')
 
 @csrf_protect
 def signup_page(request):

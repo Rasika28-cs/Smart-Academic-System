@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
 from .models import Event
@@ -60,7 +60,7 @@ def create_event(request):
             title="New OD Event Available",
             message=f"{event.event_name} at {event.college_name} on {event.event_date}",
             type="od",
-            url="/od/events/"
+            url="/events/events/"
         )
 
         notification.users.set(
@@ -76,3 +76,37 @@ def create_event(request):
             'batch': request.user.student_profile.batch
         }
     )
+
+@login_required
+def edit_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    if request.method == "POST":
+        event.event_name = request.POST.get("event_name")
+        event.college_name = request.POST.get("college_name")
+        event.event_date = request.POST.get("event_date")
+
+        if request.FILES.get("brochure"):
+            event.brochure = request.FILES.get("brochure")
+
+        event.save()
+        return redirect("event_list")
+
+    return render(
+        request,
+        "od/create_event.html",  # reuse existing template
+        {
+            "event": event,
+            "edit_mode": True,
+        }
+    )
+
+@login_required
+def delete_event(request, event_id):
+    event = Event.objects.get(id=event_id)
+
+    if request.method == "POST":
+        event.delete()
+        return redirect("event_list")
+
+    return redirect("event_list")

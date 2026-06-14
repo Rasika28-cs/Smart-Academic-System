@@ -109,7 +109,13 @@
             <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
               <span class="material-symbols-outlined text-primary">event_available</span>
             </div>
-            <h1 class="text-2xl font-bold text-text-main">Create New Event</h1>
+            <h1 class="text-2xl font-bold text-text-main">
+              {% if edit_mode %}
+              Edit Event
+              {% else %}
+              Create New Event
+              {% endif %}
+            </h1>
           </div>
           <p class="text-text-muted text-sm leading-relaxed">Fill in the details below to add a new on-duty event for
             student participation.</p>
@@ -124,8 +130,8 @@
                 class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">campaign</span>
               <input
                 class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm placeholder:text-text-muted/60"
-                id="event_name" name="event_name" placeholder="e.g. International Tech Fest 2026" required=""
-                type="text" />
+                id="event_name" name="event_name" placeholder="e.g. International Tech Fest 2026"
+                value="{{ event.event_name|default:'' }}" required type="text" />
             </div>
           </div>
           <div class="space-y-1.5">
@@ -135,8 +141,8 @@
                 class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">account_balance</span>
               <input
                 class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm placeholder:text-text-muted/60"
-                id="college_name" name="college_name" placeholder="e.g. Anna University, Chennai" required=""
-                type="text" />
+                id="college_name" name="college_name" placeholder="e.g. Anna University, Chennai"
+                value="{{ event.college_name|default:'' }}" required type="text" />
             </div>
           </div>
           <div class="space-y-1.5">
@@ -145,7 +151,7 @@
               <span
                 class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">calendar_today</span>
               <input class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm"
-                id="event_date" name="event_date" required="" type="date" />
+                id="event_date" name="event_date" value="{{ event.event_date|date:'Y-m-d' }}" required type="date" />
             </div>
           </div>
 
@@ -160,7 +166,7 @@
                 <p class="text-xs text-text-muted px-4 text-center group-hover:text-primary" id="brochureName">Click to
                   upload image or PDF brochure</p>
               </div>
-              <input class="hidden" id="brochureInput" name="brochure" required
+              <input class="hidden" id="brochureInput" name="brochure"
                 onchange="document.getElementById('brochureName').textContent = this.files[0]?.name || 'Click to upload image or PDF brochure'; document.getElementById('brochureName').classList.add('font-semibold');"
                 type="file" />
             </label>
@@ -169,8 +175,15 @@
             <button
               class="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-all duration-200 shadow-lg shadow-blue-200 active:scale-[0.98]"
               type="submit">
-              <span class="material-symbols-outlined">add_circle</span>
+              <span class="material-symbols-outlined">
+                {% if edit_mode %}edit{% else %}add_circle{% endif %}
+              </span>
+
+              {% if edit_mode %}
+              Update Event
+              {% else %}
               Create Event
+              {% endif %}
             </button>
           </div>
         </form>
