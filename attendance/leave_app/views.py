@@ -376,16 +376,23 @@ def attendance(request):
         return err
     records = Attendance.objects.filter(student=student).order_by("-date")
     return render(request, "attendance.html", {"attendance": records})
-
+ 
 
 @login_required
 def leave_status(request):
     student, err = _student_required(request)
     if err:
         return err
-    leaves = LeaveRequest.objects.filter(student=student).order_by("-created_at")
-    return render(request, "leave_status.html", {"leaves": leaves})
 
+    seven_days_ago = timezone.now() - timedelta(days=7)
+
+    leaves = LeaveRequest.objects.filter(
+        student=student,
+        created_at__gte=seven_days_ago
+    ).order_by("-created_at")
+
+    return render(request, "leave_status.html", {"leaves": leaves})
+  
 
 @login_required
 def apply_page(request):
