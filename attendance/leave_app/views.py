@@ -55,7 +55,7 @@ from django.views.decorators.http import require_GET, require_POST
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
-
+from .utils import send_notification
 # Local models
 from .models import (
     ActivityLog, Assignment, Attendance, DefaulterStudent,
@@ -216,7 +216,9 @@ def login_page(request):
         next_url = request.POST.get("next") or request.GET.get("next", "")
 
         # Sanitise next_url to prevent open-redirect
-        if next_url and not next_url.startswith("/"):
+        from django.utils.http import url_has_allowed_host_and_scheme
+
+        if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
             next_url = ""
 
         user = authenticate(request, username=username, password=password)
@@ -374,8 +376,16 @@ def attendance(request):
     student, err = _student_required(request)
     if err:
         return err
-    records = Attendance.objects.filter(student=student).order_by("-date")
-    return render(request, "attendance.html", {"attendance": records})
+
+    records = (
+        Attendance.objects
+        .filter(student=student)
+        .order_by("-date")[:200]
+    )
+
+    return render(request, "attendance.html", {
+        "attendance": records
+    })
  
 
 @login_required
@@ -460,6 +470,7 @@ def apply_leave_api(request):
 
     if from_date < date.today():
         return JsonResponse({"status": "error", "message": "Past date not allowed"}, status=400)
+
     if from_date > to_date:
         return JsonResponse({"status": "error", "message": "Invalid date range"}, status=400)
 
@@ -468,8 +479,12 @@ def apply_leave_api(request):
         from_date__lte=to_date,
         to_date__gte=from_date,
     ).exclude(status="REJECTED")
+
     if overlap.exists():
-        return JsonResponse({"status": "error", "message": "A leave request already exists for this period"}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "A leave request already exists for this period"},
+            status=400
+        )
 
     reason = data.get("reason", "").strip()
     if not reason:
@@ -484,28 +499,34 @@ def apply_leave_api(request):
             status="PENDING",
         )
 
-        notif = Notification.objects.create(
-            title="New Leave Request",
-            message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
-            type="leave",
-            url=reverse("today_leaves"),
-        )
-        recipients = []
-        if student.mentor:
-            recipients.append(student.mentor)
-        if student.class_incharge:
-            recipients.append(student.class_incharge)
+        # -----------------------------
+        # RECIPIENTS (clean + safe)
+        # -----------------------------
+        recipients = [
+            student.mentor,
+            student.class_incharge
+        ]
+        recipients = [u for u in recipients if u]  # remove None safely
+
+        # -----------------------------
+        # SINGLE NOTIFICATION SYSTEM
+        # -----------------------------
         if recipients:
-            notif.users.add(*recipients)
+            send_notification(
+                title="New Leave Request",
+                message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
+                notif_type="leave",
+                url=reverse("today_leaves"),
+                users=recipients
+            )
 
     ActivityLog.objects.create(
         user=request.user,
         action=f"Applied leave {from_date} to {to_date}",
         ip_address=request.META.get("REMOTE_ADDR", ""),
     )
+
     return JsonResponse({"status": "success"})
-
-
 # ---------------------------------------------------------------------------
 # 5. DASHBOARDS
 # ---------------------------------------------------------------------------
@@ -557,8 +578,14 @@ def teacher_dashboard(request):
 # ---------------------------------------------------------------------------
 
 
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
+
 @login_required
+@require_POST
+@csrf_protect
 def review_leave(request, leave_id: int, action: str):
+
     if action not in ("approve", "reject"):
         raise PermissionDenied
 
@@ -566,23 +593,39 @@ def review_leave(request, leave_id: int, action: str):
 
     try:
         with transaction.atomic():
+
             leave = (
                 LeaveRequest.objects
-                .select_related("student", "student__user", "student__mentor", "student__class_incharge")
+                .select_related(
+                    "student",
+                    "student__user",
+                    "student__mentor",
+                    "student__class_incharge",
+                    "student__parent"
+                )
                 .select_for_update()
                 .get(id=leave_id)
             )
 
-            is_mentor_of = leave.student.mentor == user
-            is_ci_of = leave.student.class_incharge == user
+            # -------------------------
+            # PERMISSION CHECK
+            # -------------------------
+            is_mentor_of = getattr(leave.student.mentor, "id", None) == user.id
+            is_ci_of = getattr(leave.student.class_incharge, "id", None) == user.id
 
             if not (is_mentor_of or is_ci_of or user.is_superuser):
                 raise PermissionDenied
 
+            # -------------------------
+            # ALREADY PROCESSED CHECK
+            # -------------------------
             if leave.status != "PENDING":
                 messages.warning(request, f"This leave was already {leave.status}.")
                 return _redirect_after_review(user, leave)
 
+            # -------------------------
+            # UPDATE STATUS
+            # -------------------------
             if action == "approve":
                 leave.status = "APPROVED"
                 msg = "Leave approved"
@@ -600,14 +643,37 @@ def review_leave(request, leave_id: int, action: str):
             leave.reviewed_at = timezone.now()
             leave.save()
 
-            notification = Notification.objects.create(
-                title="Leave Update",
-                message=msg,
-                type="leave",
-                url=reverse("leave_status"),
-            )
-            notification.users.add(leave.student.user)
+            # -------------------------
+            # NOTIFICATION (SAFE FIX)
+            # -------------------------
+            recipients = [leave.student.user]
 
+            # SAFE parent access
+            parent_user = None
+            try:
+                parent = leave.student.parent
+                if parent:
+                    parent_user = getattr(parent, "user", None)
+            except Exception:
+                parent_user = None
+
+            if parent_user:
+                recipients.append(parent_user)
+
+            recipients = [u for u in recipients if u]
+
+            if recipients:
+                send_notification(
+                    title="Leave Update",
+                    message=msg,
+                    notif_type="leave",
+                    url=reverse("leave_status"),
+                    users=recipients
+                )
+
+            # -------------------------
+            # ACTIVITY LOG
+            # -------------------------
             ActivityLog.objects.create(
                 user=user,
                 action=f"{action.upper()} leave #{leave.id}",
@@ -618,7 +684,6 @@ def review_leave(request, leave_id: int, action: str):
         raise Http404
 
     return _redirect_after_review(user, leave)
-
 
 def _create_attendance_for_leave(leave: LeaveRequest) -> None:
     """Create Leave attendance records for each day of an approved leave."""
@@ -661,9 +726,13 @@ def _create_attendance_for_leave(leave: LeaveRequest) -> None:
 
 
 @login_required
+@require_POST
+@csrf_protect
 def mark_attendance(request):
-    if not request.user.is_staff:
-        return HttpResponse("Unauthorized", status=403)
+    from django.core.exceptions import PermissionDenied
+
+    if not request.user.groups.filter(name="Teacher").exists():
+        raise PermissionDenied
 
     today = date.today()
     batch = request.GET.get("batch", "")
@@ -984,8 +1053,7 @@ def generate_qr(request):
 
 
 @login_required
-@role_required("ClassIncharge")
-@role_required("Mentor")
+@role_required("Mentor", "ClassIncharge")
 def upload_new_admissions(request):
     """Upload new student admissions from a CSV file."""
     if request.method != "POST":
@@ -1076,8 +1144,9 @@ def get_notifications(request):
     return JsonResponse(data)
 
 
-@require_POST
 @login_required
+@csrf_protect
+@require_POST
 def mark_as_read(request, id: int):
     notif = get_object_or_404(Notification, id=id, users=request.user)
     notif.read_by.add(request.user)
@@ -1085,11 +1154,12 @@ def mark_as_read(request, id: int):
 
 
 @login_required
+@csrf_protect
 @require_POST
-@role_required("Mentor")
-@role_required("ClassIncharge")
+@role_required("Mentor", "ClassIncharge")
 def upload_defaulters(request):
     """Upload defaulter list from an Excel file. Restricted to HOD."""
+
     file = request.FILES.get("excel_file")
     err = _validate_upload(file)
     if err:
@@ -1101,6 +1171,7 @@ def upload_defaulters(request):
 
         required_cols = ["Roll No", "Name", "Staff Incharge", "Dept", "Year", "Reason"]
         missing = [c for c in required_cols if c not in df.columns]
+
         if missing:
             return JsonResponse(
                 {"status": "error", "message": f"Missing columns: {', '.join(missing)}"},
@@ -1110,7 +1181,9 @@ def upload_defaulters(request):
         df["Dept"] = df["Dept"].fillna("").astype(str).str.strip().str.upper()
 
         uploaded_count = 0
+
         for _, row in df.iterrows():
+
             roll_no_str = str(row["Roll No"]).strip()
             reason_str = str(row["Reason"]).strip()
             dept_str = str(row["Dept"]).strip()
@@ -1127,34 +1200,47 @@ def upload_defaulters(request):
                     "name": str(row["Name"]).strip(),
                     "staff_incharge": str(row["Staff Incharge"]).strip(),
                     "department": dept_str,
-                    "year": int(row["Year"]),
+                    "year": int(float(row["Year"])),  # safer conversion
                     "reason": reason_str,
                 },
             )
 
             if should_notify:
                 try:
-                    student_obj = Student.objects.select_related("user").get(roll_no=roll_no_str)
+                    student_obj = Student.objects.select_related("user").get(
+                        roll_no=roll_no_str
+                    )
+
                     if student_obj.user:
-                        notif = Notification.objects.create(
+                        send_notification(
                             title="Defaulter Alert",
                             message=f"You have been marked as a defaulter. Reason: {reason_str}",
-                            type="defaulter",
+                            notif_type="defaulter",
                             url=reverse("student_defaulter"),
+                            users=[student_obj.user],
                         )
-                        notif.users.add(student_obj.user)
+
                 except Student.DoesNotExist:
                     pass
 
             uploaded_count += 1
 
-        logger.info("upload_defaulters: %d records by %s", uploaded_count, request.user)
-        return JsonResponse({"status": "success", "message": f"{uploaded_count} records uploaded"})
+        logger.info(
+            "upload_defaulters: %d records by %s",
+            uploaded_count,
+            request.user,
+        )
+
+        return JsonResponse(
+            {"status": "success", "message": f"{uploaded_count} records uploaded"}
+        )
 
     except Exception as exc:
         logger.exception("upload_defaulters failed: %s", exc)
-        return JsonResponse({"status": "error", "message": "Failed to process file."}, status=500)
-
+        return JsonResponse(
+            {"status": "error", "message": "Failed to process file."},
+            status=500,
+        )
 
 @login_required
 def defaulter_list(request):
@@ -1172,8 +1258,7 @@ def defaulter_list(request):
 
 @login_required
 @require_POST
-@role_required("ClassIncharge")
-@role_required("Mentor")
+@role_required("Mentor", "ClassIncharge")
 def update_action(request, id: int):
     try:
         data = json.loads(request.body)
@@ -1230,6 +1315,8 @@ def manage_assignments(request):
 
 
 @login_required
+@csrf_protect
+@require_POST
 @role_required("ClassRep")
 def create_assignment(request):
     student = get_object_or_404(Student, user=request.user)
@@ -1268,13 +1355,14 @@ def create_assignment(request):
 
             target_users = [s.user for s in batch_students]
             if target_users:
-                notif = Notification.objects.create(
+                send_notification(
                     title="New Assignment",
                     message=f"{title} has been posted.",
-                    type="assignment",
+                    notif_type="assignment",
                     url=reverse("assignment_list"),
+                    users=target_users
                 )
-                notif.users.add(*target_users)
+                
 
         messages.success(request, "Assignment created successfully and students notified.")
         return redirect("cr_dashboard")
@@ -1287,6 +1375,8 @@ def create_assignment(request):
 
 
 @login_required
+@csrf_protect
+@require_POST
 @role_required("ClassRep")
 def edit_assignment(request, assignment_id: int):
     student = get_object_or_404(Student, user=request.user)
@@ -1326,6 +1416,8 @@ def edit_assignment(request, assignment_id: int):
 
 
 @login_required
+@csrf_protect
+@require_POST
 @role_required("ClassRep")
 def delete_assignment(request, assignment_id: int):
     student = get_object_or_404(Student, user=request.user)
@@ -1418,14 +1510,16 @@ def parent_view_defaulters(request):
     defaulters = DefaulterStudent.objects.filter(roll_no=parent.student.roll_no)
     return render(request, "parent_defaulters.html", {"defaulters": defaulters, "student": parent.student})
 
-
 @login_required
 def parent_view_od(request):
     parent = get_object_or_404(ParentProfile, user=request.user)
+
     ods = ODApplication.objects.filter(student=parent.student.user)
-    return render(request, "parent_od.html", {"ods": ods, "student": parent.student})
 
-
+    return render(request, "parent_od.html", {
+        "ods": ods,
+        "student": parent.student
+    })
 @login_required
 def parent_view_notifications(request):
     parent = get_object_or_404(ParentProfile, user=request.user)
@@ -1442,15 +1536,25 @@ def parent_view_notifications(request):
 # ---------------------------------------------------------------------------
 
 
+
 @login_required
 @require_POST
 def mark_all_notifications_read(request):
-    notifications = Notification.objects.filter(users=request.user).exclude(read_by=request.user)
-    for n in notifications:
-        n.read_by.add(request.user)
+    notif_ids = Notification.objects.filter(
+        users=request.user
+    ).exclude(read_by=request.user).values_list("id", flat=True)
+
+    through = Notification.read_by.through
+
+    through.objects.bulk_create(
+        [
+            through(notification_id=nid, user_id=request.user.id)
+            for nid in notif_ids
+        ],
+        ignore_conflicts=True
+    )
+
     return JsonResponse({"status": "success"})
-
-
 @login_required
 @require_POST
 def delete_notification(request, id: int):
@@ -1482,57 +1586,75 @@ def view_activity_logs(request):
 # ---------------------------------------------------------------------------
 
 
+
 @login_required
+@csrf_protect
+@require_POST
 @role_required("ClassRep")
 def create_timetable_entry(request):
-    if request.method == "POST":
-        day = request.POST.get("day", "").strip()
-        room = request.POST.get("room", "").strip()
-        start = request.POST.get("start_time", "").strip()
-        end = request.POST.get("end_time", "").strip()
-        teacher_id = request.POST.get("teacher", "").strip()
-        subject_id = request.POST.get("subject", "").strip()
-        batch = request.POST.get("batch", "").strip()
-        dept_id = request.POST.get("department", "").strip()
+    day = request.POST.get("day", "").strip()
+    room = request.POST.get("room", "").strip()
+    start = request.POST.get("start_time", "").strip()
+    end = request.POST.get("end_time", "").strip()
+    teacher_id = request.POST.get("teacher", "").strip()
+    subject_id = request.POST.get("subject", "").strip()
+    batch = request.POST.get("batch", "").strip()
+    dept_id = request.POST.get("department", "").strip()
 
-        if not all([day, room, start, end, teacher_id, subject_id, batch, dept_id]):
-            messages.error(request, "All fields are required.")
-            return redirect("create_timetable_entry")
+    if not all([day, room, start, end, teacher_id, subject_id, batch, dept_id]):
+        messages.error(request, "All fields are required.")
+        return redirect("create_timetable_entry")
 
-        if start >= end:
-            messages.error(request, "Start time must be before end time.")
-            return redirect("create_timetable_entry")
+    try:
+        start_time = datetime.strptime(start, "%H:%M").time()
+        end_time = datetime.strptime(end, "%H:%M").time()
+    except ValueError:
+        messages.error(request, "Invalid time format.")
+        return redirect("create_timetable_entry")
 
-        teacher_clash = Timetable.objects.filter(
-            day=day, teacher_id=teacher_id,
-            start_time__lt=end, end_time__gt=start,
-        ).exists()
-        room_clash = Timetable.objects.filter(
-            day=day, room=room,
-            start_time__lt=end, end_time__gt=start,
-        ).exists()
+    if start_time >= end_time:
+        messages.error(request, "Start time must be before end time.")
+        return redirect("create_timetable_entry")
 
+    teacher_clash = Timetable.objects.filter(
+        day=day,
+        teacher_id=teacher_id,
+        start_time__lt=end_time,
+        end_time__gt=start_time,
+    ).exists()
+
+    room_clash = Timetable.objects.filter(
+        day=day,
+        room=room,
+        start_time__lt=end_time,
+        end_time__gt=start_time,
+    ).exists()
+
+    if teacher_clash or room_clash:
+        msg = []
         if teacher_clash:
-            messages.error(request, "Teacher is already assigned to another class during this time.")
-        elif room_clash:
-            messages.error(request, "Room is already occupied during this time.")
-        else:
-            department = get_object_or_404(Department, id=dept_id)
-            Timetable.objects.create(
-                department=department, batch=batch,
-                subject_id=subject_id, teacher_id=teacher_id,
-                day=day, start_time=start, end_time=end, room=room,
-            )
-            messages.success(request, "Timetable entry created successfully.")
+            msg.append("Teacher conflict")
+        if room_clash:
+            msg.append("Room conflict")
+        messages.error(request, " | ".join(msg))
+        return redirect("create_timetable_entry")
 
-        return redirect("view_timetable")
+    department = get_object_or_404(Department, id=dept_id)
 
-    return render(request, "create_timetable.html", {
-        "departments": Department.objects.all(),
-        "subjects": Subject.objects.all(),
-        "teachers": User.objects.filter(is_staff=True),
-    })
+    with transaction.atomic():
+        Timetable.objects.create(
+            department=department,
+            batch=batch,
+            subject_id=subject_id,
+            teacher_id=teacher_id,
+            day=day,
+            start_time=start_time,
+            end_time=end_time,
+            room=room,
+        )
 
+    messages.success(request, "Timetable entry created successfully.")
+    return redirect("view_timetable")
 
 # ---------------------------------------------------------------------------
 # 21. GRADE UPLOADS
@@ -1540,8 +1662,9 @@ def create_timetable_entry(request):
 
 
 @login_required
-@role_required("Mentor")
-@role_required("ClassIncharge")
+@csrf_protect
+@require_POST
+@role_required("Mentor", "ClassIncharge")
 def upload_grades(request):
     if request.method != "POST":
         return render(request, "upload_grades.html")
@@ -1604,14 +1727,14 @@ def upload_grades(request):
                     )
 
             if student.id not in notified_student_ids and student.user:
-                notif = Notification.objects.create(
+                send_notification(
                     title="Grade Published",
                     message=f"Grades have been uploaded for {title}.",
-                    type="grade",
+                    notif_type="grade",
                     url=reverse("student_grades"),
+                    users=student.user
                 )
-                notif.users.add(student.user)
-                notified_student_ids.add(student.id)
+                
 
     logger.info("upload_grades: %d students notified by %s", len(notified_student_ids), request.user)
     return redirect("upload_grades")

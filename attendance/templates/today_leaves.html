@@ -244,49 +244,59 @@
               </td>
 
               <!-- Action Buttons -->
-              <td class="px-6 py-5 text-right whitespace-nowrap">
-                {% if leave.status == "PENDING" %}
-                  <div class="flex items-center justify-end gap-2">
-                    <a href="/leave/review/{{ leave.id }}/approve/"
-                       onclick="return confirm('Approve leave for {{ leave.student.name|escapejs }}?');"
-                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                              bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold
-                              transition shadow-sm">
-                      <span class="material-symbols-outlined text-sm">check</span>
-                      Approve
-                    </a>
-                    <a href="/leave/review/{{ leave.id }}/reject/"
-                       onclick="return confirm('Reject leave for {{ leave.student.name|escapejs }}?');"
-                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                              bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold
-                              transition shadow-sm">
-                      <span class="material-symbols-outlined text-sm">close</span>
-                      Reject
-                    </a>
-                  </div>
-                {% else %}
-                  <div class="flex items-center justify-end gap-2">
-                    <button disabled
-                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                                   bg-slate-100 text-slate-400 text-xs font-semibold
-                                   cursor-not-allowed border border-slate-200">
-                      <span class="material-symbols-outlined text-sm text-slate-300">check</span>
-                      Approve
-                    </button>
-                    <button disabled
-                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                                   bg-slate-100 text-slate-400 text-xs font-semibold
-                                   cursor-not-allowed border border-slate-200">
-                      <span class="material-symbols-outlined text-sm text-slate-300">close</span>
-                      Reject
-                    </button>
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg
-                                 bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200">
-                      Completed
-                    </span>
-                  </div>
-                {% endif %}
-              </td>
+             <!-- Action Buttons -->
+<td class="px-6 py-5 text-right whitespace-nowrap">
+  {% if leave.status == "PENDING" %}
+    <div class="flex items-center justify-end gap-2">
+      <!-- Approve Button via POST Form -->
+      <form method="POST" action="{% url 'review_leave' leave.id 'approve' %}" class="inline">
+        {% csrf_token %}
+        <button type="submit"
+                onclick="return confirm('Approve leave for {{ leave.student.name|escapejs }}?');"
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                       bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold
+                       transition shadow-sm">
+          <span class="material-symbols-outlined text-sm">check</span>
+          Approve
+        </button>
+      </form>
+      
+      <!-- Reject Button via POST Form -->
+      <form method="POST" action="{% url 'review_leave' leave.id 'reject' %}" class="inline">
+        {% csrf_token %}
+        <button type="submit"
+                onclick="return confirm('Reject leave for {{ leave.student.name|escapejs }}?');"
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                       bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold
+                       transition shadow-sm">
+          <span class="material-symbols-outlined text-sm">close</span>
+          Reject
+        </button>
+      </form>
+    </div>
+  {% else %}
+    <div class="flex items-center justify-end gap-2">
+      <button disabled
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                     bg-slate-100 text-slate-400 text-xs font-semibold
+                     cursor-not-allowed border border-slate-200">
+        <span class="material-symbols-outlined text-sm text-slate-300">check</span>
+        Approve
+      </button>
+      <button disabled
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                     bg-slate-100 text-slate-400 text-xs font-semibold
+                     cursor-not-allowed border border-slate-200">
+        <span class="material-symbols-outlined text-sm text-slate-300">close</span>
+        Reject
+      </button>
+      <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg
+                   bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200">
+        Completed
+      </span>
+    </div>
+  {% endif %}
+</td>
 
             </tr>
             {% empty %}
