@@ -546,7 +546,7 @@ def teacher_dashboard(request):
         "pending_od": ODApplication.objects.filter(status="pending").count(),
     }
     if request.user.groups.filter(name="ClassIncharge").exists():
-        return render(request, "ci_dashboard.html", context)
+        return render(request, "class_incharge_dashboard.html", context)
     if request.user.groups.filter(name="Mentor").exists():
         return render(request, "mentor_dashboard.html", context)
     return render(request, "teacher_dashboard.html", context)
@@ -984,7 +984,8 @@ def generate_qr(request):
 
 
 @login_required
-@role_required("HOD")
+@role_required("ClassIncharge")
+@role_required("Mentor")
 def upload_new_admissions(request):
     """Upload new student admissions from a CSV file."""
     if request.method != "POST":
@@ -1085,7 +1086,8 @@ def mark_as_read(request, id: int):
 
 @login_required
 @require_POST
-@role_required("HOD")
+@role_required("Mentor")
+@role_required("ClassIncharge")
 def upload_defaulters(request):
     """Upload defaulter list from an Excel file. Restricted to HOD."""
     file = request.FILES.get("excel_file")
@@ -1170,7 +1172,8 @@ def defaulter_list(request):
 
 @login_required
 @require_POST
-@role_required("HOD")
+@role_required("ClassIncharge")
+@role_required("Mentor")
 def update_action(request, id: int):
     try:
         data = json.loads(request.body)
@@ -1537,7 +1540,8 @@ def create_timetable_entry(request):
 
 
 @login_required
-@role_required("HOD")
+@role_required("Mentor")
+@role_required("ClassIncharge")
 def upload_grades(request):
     if request.method != "POST":
         return render(request, "upload_grades.html")

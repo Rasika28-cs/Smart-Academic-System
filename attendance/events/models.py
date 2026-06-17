@@ -6,7 +6,15 @@ class Event(models.Model):
     event_name = models.CharField(max_length=100)
     event_date = models.DateField()
 
-    batch = models.CharField(max_length=20)   # NEW
+    BATCH_CHOICES = [
+    ('2024-2028', '2024-2028'),
+    ('2025-2029', '2025-2029'),
+]
+
+    batch = models.CharField(
+        max_length=20,
+        choices=BATCH_CHOICES
+    )# NEW
 
     brochure = models.FileField(
         upload_to='brochures/'
