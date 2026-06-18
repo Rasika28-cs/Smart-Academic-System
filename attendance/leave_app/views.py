@@ -781,10 +781,24 @@ def _create_attendance_for_leave(leave: LeaveRequest) -> None:
 @require_POST
 @csrf_protect
 def mark_attendance(request):
-    from django.core.exceptions import PermissionDenied
 
-    if not request.user.groups.filter(name="Teacher").exists():
-        raise PermissionDenied
+    is_teacher = (
+        request.user.is_staff
+        or request.user.is_superuser
+        or request.user.groups.filter(
+            name__in=[
+                "Teacher",
+                "Mentor",
+                "ClassIncharge",
+                "HOD",
+            ]
+        ).exists()
+    )
+
+    if not is_teacher:
+        raise PermissionDenied(
+            "Only authorised staff can mark attendance."
+        )
 
     today = date.today()
     batch = request.GET.get("batch", "")
