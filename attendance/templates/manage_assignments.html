@@ -186,13 +186,22 @@
                                         Edit
                                     </a>
 
-                                    <a href="{% url 'delete_assignment' assignment.id %}"
-                                        onclick="return confirm('Delete this assignment?')"
-                                        class="inline-flex items-center gap-1 px-4 py-2 text-error hover:bg-error/5 rounded-lg font-bold transition-all">
-                                        <span class="material-symbols-outlined text-[18px]">delete</span>
-                                        Delete
-                                    </a>
+                                  <form method="POST"
+      action="{% url 'delete_assignment' assignment.id %}"
+      style="display:inline;">
+    {% csrf_token %}
 
+    <button type="submit"
+            onclick="return confirm('Delete this assignment?')"
+            class="inline-flex items-center gap-1 px-4 py-2 text-error hover:bg-error/5 rounded-lg font-bold transition-all bg-transparent border-0 cursor-pointer">
+
+        <span class="material-symbols-outlined text-[18px]">
+            delete
+        </span>
+
+        Delete
+    </button>
+</form>
                                 </div>
                             </td>
                         </tr>
