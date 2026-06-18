@@ -1637,10 +1637,18 @@ def parent_dashboard(request):
     student = parent.student
 
     attendance_qs = Attendance.objects.filter(student=student)
-    total = attendance_qs.count()
-    present = attendance_qs.filter(status="Present").count()
-    leave = attendance_qs.filter(status="Leave").count()
-    absent = attendance_qs.filter(status="Absent").count()
+
+    stats = attendance_qs.aggregate(
+        total=Count("id"),
+        present=Count("id", filter=Q(status="Present")),
+        leave=Count("id", filter=Q(status="Leave")),
+        absent=Count("id", filter=Q(status="Absent")),
+    )
+
+    total = stats["total"] or 0
+    present = stats["present"] or 0
+    leave = stats["leave"] or 0
+    absent = stats["absent"] or 0
     attendance_percent = _calc_attendance_percent(leave, absent)
 
     return render(request, "parent_dashboard.html", {
