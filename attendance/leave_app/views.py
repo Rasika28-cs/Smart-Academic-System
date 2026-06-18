@@ -1520,44 +1520,71 @@ def create_assignment(request):
 
 @login_required
 @csrf_protect
-@require_POST
 @role_required("ClassRep")
 def edit_assignment(request, assignment_id: int):
     student = get_object_or_404(Student, user=request.user)
-    assignment = get_object_or_404(Assignment, id=assignment_id, batch=student.batch)
 
-    if request.method == "POST":
-        title = request.POST.get("title", "").strip()
-        if not title:
-            messages.error(request, "Title is required.")
-            return redirect("edit_assignment", assignment_id=assignment_id)
+    assignment = get_object_or_404(
+        Assignment,
+        id=assignment_id,
+        batch=student.batch
+    )
 
-        file = request.FILES.get("file")
-        if file:
-            err = _validate_upload(file)
-            if err:
-                messages.error(request, err)
-                return redirect("edit_assignment", assignment_id=assignment_id)
+    # ---------------- GET ----------------
+    if request.method == "GET":
+        return render(
+            request,
+            "create_assignment.html",
+            {
+                "assignment": assignment,
+                "subjects": Subject.objects.all(),
+                "batch": student.batch,
+                "page_title": "Edit Assignment",
+                "button_text": "Update Assignment",
+            },
+        )
 
-        assignment.title = title
-        assignment.description = request.POST.get("description", "").strip()
-        assignment.subject_id = request.POST.get("subject")
-        assignment.due_date = request.POST.get("due_date")
-        if file:
-            assignment.file = file
-        assignment.save()
+    # ---------------- POST ----------------
+    title = request.POST.get("title", "").strip()
 
-        messages.success(request, "Assignment updated successfully.")
-        return redirect("manage_assignments")
+    if not title:
+        messages.error(request, "Title is required.")
+        return redirect(
+            "edit_assignment",
+            assignment_id=assignment_id
+        )
 
-    return render(request, "create_assignment.html", {
-        "assignment": assignment,
-        "subjects": Subject.objects.all(),
-        "batch": student.batch,
-        "page_title": "Edit Assignment",
-        "button_text": "Update Assignment",
-    })
+    file = request.FILES.get("file")
 
+    if file:
+        err = _validate_upload(file)
+        if err:
+            messages.error(request, err)
+            return redirect(
+                "edit_assignment",
+                assignment_id=assignment_id
+            )
+
+    assignment.title = title
+    assignment.description = request.POST.get(
+        "description",
+        ""
+    ).strip()
+
+    assignment.subject_id = request.POST.get("subject")
+    assignment.due_date = request.POST.get("due_date")
+
+    if file:
+        assignment.file = file
+
+    assignment.save()
+
+    messages.success(
+        request,
+        "Assignment updated successfully."
+    )
+
+    return redirect("manage_assignments")
 
 @login_required
 @csrf_protect
@@ -1835,37 +1862,78 @@ def create_timetable_entry(request):
 @require_POST
 @role_required("Mentor", "ClassIncharge")
 def upload_grades(request):
-    if request.method != "POST":
-        return render(request, "upload_grades.html")
-
     file = request.FILES.get("file")
+
     err = _validate_upload(file)
     if err:
-        return render(request, "upload_grades.html", {"error": err})
+        return render(
+            request,
+            "upload_grades.html",
+            {"error": err},
+        )
 
     title = request.POST.get("title", "").strip()
     semester = request.POST.get("semester", "").strip()
+
     if not title or not semester:
-        return render(request, "upload_grades.html", {"error": "Title and semester are required."})
+        return render(
+            request,
+            "upload_grades.html",
+            {"error": "Title and semester are required."},
+        )
 
     try:
-        if file.name.endswith(".csv"):
+        if file.name.lower().endswith(".csv"):
             df = pd.read_csv(file, encoding="utf-8-sig")
         else:
             df = pd.read_excel(file, engine="openpyxl")
+
     except Exception as exc:
-        logger.exception("upload_grades: failed to parse file: %s", exc)
-        return render(request, "upload_grades.html", {"error": "Could not parse file. Check the format."})
+        logger.exception(
+            "upload_grades: failed to parse file: %s",
+            exc,
+        )
+        return render(
+            request,
+            "upload_grades.html",
+            {
+                "error": (
+                    "Could not parse file. "
+                    "Check the format."
+                )
+            },
+        )
 
     df.columns = df.columns.str.strip()
 
-    reg_col = next((c for c in df.columns if "register" in c.lower()), None)
-    if not reg_col:
-        return render(request, "upload_grades.html", {"error": "Register No column not found."})
+    reg_col = next(
+        (
+            c
+            for c in df.columns
+            if "register" in c.lower()
+        ),
+        None,
+    )
 
-    subject_columns = [c for c in df.columns if c not in (reg_col, "Student Name")]
+    if not reg_col:
+        return render(
+            request,
+            "upload_grades.html",
+            {
+                "error": (
+                    "Register No column not found."
+                )
+            },
+        )
+
+    subject_columns = [
+        c
+        for c in df.columns
+        if c not in (reg_col, "Student Name")
+    ]
 
     with transaction.atomic():
+
         upload = GradeUpload.objects.create(
             title=title,
             semester=semester,
@@ -1873,42 +1941,87 @@ def upload_grades(request):
             uploaded_by=request.user,
         )
 
-        notified_student_ids: set = set()
+        notified_student_ids = set()
+
         for _, row in df.iterrows():
-            reg_no = str(row[reg_col]).strip()
-            if not reg_no or reg_no.lower() == "nan":
+
+            reg_no = str(
+                row[reg_col]
+            ).strip()
+
+            if (
+                not reg_no
+                or reg_no.lower() == "nan"
+            ):
                 continue
 
             try:
-                student = Student.objects.select_related("user").get(reg_no__iexact=reg_no)
+                student = (
+                    Student.objects
+                    .select_related("user")
+                    .get(reg_no__iexact=reg_no)
+                )
+
             except Student.DoesNotExist:
-                logger.debug("upload_grades: student not found for reg_no %s", reg_no)
+                logger.debug(
+                    "upload_grades: student not found for reg_no %s",
+                    reg_no,
+                )
                 continue
 
             for subject_code in subject_columns:
-                grade = str(row[subject_code]).strip()
-                if grade and grade.lower() != "nan":
+
+                grade = str(
+                    row[subject_code]
+                ).strip()
+
+                if (
+                    grade
+                    and grade.lower() != "nan"
+                ):
                     StudentGrade.objects.update_or_create(
                         upload=upload,
                         student=student,
                         subject_code=subject_code,
-                        defaults={"grade": grade},
+                        defaults={
+                            "grade": grade
+                        },
                     )
 
-            if student.id not in notified_student_ids and student.user:
+            # Prevent duplicate notifications
+            if (
+                student.user
+                and student.id not in notified_student_ids
+            ):
                 send_notification(
                     title="Grade Published",
-                    message=f"Grades have been uploaded for {title}.",
+                    message=(
+                        f"Grades have been uploaded "
+                        f"for {title}."
+                    ),
                     notif_type="grade",
-                    url=reverse("student_grades"),
-                    users=student.user
+                    url=reverse(
+                        "student_grades"
+                    ),
+                    users=[student.user],
                 )
-                
 
-    logger.info("upload_grades: %d students notified by %s", len(notified_student_ids), request.user)
+                notified_student_ids.add(
+                    student.id
+                )
+
+    logger.info(
+        "upload_grades: %d students notified by %s",
+        len(notified_student_ids),
+        request.user,
+    )
+
+    messages.success(
+        request,
+        f"Grades uploaded successfully for {len(notified_student_ids)} students."
+    )
+
     return redirect("upload_grades")
-
-
 @login_required
 def student_grades(request):
     student, err = _student_required(request)
