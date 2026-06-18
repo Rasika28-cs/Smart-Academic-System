@@ -52,6 +52,13 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET, require_POST
 
+from datetime import datetime
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.db import transaction
+from django.shortcuts import render, redirect, get_object_or_404
+
+
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
@@ -839,196 +846,334 @@ def today_leaves(request):
 @login_required
 @role_required("HOD")
 def hod_dashboard(request):
-    try:
-        managed_dept = request.user.managed_dept.first()
-    except Exception:
-        managed_dept = None
+    managed_dept = request.user.managed_dept.first()
 
     if not managed_dept:
-        return HttpResponse("You are not assigned to any department.", status=403)
+        return HttpResponse(
+            "You are not assigned to any department.",
+            status=403
+        )
 
     search_query = request.GET.get("search", "").strip()
     sort_order = request.GET.get("sort", "")
-    selected_date = request.GET.get("date", "")
+
+    from django.utils.dateparse import parse_date
+    selected_date = parse_date(request.GET.get("date", ""))
 
     students = (
         Student.objects.filter(department=managed_dept)
         .annotate(
             total=Count("attendance"),
-            p=Count("attendance", filter=Q(attendance__status="Present")),
-            l=Count("attendance", filter=Q(attendance__status="Leave")),
-            a=Count("attendance", filter=Q(attendance__status="Absent")),
+            p=Count(
+                "attendance",
+                filter=Q(attendance__status="Present")
+            ),
+            l=Count(
+                "attendance",
+                filter=Q(attendance__status="Leave")
+            ),
+            a=Count(
+                "attendance",
+                filter=Q(attendance__status="Absent")
+            ),
         )
         .annotate(
             perc=Case(
-                When(total__gt=0, then=100 - ((F("l") + F("a")) * 3)),
+                When(
+                    total__gt=0,
+                    then=(F("p") * 100.0) / F("total")
+                ),
                 default=0.0,
                 output_field=FloatField(),
             )
         )
-        .order_by("-perc")
     )
 
     if search_query:
         students = students.filter(
-            Q(name__icontains=search_query) | Q(roll_no__icontains=search_query)
+            Q(name__icontains=search_query)
+            | Q(roll_no__icontains=search_query)
         )
 
-    if sort_order == "low":
-        students = students.order_by("perc")
+    students = (
+        students.order_by("perc")
+        if sort_order == "low"
+        else students.order_by("-perc")
+    )
+
+    stats = students.aggregate(
+        avg=Avg("perc"),
+        above=Count("id", filter=Q(perc__gte=75)),
+        below=Count("id", filter=Q(perc__lt=75)),
+        total=Count("id"),
+    )
 
     today_dt = date.today()
     start_date = today_dt - timedelta(days=21)
 
     trend_data = (
-        Attendance.objects.filter(student__department=managed_dept, date__gte=start_date)
+        Attendance.objects.filter(
+            student__department=managed_dept,
+            date__gte=start_date,
+        )
         .values("date")
-        .annotate(present_count=Count("id", filter=Q(status="Present")))
+        .annotate(
+            present_count=Count(
+                "id",
+                filter=Q(status="Present")
+            )
+        )
         .order_by("date")
     )
-    trend_labels = [d["date"].strftime("%b %d") for d in trend_data]
-    trend_values = [d["present_count"] for d in trend_data]
+
+    trend_labels = [
+        d["date"].strftime("%b %d")
+        for d in trend_data
+    ]
+
+    trend_values = [
+        d["present_count"]
+        for d in trend_data
+    ]
 
     subject_stats = (
-        Attendance.objects.filter(student__department=managed_dept)
-        .values("subject__name", "subject__code")
+        Attendance.objects.filter(
+            student__department=managed_dept
+        )
+        .values(
+            "subject__name",
+            "subject__code"
+        )
         .annotate(
             total=Count("id"),
-            present=Count("id", filter=Q(status="Present")),
-            leave=Count("id", filter=Q(status="Leave")),
+            present=Count(
+                "id",
+                filter=Q(status="Present")
+            ),
+            leave=Count(
+                "id",
+                filter=Q(status="Leave")
+            ),
         )
         .annotate(
             perc=Case(
-                When(total__gt=0, then=(F("present") * 100.0) / F("total")),
+                When(
+                    total__gt=0,
+                    then=(F("present") * 100.0) / F("total")
+                ),
                 default=0.0,
                 output_field=FloatField(),
             )
         )
         .order_by("subject__name")
     )
-    sub_names = [s["subject__name"] or "General" for s in subject_stats]
-    sub_percs = [round(s["perc"], 2) for s in subject_stats]
 
-    total_stats = Attendance.objects.filter(student__department=managed_dept).aggregate(
+    sub_names = [
+        s["subject__name"] or "General"
+        for s in subject_stats
+    ]
+
+    sub_percs = [
+        round(s["perc"], 2)
+        for s in subject_stats
+    ]
+
+    total_stats = Attendance.objects.filter(
+        student__department=managed_dept
+    ).aggregate(
         p=Count("id", filter=Q(status="Present")),
         l=Count("id", filter=Q(status="Leave")),
         a=Count("id", filter=Q(status="Absent")),
     )
-    dist_data = [total_stats["p"] or 0, total_stats["l"] or 0, total_stats["a"] or 0]
 
-    total_students = Student.objects.filter(department=managed_dept).count()
-    above_75_count = students.filter(perc__gte=75).count()
-    below_75_count = students.filter(perc__lt=75).count()
-    dept_avg = students.aggregate(avg=Avg("perc"))["avg"] or 0.0
+    dist_data = [
+        total_stats["p"] or 0,
+        total_stats["l"] or 0,
+        total_stats["a"] or 0,
+    ]
 
     top_students = list(students[:12])
+
     names = [s.name for s in top_students]
     percentages = [round(s.perc, 2) for s in top_students]
 
     daily_records = []
+
     if selected_date:
-        daily_records = Attendance.objects.filter(
-            student__department=managed_dept, date=selected_date
-        ).select_related("student")
+        daily_records = (
+            Attendance.objects.filter(
+                student__department=managed_dept,
+                date=selected_date,
+            )
+            .select_related("student")
+        )
 
     dept_code = managed_dept.code.strip()
-    defaulter_list = DefaulterStudent.objects.filter(
-        department__icontains=dept_code
-    ).order_by("year", "roll_no")
 
-    grade_uploads = GradeUpload.objects.all().order_by("-id")[:5]
+    defaulter_list = (
+        DefaulterStudent.objects.filter(
+            department__icontains=dept_code
+        )
+        .order_by("year", "roll_no")
+    )
+
+    grade_uploads = (
+        GradeUpload.objects
+        .order_by("-id")[:5]
+    )
+
     recent_grades = (
-        StudentGrade.objects.filter(student__department=managed_dept)
-        .select_related("student", "upload")
+        StudentGrade.objects.filter(
+            student__department=managed_dept
+        )
+        .select_related(
+            "student",
+            "upload"
+        )
         .order_by("-id")[:50]
     )
 
-    return render(request, "hod_dashboard.html", {
-        "students": students,
-        "managed_dept": managed_dept,
-        "names": json.dumps(names),
-        "percentages": json.dumps(percentages),
-        "trend_labels": json.dumps(trend_labels),
-        "trend_values": json.dumps(trend_values),
-        "sub_names": json.dumps(sub_names),
-        "sub_percs": json.dumps(sub_percs),
-        "dist_data": json.dumps(dist_data),
-        "total_students": total_students,
-        "above_75_count": above_75_count,
-        "below_75_count": below_75_count,
-        "department_average": round(dept_avg, 1),
-        "search_query": search_query,
-        "selected_date": selected_date,
-        "daily_records": daily_records,
-        "defaulter_list": defaulter_list,
-        "grade_uploads": grade_uploads,
-        "recent_grades": recent_grades,
-    })
-
-
-# ---------------------------------------------------------------------------
-# 10. PDF REPORTS
-# ---------------------------------------------------------------------------
-
+    return render(
+        request,
+        "hod_dashboard.html",
+        {
+            "students": students,
+            "managed_dept": managed_dept,
+            "names": json.dumps(names),
+            "percentages": json.dumps(percentages),
+            "trend_labels": json.dumps(trend_labels),
+            "trend_values": json.dumps(trend_values),
+            "sub_names": json.dumps(sub_names),
+            "sub_percs": json.dumps(sub_percs),
+            "dist_data": json.dumps(dist_data),
+            "total_students": stats["total"],
+            "above_75_count": stats["above"],
+            "below_75_count": stats["below"],
+            "department_average": round(
+                stats["avg"] or 0,
+                1
+            ),
+            "search_query": search_query,
+            "selected_date": selected_date,
+            "daily_records": daily_records,
+            "defaulter_list": defaulter_list,
+            "grade_uploads": grade_uploads,
+            "recent_grades": recent_grades,
+        },
+    )
 
 @login_required
 @role_required("HOD")
 def attendance_report_pdf(request):
     managed_dept = request.user.managed_dept.first()
+
     if not managed_dept:
-        return HttpResponse("No department assigned.", status=403)
+        return HttpResponse(
+            "No department assigned.",
+            status=403
+        )
 
-    students = Student.objects.filter(department=managed_dept).order_by("roll_no")
+    students = (
+        Student.objects.filter(
+            department=managed_dept
+        )
+        .only("roll_no", "name")
+        .order_by("roll_no")
+    )
 
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="attendance_report.pdf"'
+    response = HttpResponse(
+        content_type="application/pdf"
+    )
+
+    response[
+        "Content-Disposition"
+    ] = 'attachment; filename="attendance_report.pdf"'
+
     doc = SimpleDocTemplate(response)
 
     data = [["Roll No", "Name", "Department"]]
-    for s in students:
-        data.append([s.roll_no, s.name, managed_dept.code])
+
+    for student in students:
+        data.append([
+            student.roll_no,
+            student.name,
+            managed_dept.code,
+        ])
 
     table = Table(data)
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-    ]))
-    doc.build([table])
-    return response
 
+    table.setStyle(
+        TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+        ])
+    )
+
+    doc.build([table])
+
+    return response
 
 @login_required
 @role_required("HOD")
 def defaulter_report_pdf(request):
     managed_dept = request.user.managed_dept.first()
-    if not managed_dept:
-        return HttpResponse("No department assigned.", status=403)
 
-    defaulters = DefaulterStudent.objects.filter(
-        department__icontains=managed_dept.code
+    if not managed_dept:
+        return HttpResponse(
+            "No department assigned.",
+            status=403
+        )
+
+    defaulters = (
+        DefaulterStudent.objects.filter(
+            department__icontains=managed_dept.code
+        )
+        .order_by("year", "roll_no")
     )
 
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="defaulter_report.pdf"'
+    response = HttpResponse(
+        content_type="application/pdf"
+    )
+
+    response[
+        "Content-Disposition"
+    ] = 'attachment; filename="defaulter_report.pdf"'
+
     doc = SimpleDocTemplate(response)
 
-    data = [["Roll No", "Name", "Year", "Reason", "Staff Incharge", "Action"]]
-    for d in defaulters:
+    data = [[
+        "Roll No",
+        "Name",
+        "Year",
+        "Reason",
+        "Staff Incharge",
+        "Action",
+    ]]
+
+    for student in defaulters:
         data.append([
-            d.roll_no, d.name, str(d.year), d.reason,
-            d.staff_incharge, d.action_taken or "-",
+            student.roll_no,
+            student.name,
+            str(student.year),
+            student.reason,
+            student.staff_incharge,
+            student.action_taken or "-",
         ])
 
     table = Table(data)
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-    ]))
-    doc.build([table])
-    return response
 
+    table.setStyle(
+        TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+        ])
+    )
+
+    doc.build([table])
+
+    return response
 
 # ---------------------------------------------------------------------------
 # 11. UTILITIES
@@ -1316,7 +1461,6 @@ def manage_assignments(request):
 
 @login_required
 @csrf_protect
-@require_POST
 @role_required("ClassRep")
 def create_assignment(request):
     student = get_object_or_404(Student, user=request.user)
@@ -1589,9 +1733,22 @@ def view_activity_logs(request):
 
 @login_required
 @csrf_protect
-@require_POST
 @role_required("ClassRep")
 def create_timetable_entry(request):
+
+    # ---------------- GET: Show Form ----------------
+    if request.method == "GET":
+        return render(
+            request,
+            "create_timetable.html",
+            {
+                "teachers": User.objects.filter(is_staff=True),
+                "subjects": Subject.objects.all(),
+                "departments": Department.objects.all(),
+            },
+        )
+
+    # ---------------- POST: Create Timetable ----------------
     day = request.POST.get("day", "").strip()
     room = request.POST.get("room", "").strip()
     start = request.POST.get("start_time", "").strip()
@@ -1616,6 +1773,7 @@ def create_timetable_entry(request):
         messages.error(request, "Start time must be before end time.")
         return redirect("create_timetable_entry")
 
+    # Check teacher conflict
     teacher_clash = Timetable.objects.filter(
         day=day,
         teacher_id=teacher_id,
@@ -1623,6 +1781,7 @@ def create_timetable_entry(request):
         end_time__gt=start_time,
     ).exists()
 
+    # Check room conflict
     room_clash = Timetable.objects.filter(
         day=day,
         room=room,
@@ -1631,30 +1790,40 @@ def create_timetable_entry(request):
     ).exists()
 
     if teacher_clash or room_clash:
-        msg = []
+        errors = []
+
         if teacher_clash:
-            msg.append("Teacher conflict")
+            errors.append("Teacher conflict")
+
         if room_clash:
-            msg.append("Room conflict")
-        messages.error(request, " | ".join(msg))
+            errors.append("Room conflict")
+
+        messages.error(request, " | ".join(errors))
         return redirect("create_timetable_entry")
 
     department = get_object_or_404(Department, id=dept_id)
 
-    with transaction.atomic():
-        Timetable.objects.create(
-            department=department,
-            batch=batch,
-            subject_id=subject_id,
-            teacher_id=teacher_id,
-            day=day,
-            start_time=start_time,
-            end_time=end_time,
-            room=room,
-        )
+    try:
+        with transaction.atomic():
+            Timetable.objects.create(
+                department=department,
+                batch=batch,
+                subject_id=subject_id,
+                teacher_id=teacher_id,
+                day=day,
+                start_time=start_time,
+                end_time=end_time,
+                room=room,
+            )
 
-    messages.success(request, "Timetable entry created successfully.")
-    return redirect("view_timetable")
+        messages.success(request, "Timetable entry created successfully.")
+        return redirect("view_timetable")
+
+    except Exception as e:
+        messages.error(request, f"Error creating timetable: {e}")
+        return redirect("create_timetable_entry")
+
+
 
 # ---------------------------------------------------------------------------
 # 21. GRADE UPLOADS
