@@ -52,16 +52,10 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET, require_POST
 
-from datetime import datetime
-from django.contrib import messages
-from django.contrib.auth.models import User
-from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
-
-
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
+
 from .utils import send_notification
 # Local models
 from .models import (
