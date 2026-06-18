@@ -1772,13 +1772,12 @@ def view_activity_logs(request):
 # ---------------------------------------------------------------------------
 
 
-
 @login_required
 @csrf_protect
 @role_required("ClassRep")
 def create_timetable_entry(request):
 
-    # ---------------- GET: Show Form ----------------
+    # ---------------- GET ----------------
     if request.method == "GET":
         return render(
             request,
@@ -1790,7 +1789,7 @@ def create_timetable_entry(request):
             },
         )
 
-    # ---------------- POST: Create Timetable ----------------
+    # ---------------- POST ----------------
     day = request.POST.get("day", "").strip()
     room = request.POST.get("room", "").strip()
     start = request.POST.get("start_time", "").strip()
@@ -1800,53 +1799,90 @@ def create_timetable_entry(request):
     batch = request.POST.get("batch", "").strip()
     dept_id = request.POST.get("department", "").strip()
 
-    if not all([day, room, start, end, teacher_id, subject_id, batch, dept_id]):
+    if not all(
+        [
+            day,
+            room,
+            start,
+            end,
+            teacher_id,
+            subject_id,
+            batch,
+            dept_id,
+        ]
+    ):
         messages.error(request, "All fields are required.")
         return redirect("create_timetable_entry")
 
     try:
-        start_time = datetime.strptime(start, "%H:%M").time()
-        end_time = datetime.strptime(end, "%H:%M").time()
+        start_time = datetime.strptime(
+            start,
+            "%H:%M",
+        ).time()
+
+        end_time = datetime.strptime(
+            end,
+            "%H:%M",
+        ).time()
+
     except ValueError:
         messages.error(request, "Invalid time format.")
         return redirect("create_timetable_entry")
 
     if start_time >= end_time:
-        messages.error(request, "Start time must be before end time.")
+        messages.error(
+            request,
+            "Start time must be before end time.",
+        )
         return redirect("create_timetable_entry")
 
-    # Check teacher conflict
-    teacher_clash = Timetable.objects.filter(
-        day=day,
-        teacher_id=teacher_id,
-        start_time__lt=end_time,
-        end_time__gt=start_time,
-    ).exists()
-
-    # Check room conflict
-    room_clash = Timetable.objects.filter(
-        day=day,
-        room=room,
-        start_time__lt=end_time,
-        end_time__gt=start_time,
-    ).exists()
-
-    if teacher_clash or room_clash:
-        errors = []
-
-        if teacher_clash:
-            errors.append("Teacher conflict")
-
-        if room_clash:
-            errors.append("Room conflict")
-
-        messages.error(request, " | ".join(errors))
-        return redirect("create_timetable_entry")
-
-    department = get_object_or_404(Department, id=dept_id)
+    department = get_object_or_404(
+        Department,
+        id=dept_id,
+    )
 
     try:
+
         with transaction.atomic():
+
+            # Lock timetable rows for this day
+            timetable_qs = (
+                Timetable.objects
+                .select_for_update()
+                .filter(day=day)
+            )
+
+            teacher_clash = timetable_qs.filter(
+                teacher_id=teacher_id,
+                start_time__lt=end_time,
+                end_time__gt=start_time,
+            ).exists()
+
+            room_clash = timetable_qs.filter(
+                room=room,
+                start_time__lt=end_time,
+                end_time__gt=start_time,
+            ).exists()
+
+            if teacher_clash or room_clash:
+
+                errors = []
+
+                if teacher_clash:
+                    errors.append("Teacher conflict")
+
+                if room_clash:
+                    errors.append("Room conflict")
+
+                messages.error(
+                    request,
+                    " | ".join(errors),
+                )
+
+                return redirect(
+                    "create_timetable_entry"
+                )
+
             Timetable.objects.create(
                 department=department,
                 batch=batch,
@@ -1858,14 +1894,26 @@ def create_timetable_entry(request):
                 room=room,
             )
 
-        messages.success(request, "Timetable entry created successfully.")
+        messages.success(
+            request,
+            "Timetable entry created successfully.",
+        )
+
         return redirect("view_timetable")
 
-    except Exception as e:
-        messages.error(request, f"Error creating timetable: {e}")
+    except Exception as exc:
+
+        logger.exception(
+            "create_timetable_entry failed: %s",
+            exc,
+        )
+
+        messages.error(
+            request,
+            "Unable to create timetable entry.",
+        )
+
         return redirect("create_timetable_entry")
-
-
 
 # ---------------------------------------------------------------------------
 # 21. GRADE UPLOADS
