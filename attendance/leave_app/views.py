@@ -355,9 +355,16 @@ def dashboard(request):
         return err
 
     records = Attendance.objects.filter(student=student)
-    p = records.filter(status="Present").count()
-    l = records.filter(status="Leave").count()
-    a = records.filter(status="Absent").count()
+
+    attendance_stats = records.aggregate(
+        present=Count("id", filter=Q(status="Present")),
+        leave=Count("id", filter=Q(status="Leave")),
+        absent=Count("id", filter=Q(status="Absent")),
+    )
+
+    p = attendance_stats["present"] or 0
+    l = attendance_stats["leave"] or 0
+    a = attendance_stats["absent"] or 0
 
     context = {
         "student": student,
