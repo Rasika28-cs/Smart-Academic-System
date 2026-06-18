@@ -81,8 +81,23 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 
 ALLOWED_UPLOAD_EXTENSIONS = {".csv", ".xlsx"}
+
+ALLOWED_MIME_TYPES = {
+    ".csv": {
+        "text/csv",
+        "application/csv",
+        "text/plain",
+    },
+    ".xlsx": {
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+}
+
 MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
 # ---------------------------------------------------------------------------
@@ -157,22 +172,45 @@ def _redirect_after_review(user, leave: Optional[LeaveRequest] = None):
         return redirect("class_incharge_dashboard")
     return redirect("teacher_dashboard")
 
-
 def _validate_upload(file) -> Optional[str]:
     """
-    Validate an uploaded file.
-    Returns an error string on failure, None on success.
+    Validate uploaded file:
+    - File exists
+    - Allowed extension
+    - Allowed MIME type
+    - File size limit
     """
+
     if file is None:
         return "No file uploaded."
+
     ext = os.path.splitext(file.name)[1].lower()
+
     if ext not in ALLOWED_UPLOAD_EXTENSIONS:
-        return f"Invalid file type '{ext}'. Allowed: {', '.join(ALLOWED_UPLOAD_EXTENSIONS)}"
+        return (
+            f"Invalid file type '{ext}'. "
+            f"Allowed: {', '.join(ALLOWED_UPLOAD_EXTENSIONS)}"
+        )
+
+    mime_type = getattr(file, "content_type", "")
+
+    allowed_mimes = ALLOWED_MIME_TYPES.get(ext, set())
+
+    if mime_type not in allowed_mimes:
+        return (
+            f"Invalid MIME type '{mime_type}'. "
+            f"Expected {', '.join(allowed_mimes)}"
+        )
+
     if file.size > MAX_UPLOAD_SIZE_BYTES:
-        return f"File too large ({file.size // 1024} KB). Maximum is {MAX_UPLOAD_SIZE_BYTES // 1024 // 1024} MB."
+        return (
+            f"File too large "
+            f"({file.size // 1024} KB). "
+            f"Maximum is "
+            f"{MAX_UPLOAD_SIZE_BYTES // 1024 // 1024} MB."
+        )
+
     return None
-
-
 # ---------------------------------------------------------------------------
 # 2. HOME & LOGIN ROUTING
 # ---------------------------------------------------------------------------
@@ -1862,6 +1900,12 @@ def create_timetable_entry(request):
                 room=room,
                 start_time__lt=end_time,
                 end_time__gt=start_time,
+            ).exists()
+            batch_clash = timetable_qs.filter(
+                batch=batch,
+                department=department,
+                start_time__lt=end_time,
+                end_time__gt=start_time
             ).exists()
 
             if teacher_clash or room_clash:
