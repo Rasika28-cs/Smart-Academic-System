@@ -17,9 +17,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", cast=bool, default=True)
-ALLOWED_HOSTS = ["*"]  # Change this when deploying
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost"
+).split(",")
 # Authentication
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/student/dashboard/'
@@ -42,9 +45,10 @@ INSTALLED_APPS = [
     'department',
 ]
 
-# Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -52,7 +56,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 # URL Configuration
 ROOT_URLCONF = 'myproject.urls'
 
@@ -79,7 +82,10 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 # Database
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=os.getenv(
+            "DATABASE_URL",
+            f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+        ),
         conn_max_age=600,
     )
 }
@@ -98,9 +104,11 @@ USE_I18N = True
 USE_TZ = True
 
 # Static Files
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = (
+    'whitenoise.storage.CompressedManifestStaticFilesStorage'
+)
 
 # Media Files
 MEDIA_URL = '/media/'
