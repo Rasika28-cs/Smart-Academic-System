@@ -294,9 +294,7 @@ def login_page(request):
 
     return render(request, "login.html")
 
-@login_required
-@require_POST
-@csrf_protect
+
 def logout_view(request):
     logout(request)
     return redirect('login_page')

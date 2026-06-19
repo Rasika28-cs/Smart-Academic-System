@@ -16,14 +16,17 @@ from events.models import Event
 
 @login_required
 def view_od_status(request):
-    try:
-        student = request.user.student_profile
-    except AttributeError:
-        raise PermissionDenied("Student profile not found")
+    ods = (
+        ODApplication.objects.filter(student=request.user)
+        .select_related("event")
+        .order_by("-date")
+    )
 
-    ods = ODApplication.objects.filter(student=student).select_related("event")
-
-    return render(request, "od/od_status.html", {"ods": ods})
+    return render(
+        request,
+        "od/od_status.html",
+        {"ods": ods},
+    )
 
 
 # ─────────────────────────────────────────────
@@ -33,26 +36,24 @@ def view_od_status(request):
 @require_POST
 @login_required
 def apply_od(request, event_id):
-    try:
-        student = request.user.student_profile
-    except AttributeError:
-        raise PermissionDenied("Student profile not found")
-
     event = get_object_or_404(Event, id=event_id)
 
     # Prevent duplicate application
-    if ODApplication.objects.filter(student=student, event=event).exists():
+    if ODApplication.objects.filter(
+        student=request.user,
+        event=event,
+    ).exists():
         return redirect("event_list")
 
     approved_count = ODApplication.objects.filter(
         date=event.event_date,
-        status="approved"
+        status="approved",
     ).count()
 
     status = "approved" if approved_count < 8 else "pending"
 
-    od = ODApplication.objects.create(
-        student=student,
+    ODApplication.objects.create(
+        student=request.user,
         event=event,
         date=event.event_date,
         status=status,
@@ -84,20 +85,32 @@ def staff_panel(request):
 
     batch = request.GET.get("batch")
 
-    applications = ODApplication.objects.filter(
-        status="pending"
-    ).select_related("student", "event")
+    applications = (
+        ODApplication.objects.filter(status="pending")
+        .select_related("student", "event")
+        .order_by("-date")
+    )
 
     if batch:
-        applications = applications.filter(student__batch=batch)
+        applications = applications.filter(
+            student__student_profile__batch=batch
+        )
 
-    return render(request, "od/staff.html", {
-        "applications": applications,
-        "batches": Student.objects.values_list(
-            "batch", flat=True
-        ).distinct().order_by("batch"),
-        "selected_batch": batch,
-    })
+    batches = (
+        Student.objects.values_list("batch", flat=True)
+        .distinct()
+        .order_by("batch")
+    )
+
+    return render(
+        request,
+        "od/staff.html",
+        {
+            "applications": applications,
+            "batches": batches,
+            "selected_batch": batch,
+        },
+    )
 
 
 # ─────────────────────────────────────────────
@@ -116,7 +129,7 @@ def approve_od(request, id):
         return redirect("staff_panel")
 
     app.status = "approved"
-    app.save()
+    app.save(update_fields=["status"])
 
     notif = Notification.objects.create(
         title="OD Approved",
@@ -125,7 +138,7 @@ def approve_od(request, id):
         url=reverse("view_od_status"),
     )
 
-    notif.users.add(app.student.user)
+    notif.users.add(app.student)
 
     return redirect("staff_panel")
 
@@ -146,7 +159,7 @@ def reject_od(request, id):
         return redirect("staff_panel")
 
     app.status = "rejected"
-    app.save()
+    app.save(update_fields=["status"])
 
     notif = Notification.objects.create(
         title="OD Rejected",
@@ -155,7 +168,7 @@ def reject_od(request, id):
         url=reverse("view_od_status"),
     )
 
-    notif.users.add(app.student.user)
+    notif.users.add(app.student)
 
     return redirect("staff_panel")
 
