@@ -10,14 +10,13 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 from pathlib import Path
 from decouple import config
 import os
-import os
 import dj_database_url
 # Base Directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = os.getenv("DEBUG", "True") == "True"
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -80,7 +79,6 @@ TEMPLATES = [
 # WSGI
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
-# Database
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv(
@@ -90,6 +88,11 @@ DATABASES = {
         conn_max_age=600,
     )
 }
+if not DATABASES['default'].get('NAME'):
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 # Password Validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
