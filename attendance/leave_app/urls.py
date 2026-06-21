@@ -31,11 +31,7 @@ urlpatterns = [
 
     # ---------------- Mentor / Staff ----------------
     path('mentor/dashboard/', views.mentor_dashboard, name='mentor_dashboard'),
-    path(
-        'class-incharge/dashboard/',
-        views.class_incharge_dashboard,
-        name='class_incharge_dashboard'
-    ),
+    
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
 
     # ---------------- HOD ----------------
