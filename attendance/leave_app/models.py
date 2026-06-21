@@ -50,8 +50,7 @@ class Student(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
     mentor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_students')
-    class_incharge = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ci_students')
-
+    
     def __str__(self):
         return f"{self.name} ({self.roll_no})"
 
@@ -67,10 +66,9 @@ class LeaveRequest(models.Model):
     ]
 
     REVIEWER_CHOICES = [
-        ('Mentor', 'Mentor'),
-        ('Class Incharge', 'Class Incharge'),
-        ('Superuser', 'Superuser'),
-    ]
+    ('Mentor', 'Mentor'),
+    ('Superuser', 'Superuser'),
+   ]
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     from_date = models.DateField()
@@ -92,13 +90,7 @@ class LeaveRequest(models.Model):
         blank=True
     )
 
-    class_incharge_reviewed_by = models.ForeignKey(
-        User,
-        related_name='ci_reviews',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    
 
     # Unified audit fields
     reviewed_by = models.ForeignKey(
