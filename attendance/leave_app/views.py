@@ -113,11 +113,6 @@ def role_required(*group_names: str):
     return decorator
 
 
-def is_class_incharge(user) -> bool:
-    return user.is_authenticated and (
-        user.groups.filter(name="ClassIncharge").exists() or user.is_superuser
-    )
-
 
 def is_mentor(user) -> bool:
     return user.is_authenticated and (
@@ -156,14 +151,12 @@ def _redirect_after_review(user, leave: Optional[LeaveRequest] = None):
     if user.is_superuser:
         return redirect("teacher_dashboard")
     if leave is not None and hasattr(leave, "student"):
-        if leave.student.class_incharge == user:
-            return redirect("class_incharge_dashboard")
+        
         if leave.student.mentor == user:
             return redirect("mentor_dashboard")
     if user.groups.filter(name="Mentor").exists():
         return redirect("mentor_dashboard")
-    if user.groups.filter(name="ClassIncharge").exists():
-        return redirect("class_incharge_dashboard")
+    
     return redirect("teacher_dashboard")
 
 def _validate_upload(file) -> Optional[str]:
@@ -229,8 +222,7 @@ def _dashboard_redirect_response(user):
     """Return the correct redirect for an authenticated user."""
     if user.is_superuser:
         return redirect("hod_dashboard")
-    if is_class_incharge(user):
-        return redirect("class_incharge_dashboard")
+  
     if is_mentor(user):
         return redirect("mentor_dashboard")
     if user.is_staff:
@@ -559,7 +551,7 @@ def apply_leave_api(request):
         # -----------------------------
         recipients = [
             student.mentor,
-            student.class_incharge
+            
         ]
         recipients = [u for u in recipients if u]  # remove None safely
 
@@ -600,18 +592,6 @@ def mentor_dashboard(request):
     })
 
 
-@login_required
-@role_required("ClassIncharge")
-def class_incharge_dashboard(request):
-    leaves = LeaveRequest.objects.filter(status="APPROVED_BY_MENTOR").select_related("student")
-    if not request.user.is_superuser:
-        leaves = leaves.filter(student__class_incharge=request.user)
-    return render(request, "class_incharge_dashboard.html", {
-        "leaves": leaves,
-        "pending_leaves_count": leaves.count(),
-        "pending_od": ODApplication.objects.filter(status="pending").count(),
-    })
-
 
 @login_required
 def teacher_dashboard(request):
@@ -621,8 +601,7 @@ def teacher_dashboard(request):
         "pending_leaves": LeaveRequest.objects.filter(status__icontains="PENDING").count(),
         "pending_od": ODApplication.objects.filter(status="pending").count(),
     }
-    if request.user.groups.filter(name="ClassIncharge").exists():
-        return render(request, "class_incharge_dashboard.html", context)
+    
     if request.user.groups.filter(name="Mentor").exists():
         return render(request, "mentor_dashboard.html", context)
     return render(request, "teacher_dashboard.html", context)
@@ -655,7 +634,7 @@ def review_leave(request, leave_id: int, action: str):
                     "student",
                     "student__user",
                     "student__mentor",
-                    "student__class_incharge",
+                    
                     "student__parent"
                 )
                 .select_for_update()
@@ -666,9 +645,9 @@ def review_leave(request, leave_id: int, action: str):
             # PERMISSION CHECK
             # -------------------------
             is_mentor_of = getattr(leave.student.mentor, "id", None) == user.id
-            is_ci_of = getattr(leave.student.class_incharge, "id", None) == user.id
+            
 
-            if not (is_mentor_of or is_ci_of or user.is_superuser):
+            if not (is_mentor_of  or user.is_superuser):
                 raise PermissionDenied
 
             # -------------------------
@@ -692,7 +671,7 @@ def review_leave(request, leave_id: int, action: str):
             leave.reviewed_by = user
             leave.reviewer_role = (
                 "Superuser" if user.is_superuser
-                else "Class Incharge" if is_ci_of
+                
                 else "Mentor"
             )
             leave.reviewed_at = timezone.now()
@@ -817,7 +796,7 @@ def mark_attendance(request):
             name__in=[
                 "Teacher",
                 "Mentor",
-                "ClassIncharge",
+                
                 "HOD",
             ]
         ).exists()
@@ -1319,7 +1298,7 @@ def generate_qr(request):
 
 
 @login_required
-@role_required("Mentor", "ClassIncharge")
+@role_required("Mentor")
 def upload_new_admissions(request):
     """Upload new student admissions from a CSV file."""
     if request.method != "POST":
@@ -1422,7 +1401,7 @@ def mark_as_read(request, id: int):
 @login_required
 @csrf_protect
 @require_POST
-@role_required("Mentor", "ClassIncharge")
+@role_required("Mentor")
 def upload_defaulters(request):
     """Upload defaulter list from an Excel file. Restricted to HOD."""
 
@@ -1524,7 +1503,7 @@ def defaulter_list(request):
 
 @login_required
 @require_POST
-@role_required("Mentor", "ClassIncharge")
+@role_required("Mentor")
 def update_action(request, id: int):
     try:
         data = json.loads(request.body)
@@ -2044,7 +2023,7 @@ def create_timetable_entry(request):
 @login_required
 @csrf_protect
 @require_POST
-@role_required("Mentor", "ClassIncharge")
+@role_required("Mentor")
 def upload_grades(request):
     file = request.FILES.get("file")
 
