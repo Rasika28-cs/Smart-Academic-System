@@ -13,7 +13,6 @@ class LeaveRequestAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Request Info', {'fields': ('student', 'reason', 'from_date', 'to_date', 'status')}),
         ('Mentor Review', {'fields': ('mentor_reviewed_by', 'mentor_reviewed_at', 'mentor_remark')}),
-        ('CI Review', {'fields': ('class_incharge_reviewed_by', 'class_incharge_reviewed_at', 'class_incharge_remark')}),
     )
 
 class TimetableAdmin(admin.ModelAdmin):
