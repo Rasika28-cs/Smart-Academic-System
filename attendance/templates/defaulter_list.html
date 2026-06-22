@@ -191,17 +191,17 @@
                 </span>
               </td>
               <td class="px-6 py-4">
-                <select onchange="updateAction({{ s.id }}, this.value)">
+<select onchange="updateAction({{ s.id }}, this.value)">
 
   <option value="" {% if not s.action_taken %}selected{% endif %}>Pending</option>
 
-  <option value="Warning Sent" {% if s.action_taken == "Warning Sent" %}selected{% endif %}>Warning Sent</option>
+  <option value="Letter" {% if s.action_taken == "Letter" %}selected{% endif %}>Letter</option>
+
+  <option value="Letter + Assignment" {% if s.action_taken == "Letter + Assignment" %}selected{% endif %}>Letter + Assignment</option>
+
+  <option value="Letter + Seminar" {% if s.action_taken == "Letter + Seminar" %}selected{% endif %}>Letter + Seminar</option>
 
   <option value="Parent Called" {% if s.action_taken == "Parent Called" %}selected{% endif %}>Parent Called</option>
-
-  <option value="Suspended" {% if s.action_taken == "Suspended" %}selected{% endif %}>Suspended</option>
-
-  <option value="Resolved" {% if s.action_taken == "Resolved" %}selected{% endif %}>Resolved</option>
 
 </select>
               </td>
@@ -233,17 +233,29 @@
 
  <script>
 function updateAction(id, value) {
-    fetch(`/update-action/${id}/`, {
+    fetch(`/defaulters/update-action/${id}/`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-CSRFToken": "{{ csrf_token }}"
         },
-        body: JSON.stringify({ action: value })
+        body: JSON.stringify({
+            action: value
+        })
     })
-    .then(res => res.json())
-    .then(data => console.log(data))
-    .catch(err => alert("Error updating"));
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Updated:", data);
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Error updating");
+    });
 }
 </script>
 </body>
