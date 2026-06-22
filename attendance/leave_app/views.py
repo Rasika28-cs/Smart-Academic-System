@@ -628,14 +628,12 @@ def review_leave(request, leave_id: int, action: str):
     try:
         with transaction.atomic():
 
+            # ✅ IMPORTANT FIX:
+            # Do NOT use select_related on nullable relations with select_for_update
             leave = (
                 LeaveRequest.objects
-                .select_related(
-                    "student",
-                    "student__user",
-                    "student__parent"
-                )
                 .select_for_update()
+                .select_related("student", "student__user")  # safe joins only
                 .get(id=leave_id)
             )
 
@@ -670,9 +668,7 @@ def review_leave(request, leave_id: int, action: str):
 
             leave.reviewed_by = user
             leave.reviewer_role = (
-                "Superuser"
-                if user.is_superuser
-                else "Mentor"
+                "Superuser" if user.is_superuser else "Mentor"
             )
             leave.reviewed_at = timezone.now()
             leave.save()
@@ -683,12 +679,9 @@ def review_leave(request, leave_id: int, action: str):
             recipients = [leave.student.user]
 
             parent_user = None
-            try:
-                parent = leave.student.parent
-                if parent:
-                    parent_user = getattr(parent, "user", None)
-            except Exception:
-                parent_user = None
+            parent = getattr(leave.student, "parent", None)  # safer access
+            if parent:
+                parent_user = getattr(parent, "user", None)
 
             if parent_user:
                 recipients.append(parent_user)
@@ -717,8 +710,6 @@ def review_leave(request, leave_id: int, action: str):
         raise Http404
 
     return _redirect_after_review(user, leave)
-
-
 
 from collections import defaultdict
 from datetime import timedelta
