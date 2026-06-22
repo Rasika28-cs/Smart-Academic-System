@@ -1004,14 +1004,14 @@ def hod_dashboard(request):
             ),
         )
         .annotate(
-            perc=Case(
-                When(
-                    total__gt=0,
-                    then=(F("p") * 100.0) / F("total")
-                ),
-                default=0.0,
-                output_field=FloatField(),
-            )
+                    perc=Case(
+            When(
+                total__gt=0,
+                then=(F("p") * 100.0) / F("total")
+            ),
+            default=100.0,
+            output_field=FloatField(),
+        )
         )
     )
 
