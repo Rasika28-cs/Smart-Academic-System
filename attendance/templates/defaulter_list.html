@@ -128,6 +128,16 @@
 
 </div>
 
+{% if messages %}
+  <div class="p-4">
+    {% for message in messages %}
+      <div class="text-sm p-2 rounded bg-green-100 text-green-700">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
     <!-- Upload Section -->
     <section class="bg-surface border border-outline rounded-xl p-6 mb-8 table-container">
       <h2 class="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">

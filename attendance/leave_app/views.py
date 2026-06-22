@@ -1452,6 +1452,76 @@ def mark_as_read(request, id: int):
 @require_POST
 @role_required("Mentor")
 def upload_defaulters(request):
+
+    file = request.FILES.get("excel_file")
+    err = _validate_upload(file)
+    if err:
+        messages.error(request, err)
+        return redirect("defaulter_list")
+
+    try:
+        df = pd.read_excel(file, engine="openpyxl")
+        df.columns = df.columns.str.strip()
+
+        required_cols = ["Roll No", "Name", "Staff Incharge", "Dept", "Year", "Reason"]
+        missing = [c for c in required_cols if c not in df.columns]
+
+        if missing:
+            messages.error(request, f"Missing columns: {', '.join(missing)}")
+            return redirect("defaulter_list")
+
+        df["Dept"] = df["Dept"].fillna("").astype(str).str.strip().str.upper()
+
+        uploaded_count = 0
+
+        for _, row in df.iterrows():
+            roll_no_str = str(row["Roll No"]).strip()
+            reason_str = str(row["Reason"]).strip()
+
+            if not roll_no_str or roll_no_str.lower() == "nan":
+                continue
+
+            existing = DefaulterStudent.objects.filter(roll_no=roll_no_str).first()
+            should_notify = not existing or existing.reason != reason_str
+
+            DefaulterStudent.objects.update_or_create(
+                roll_no=roll_no_str,
+                defaults={
+                    "name": str(row["Name"]).strip(),
+                    "staff_incharge": str(row["Staff Incharge"]).strip(),
+                    "department": str(row["Dept"]).strip(),
+                    "year": int(float(row["Year"])),
+                    "reason": reason_str,
+                },
+            )
+
+            if should_notify:
+                try:
+                    student_obj = Student.objects.select_related("user").get(
+                        roll_no=roll_no_str
+                    )
+
+                    if student_obj.user:
+                        send_notification(
+                            title="Defaulter Alert",
+                            message=f"You have been marked as a defaulter. Reason: {reason_str}",
+                            notif_type="defaulter",
+                            url=reverse("student_defaulter"),
+                            users=[student_obj.user],
+                        )
+                except Student.DoesNotExist:
+                    pass
+
+            uploaded_count += 1
+
+        messages.success(request, f"{uploaded_count} records uploaded successfully")
+        return redirect("defaulter_list")
+
+    except Exception as exc:
+        logger.exception("upload_defaulters failed: %s", exc)
+        messages.error(request, "Failed to process file.")
+        return redirect("defaulter_list")
+    
     """Upload defaulter list from an Excel file. Restricted to HOD."""
 
     file = request.FILES.get("excel_file")
