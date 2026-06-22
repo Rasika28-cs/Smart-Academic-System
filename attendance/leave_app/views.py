@@ -620,6 +620,7 @@ from django.http import Http404
 from django.db import transaction
 from django.utils import timezone
 from django.urls import reverse
+from django.contrib import messages
 
 @login_required
 @require_POST
@@ -627,41 +628,21 @@ from django.urls import reverse
 def review_leave(request, leave_id: int, action: str):
 
     if action not in ("approve", "reject"):
-        raise PermissionDenied
+        raise PermissionDenied("Invalid action")
 
     user = request.user
+
+    is_mentor = user.groups.filter(name="Mentor").exists()
+    if not (is_mentor or user.is_superuser):
+        raise PermissionDenied("Not authorized")
 
     try:
         with transaction.atomic():
 
-            # -------------------------
-            # LOCK ONLY MAIN ROW (SAFE)
-            # -------------------------
+            # Lock leave row
             leave = LeaveRequest.objects.select_for_update().get(id=leave_id)
 
-            # IMPORTANT: use IDs (avoid JOIN / lazy ORM issues)
-            student_id = leave.student_id
-
-            # Fetch related objects SAFELY (no joins inside lock)
-            student_user = User.objects.filter(student__id=student_id).first()
-
-            parent_user = (
-                User.objects
-                .filter(parentprofile__student_id=student_id)
-                .first()
-            )
-
-            # -------------------------
-            # PERMISSION CHECK
-            # -------------------------
-            is_mentor = user.groups.filter(name="Mentor").exists()
-
-            if not (is_mentor or user.is_superuser):
-                raise PermissionDenied
-
-            # -------------------------
-            # STATUS CHECK
-            # -------------------------
+            # Prevent double review
             if leave.status != "PENDING":
                 messages.warning(
                     request,
@@ -669,21 +650,30 @@ def review_leave(request, leave_id: int, action: str):
                 )
                 return _redirect_after_review(user, leave)
 
+            # ✅ FIX: correct way (NO wrong 'student' relation)
+            student_user = leave.student.user  # BEST FIX (no extra query)
+
+            # Parent lookup (only if your model exists)
+            parent_user = (
+                User.objects
+                .filter(parent_profile__student_id=leave.student_id)
+                .first()
+            )
+
             # -------------------------
             # UPDATE STATUS
             # -------------------------
             if action == "approve":
                 leave.status = "APPROVED"
-                msg = "Leave approved"
+                message = "Leave approved"
                 _create_attendance_for_leave(leave)
+
             else:
                 leave.status = "REJECTED"
-                msg = "Leave rejected"
+                message = "Leave rejected"
 
             leave.reviewed_by = user
-            leave.reviewer_role = (
-                "Superuser" if user.is_superuser else "Mentor"
-            )
+            leave.reviewer_role = "Superuser" if user.is_superuser else "Mentor"
             leave.reviewed_at = timezone.now()
             leave.save()
 
@@ -701,7 +691,7 @@ def review_leave(request, leave_id: int, action: str):
             if recipients:
                 send_notification(
                     title="Leave Update",
-                    message=msg,
+                    message=message,
                     notif_type="leave",
                     url=reverse("leave_status"),
                     users=recipients
@@ -717,10 +707,9 @@ def review_leave(request, leave_id: int, action: str):
             )
 
     except LeaveRequest.DoesNotExist:
-        raise Http404
+        raise Http404("Leave request not found")
 
     return _redirect_after_review(user, leave)
-
 from collections import defaultdict
 from datetime import timedelta
 
