@@ -400,12 +400,6 @@
           <span class="material-symbols-outlined text-[18px] fill">login</span> Login
         </a>
       </li>
-      <li>
-        <a class="px-4 py-2.5 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg active:scale-[0.98]"
-          href="{% url 'parent_login' %}">
-          <span class="material-symbols-outlined text-[18px] fill">account_circle</span> Parent
-        </a>
-      </li>
     </ul>
     <button aria-label="Toggle menu" class="lg:hidden p-2 text-text hover:bg-slate-100 rounded-lg transition-colors"
       id="hamburgerBtn">
@@ -500,7 +494,7 @@
         <div class="group">
           <div
             class="text-2xl sm:text-4xl font-extrabold text-white mb-1 sm:mb-2 group-hover:text-primary transition-colors">
-            25+</div>
+            100+</div>
           <div class="text-[10px] sm:text-[11px] text-slate-500 uppercase font-bold tracking-[0.2em]">Expert Faculty
           </div>
         </div>
@@ -821,9 +815,9 @@
           class="group bg-slate-50 border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-200/60 transition-all hover:-translate-y-2">
           <div class="h-44 sm:h-56 overflow-hidden relative">
             {% if member.image %}
-            <img alt="{{ member.name }}"
-              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              src="{{ member.image.url }}" /> {% else %}
+            <img src="{{ member.image.url }}" alt="{{ member.name }}">
+            <p>{{ member.image.url }}</p>
+            {% else %}
             <div class="w-full h-full bg-slate-200 flex items-center justify-center">
               <span class="material-symbols-outlined text-slate-400 text-5xl sm:text-6xl fill">account_circle</span>
             </div>
@@ -986,7 +980,7 @@
               </div>
               <div>
                 <div class="text-[11px] font-black text-muted uppercase tracking-[0.2em] mb-1.5">Working Hours</div>
-                <div class="font-bold text-text text-sm sm:text-base">Mon – Sat: 8:45 AM – 4:30 PM</div>
+                <div class="font-bold text-text text-sm sm:text-base">Mon – Sat: 9:00 AM – 4:10 PM</div>
               </div>
             </div>
           </div>
@@ -1035,12 +1029,12 @@
               <span class="material-symbols-outlined text-[18px] sm:text-[20px] group-hover:text-white">language</span>
             </a>
             <a class="w-10 h-10 sm:w-11 sm:h-11 bg-white/5 rounded-xl flex items-center justify-center hover:bg-primary transition-all border border-white/5 group"
-              href="#">
+              href="https://www.vcet.ac.in/department/cse/" target="_blank">
               <span class="material-symbols-outlined text-[18px] sm:text-[20px] group-hover:text-white">hub</span>
             </a>
             <a class="w-10 h-10 sm:w-11 sm:h-11 bg-white/5 rounded-xl flex items-center justify-center hover:bg-primary transition-all border border-white/5 group"
-              href="#">
-              <span class="material-symbols-outlined text-[18px] sm:text-[20px] group-hover:text-white">rss_feed</span>
+              href="https://www.instagram.com/vcet_cyse_2024?igsh=ejlvYXNvMnNnY2kw">
+              <span class="material-symbols-outlined text-[18px] sm:text-[20px] group-hover:text-white">instagram</span>
             </a>
           </div>
         </div>
@@ -1049,12 +1043,12 @@
           <ul class="space-y-3 sm:space-y-4 text-sm font-medium">
             <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#about"><span
                   class="w-1 h-1 rounded-full bg-slate-700"></span> About Department</a></li>
+            <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#nge"><span
+                  class="w-1 h-1 rounded-full bg-slate-700"></span> Events &amp; News</a></li>
             <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#faculty"><span
                   class="w-1 h-1 rounded-full bg-slate-700"></span> Faculty Directory</a></li>
             <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#achievements"><span
                   class="w-1 h-1 rounded-full bg-slate-700"></span> Achievements</a></li>
-            <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#nge"><span
-                  class="w-1 h-1 rounded-full bg-slate-700"></span> Events &amp; News</a></li>
             <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#contact"><span
                   class="w-1 h-1 rounded-full bg-slate-700"></span> Contact Info</a></li>
           </ul>
@@ -1068,16 +1062,17 @@
               <li><a class="hover:text-primary transition-colors" href="{% url 'login_page' %}">Leave System</a></li>
             </ul>
             <ul class="space-y-3 sm:space-y-4 text-sm font-medium">
-              <li><a class="hover:text-primary transition-colors" href="/od/">OD Management</a></li>
-              <li><a class="hover:text-primary transition-colors" href="#">Syllabus Repository</a></li>
-              <li><a class="hover:text-primary transition-colors" href="#">E-Resources</a></li>
+              <li><a class="hover:text-primary transition-colors" href="{% url 'login_page' %}">OD Management</a></li>
+              <li><a class="hover:text-primary transition-colors" href="{% url 'login_page' %}">Time Table</a></li>
+              <li><a class="hover:text-primary transition-colors" href="{% url 'login_page' %}">Assignment Portal</a>
+              </li>
             </ul>
           </div>
         </div>
       </div>
       <div
         class="pt-8 sm:pt-10 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 text-center sm:text-left">
-        <div>© 2025 Dept. of CSE (Cyber Security) – Velammal College of Engineering & Technology, Madurai.</div>
+        <div>© 2024 Dept. of CSE (Cyber Security) – Velammal College of Engineering & Technology, Madurai.</div>
         <div class="flex items-center gap-2">
           Powered by <a class="text-primary hover:text-white transition-colors" href="{% url 'home' %}">Smart Academic
             System</a>
