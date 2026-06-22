@@ -1,14 +1,17 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Defaulter List | Smart Academic System</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
 
   <script>
     tailwind.config = {
@@ -58,7 +61,7 @@
       background-color: #f1f5f9;
       color: #2563eb;
     }
-    
+
     .status-select {
       appearance: none;
       background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
@@ -71,7 +74,7 @@
 </head>
 
 <body class="min-h-screen flex flex-col">
-    <!-- Top Navigation (Standardized from attendance.html) -->
+  <!-- Top Navigation (Standardized from attendance.html) -->
   <nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
     <a href="{% url 'dashboard' %}" class="flex items-center gap-2 font-bold text-primary text-lg no-underline">
       <span class="material-symbols-outlined text-2xl">school</span>
@@ -80,12 +83,14 @@
 
     <ul class="flex gap-1 ml-auto list-none items-center">
       <li>
-        <a href="{% url 'dashboard' %}" class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline">
+        <a href="{% url 'dashboard' %}"
+          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline">
           Dashboard
         </a>
       </li>
       <li>
-        <a href="{% url 'logout' %}" class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline">
+        <a href="{% url 'logout' %}"
+          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline">
           Logout
         </a>
       </li>
@@ -97,46 +102,43 @@
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
 
-  <!-- Title -->
-  <div>
-    <h1 class="text-2xl font-bold text-on-surface flex items-center gap-2">
-      <span class="material-symbols-outlined text-primary">gavel</span>
-      Defaulter List
-    </h1>
+      <!-- Title -->
+      <div>
+        <h1 class="text-2xl font-bold text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">gavel</span>
+          Defaulter List
+        </h1>
 
-    <p class="text-on-surface-variant text-sm mt-1">
-      Manage and track actions for students with attendance shortages.
-    </p>
-  </div>
+        <p class="text-on-surface-variant text-sm mt-1">
+          Manage and track actions for students with attendance shortages.
+        </p>
+      </div>
 
-  <!-- Batch Filter -->
-  <form method="get">
-    <select
-      name="batch"
-      onchange="this.form.submit()"
-      class="border border-outline rounded-lg px-7 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-    >
-      <option value="">All Batches</option>
+      <!-- Batch Filter -->
+      <form method="get">
+        <select name="batch" onchange="this.form.submit()"
+          class="border border-outline rounded-lg px-7 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary">
+          <option value="">All Batches</option>
 
-      {% for b in batches %}
-      <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>
-        {{ b }}
-      </option>
-      {% endfor %}
-    </select>
-  </form>
+          {% for b in batches %}
+          <option value="{{ b }}" {% if selected_batch==b %}selected{% endif %}>
+            {{ b }}
+          </option>
+          {% endfor %}
+        </select>
+      </form>
 
-</div>
+    </div>
 
-{% if messages %}
-  <div class="p-4">
-    {% for message in messages %}
+    {% if messages %}
+    <div class="p-4">
+      {% for message in messages %}
       <div class="text-sm p-2 rounded bg-green-100 text-green-700">
         {{ message }}
       </div>
-    {% endfor %}
-  </div>
-{% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Upload Section -->
     <section class="bg-surface border border-outline rounded-xl p-6 mb-8 table-container">
@@ -144,20 +146,23 @@
         <span class="material-symbols-outlined text-primary text-lg">upload_file</span>
         Import Defaulters
       </h2>
-      <form action="{% url 'upload_defaulters' %}" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row gap-4 items-center">
+      <form action="{% url 'upload_defaulters' %}" method="POST" enctype="multipart/form-data"
+        class="flex flex-col sm:flex-row gap-4 items-center">
         {% csrf_token %}
         <div class="relative w-full">
-          <input type="file" name="excel_file" required class="block w-full text-sm text-on-surface-variant file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all border border-outline rounded-lg bg-slate-50 cursor-pointer focus:outline-none"/>
+          <input type="file" name="excel_file" required
+            class="block w-full text-sm text-on-surface-variant file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all border border-outline rounded-lg bg-slate-50 cursor-pointer focus:outline-none" />
         </div>
-        <button type="submit" class="w-full sm:w-auto bg-primary text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary-dark transition-all shadow-sm flex items-center justify-center gap-2">
+        <button type="submit"
+          class="w-full sm:w-auto bg-primary text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary-dark transition-all shadow-sm flex items-center justify-center gap-2">
           <span class="material-symbols-outlined text-lg">upload</span>
           Upload Excel
         </button>
       </form>
       <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-  <span class="font-semibold">Note:</span>
-  Only Excel files (.xlsx, .xls) are allowed. Please upload files in the prescribed defaulter list format.
-</div>
+        <span class="font-semibold">Note:</span>
+        Only Excel files (.xlsx, .xls) are allowed. Please upload files in the prescribed defaulter list format.
+      </div>
     </section>
 
     <!-- Table Section -->
@@ -168,10 +173,13 @@
             <tr class="bg-slate-50 border-b border-outline">
               <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Roll No</th>
               <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Student</th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant text-center">Year</th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Staff Incharge</th>
+              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant text-center">
+                Year</th>
+              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Staff
+                Incharge</th>
               <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Reason</th>
-              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Action Taken</th>
+              <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Action Taken
+              </th>
             </tr>
           </thead>
 
@@ -183,7 +191,8 @@
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                  <div
+                    class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
                     {{ s.name|slice:":1" }}
                   </div>
                   <span class="text-sm font-medium text-on-surface">{{ s.name }}</span>
@@ -201,19 +210,22 @@
                 </span>
               </td>
               <td class="px-6 py-4">
-<select onchange="updateAction({{ s.id }}, this.value)">
+                <select onchange="updateAction({{ s.id }}, this.value)">
 
-  <option value="" {% if not s.action_taken %}selected{% endif %}>Pending</option>
+                  <option value="" {% if not s.action_taken %}selected{% endif %}>Pending</option>
 
-  <option value="Letter" {% if s.action_taken == "Letter" %}selected{% endif %}>Letter</option>
+                  <option value="Letter" {% if s.action_taken=="Letter" %}selected{% endif %}>Letter</option>
 
-  <option value="Letter + Assignment" {% if s.action_taken == "Letter + Assignment" %}selected{% endif %}>Letter + Assignment</option>
+                  <option value="Letter + Assignment" {% if s.action_taken=="Letter + Assignment" %}selected{% endif %}>
+                    Letter + Assignment</option>
 
-  <option value="Letter + Seminar" {% if s.action_taken == "Letter + Seminar" %}selected{% endif %}>Letter + Seminar</option>
+                  <option value="Letter + Seminar" {% if s.action_taken=="Letter + Seminar" %}selected{% endif %}>Letter
+                    + Seminar</option>
 
-  <option value="Parent Called" {% if s.action_taken == "Parent Called" %}selected{% endif %}>Parent Called</option>
+                  <option value="Parent Called" {% if s.action_taken=="Parent Called" %}selected{% endif %}>Parent
+                    Called</option>
 
-</select>
+                </select>
               </td>
             </tr>
             {% empty %}
@@ -241,32 +253,33 @@
     </p>
   </footer>
 
- <script>
-function updateAction(id, value) {
-    fetch(`/defaulters/update-action/${id}/`, {
+  <script>
+    function updateAction(id, value) {
+      fetch(`/defaulters/update-action/${id}/`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
         },
         body: JSON.stringify({
-            action: value
+          action: value
         })
-    })
-    .then(response => {
-        if (!response.ok) {
+      })
+        .then(response => {
+          if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log("Updated:", data);
-    })
-    .catch(error => {
-        console.error(error);
-        alert("Error updating");
-    });
-}
-</script>
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Updated:", data);
+        })
+        .catch(error => {
+          console.error(error);
+          alert("Error updating");
+        });
+    }
+  </script>
 </body>
+
 </html>

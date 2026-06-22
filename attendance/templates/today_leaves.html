@@ -252,7 +252,6 @@
       <form method="POST" action="{% url 'review_leave' leave.id 'approve' %}" class="inline">
         {% csrf_token %}
         <button type="submit"
-                onclick="return confirm('Approve leave for {{ leave.student.name|escapejs }}?');"
                 class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
                        bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold
                        transition shadow-sm">
@@ -265,7 +264,6 @@
       <form method="POST" action="{% url 'review_leave' leave.id 'reject' %}" class="inline">
         {% csrf_token %}
         <button type="submit"
-                onclick="return confirm('Reject leave for {{ leave.student.name|escapejs }}?');"
                 class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
                        bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold
                        transition shadow-sm">

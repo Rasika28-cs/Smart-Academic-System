@@ -710,6 +710,8 @@ def review_leave(request, leave_id: int, action: str):
         raise Http404("Leave request not found")
 
     return _redirect_after_review(user, leave)
+
+
 from collections import defaultdict
 from datetime import timedelta
 
