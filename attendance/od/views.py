@@ -135,7 +135,7 @@ def approve_od(request, id):
         title="OD Approved",
         message=f"Your OD request for {app.event.event_name} has been approved.",
         type="od",
-        url=reverse("view_od_status"),
+        url=reverse("od_status"),
     )
 
     notif.users.add(app.student)
@@ -165,7 +165,7 @@ def reject_od(request, id):
         title="OD Rejected",
         message=f"Your OD request for {app.event.event_name} has been rejected.",
         type="od",
-        url=reverse("view_od_status"),
+        url=reverse("od_status"),
     )
 
     notif.users.add(app.student)
