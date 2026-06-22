@@ -1188,6 +1188,25 @@ def hod_dashboard(request):
         },
     )
 
+from django.http import HttpResponse
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from django.db.models import (
+    Count,
+    Q,
+    F,
+    FloatField,
+    Case,
+    When,
+)
+
 @login_required
 @role_required("HOD")
 def attendance_report_pdf(request):
@@ -1203,7 +1222,23 @@ def attendance_report_pdf(request):
         Student.objects.filter(
             department=managed_dept
         )
-        .only("roll_no", "name")
+        .annotate(
+            total=Count("attendance"),
+            present=Count(
+                "attendance",
+                filter=Q(attendance__status="Present")
+            )
+        )
+        .annotate(
+            percentage=Case(
+                When(
+                    total__gt=0,
+                    then=(F("present") * 100.0) / F("total")
+                ),
+                default=100.0,  # New students with no attendance
+                output_field=FloatField(),
+            )
+        )
         .order_by("roll_no")
     )
 
@@ -1217,29 +1252,55 @@ def attendance_report_pdf(request):
 
     doc = SimpleDocTemplate(response)
 
-    data = [["Roll No", "Name", "Department"]]
+    styles = getSampleStyleSheet()
+
+    title = Paragraph(
+        f"{managed_dept.code} Attendance Report",
+        styles["Title"]
+    )
+
+    data = [
+        [
+            "Roll No",
+            "Name",
+            "Department",
+            "Attendance %"
+        ]
+    ]
 
     for student in students:
         data.append([
             student.roll_no,
             student.name,
             managed_dept.code,
+            f"{student.percentage:.2f}%"
         ])
 
-    table = Table(data)
+    table = Table(
+        data,
+        colWidths=[90, 150, 90, 100]
+    )
 
     table.setStyle(
         TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ])
     )
 
-    doc.build([table])
+    elements = [
+        title,
+        Spacer(1, 12),
+        table,
+    ]
+
+    doc.build(elements)
 
     return response
-
 @login_required
 @role_required("HOD")
 def defaulter_report_pdf(request):
@@ -1321,66 +1382,6 @@ def generate_qr(request):
 # ---------------------------------------------------------------------------
 # 12. CSV / EXCEL UPLOADS
 # ---------------------------------------------------------------------------
-
-
-@login_required
-@role_required("Mentor")
-def upload_new_admissions(request):
-    """Upload new student admissions from a CSV file."""
-    if request.method != "POST":
-        return render(request, "upload.html")
-
-    file = request.FILES.get("file")
-    err = _validate_upload(file)
-    if err:
-        messages.error(request, err)
-        return render(request, "upload.html")
-
-    try:
-        try:
-            decoded = io.TextIOWrapper(file.file, encoding="utf-8-sig")
-            reader = csv.DictReader(decoded)
-            rows = list(reader)
-        except UnicodeDecodeError:
-            file.file.seek(0)
-            decoded = io.TextIOWrapper(file.file, encoding="latin-1")
-            reader = csv.DictReader(decoded)
-            rows = list(reader)
-
-        count = 0
-        skipped = 0
-        for row in rows:
-            name = (row.get("name") or "").strip()
-            roll_no = (row.get("roll_no") or "").strip()
-            reg_no = (row.get("reg_no") or "").strip()
-            batch = (row.get("batch") or "").strip()
-            dept_name = (row.get("department") or "").strip()
-
-            if not all([name, roll_no, dept_name]):
-                skipped += 1
-                continue
-
-            try:
-                dept = Department.objects.get(name=dept_name)
-            except Department.DoesNotExist:
-                logger.warning("upload_new_admissions: Department not found: %s", dept_name)
-                skipped += 1
-                continue
-
-            Student.objects.update_or_create(
-                roll_no=roll_no,
-                defaults={"name": name, "reg_no": reg_no, "batch": batch, "department": dept},
-            )
-            count += 1
-
-        messages.success(request, f"{count} students admitted successfully. {skipped} rows skipped.")
-        logger.info("upload_new_admissions: %d admitted, %d skipped by %s", count, skipped, request.user)
-
-    except Exception as exc:
-        logger.exception("upload_new_admissions failed: %s", exc)
-        messages.error(request, "An error occurred while processing the file. Please check the format.")
-
-    return render(request, "upload.html")
 
 
 # ---------------------------------------------------------------------------

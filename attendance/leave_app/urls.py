@@ -64,12 +64,7 @@ urlpatterns = [
         name='today_leaves'
     ),
 
-    # ---------------- Uploads ----------------
-    path(
-        'upload/admissions/',
-        views.upload_new_admissions,
-        name='upload_new_admissions'
-    ),
+   
     path(
         'upload/defaulters/',
         views.upload_defaulters,
