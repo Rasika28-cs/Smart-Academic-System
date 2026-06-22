@@ -581,21 +581,18 @@ def apply_leave_api(request):
     return JsonResponse({"status": "success"})
 
 
-
-
 @login_required
 @role_required("Mentor")
 def mentor_dashboard(request):
-    leaves = LeaveRequest.objects.filter(status="PENDING").select_related("student")
-    if not request.user.is_superuser:
-        leaves = leaves.filter(student__mentor=request.user)
+    leaves = LeaveRequest.objects.filter(
+        status="PENDING"
+    ).select_related("student")
+
     return render(request, "mentor_dashboard.html", {
         "leaves": leaves,
         "pending_leaves_count": leaves.count(),
         "pending_od": ODApplication.objects.filter(status="pending").count(),
     })
-
-
 
 @login_required
 def teacher_dashboard(request):
