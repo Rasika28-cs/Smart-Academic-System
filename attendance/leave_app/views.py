@@ -614,6 +614,12 @@ def teacher_dashboard(request):
 
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
+from django.db import transaction
+from django.utils import timezone
+from django.urls import reverse
 
 @login_required
 @require_POST
@@ -628,13 +634,21 @@ def review_leave(request, leave_id: int, action: str):
     try:
         with transaction.atomic():
 
-            # ✅ IMPORTANT FIX:
-            # Do NOT use select_related on nullable relations with select_for_update
-            leave = (
-                LeaveRequest.objects
-                .select_for_update()
-                .select_related("student", "student__user")  # safe joins only
-                .get(id=leave_id)
+            # -------------------------
+            # LOCK ONLY MAIN ROW (SAFE)
+            # -------------------------
+            leave = LeaveRequest.objects.select_for_update().get(id=leave_id)
+
+            # IMPORTANT: use IDs (avoid JOIN / lazy ORM issues)
+            student_id = leave.student_id
+
+            # Fetch related objects SAFELY (no joins inside lock)
+            student_user = User.objects.filter(student__id=student_id).first()
+
+            parent_user = (
+                User.objects
+                .filter(parentprofile__student_id=student_id)
+                .first()
             )
 
             # -------------------------
@@ -646,7 +660,7 @@ def review_leave(request, leave_id: int, action: str):
                 raise PermissionDenied
 
             # -------------------------
-            # ALREADY PROCESSED CHECK
+            # STATUS CHECK
             # -------------------------
             if leave.status != "PENDING":
                 messages.warning(
@@ -676,17 +690,13 @@ def review_leave(request, leave_id: int, action: str):
             # -------------------------
             # NOTIFICATION
             # -------------------------
-            recipients = [leave.student.user]
+            recipients = []
 
-            parent_user = None
-            parent = getattr(leave.student, "parent", None)  # safer access
-            if parent:
-                parent_user = getattr(parent, "user", None)
+            if student_user:
+                recipients.append(student_user)
 
             if parent_user:
                 recipients.append(parent_user)
-
-            recipients = [u for u in recipients if u]
 
             if recipients:
                 send_notification(
@@ -1920,61 +1930,36 @@ def create_timetable_entry(request):
     batch = request.POST.get("batch", "").strip()
     dept_id = request.POST.get("department", "").strip()
 
-    if not all(
-        [
-            day,
-            room,
-            start,
-            end,
-            teacher_id,
-            subject_id,
-            batch,
-            dept_id,
-        ]
-    ):
+    # ---------------- VALIDATION ----------------
+    if not all([day, room, start, end, teacher_id, subject_id, batch, dept_id]):
         messages.error(request, "All fields are required.")
         return redirect("create_timetable_entry")
 
     try:
-        start_time = datetime.strptime(
-            start,
-            "%H:%M",
-        ).time()
-
-        end_time = datetime.strptime(
-            end,
-            "%H:%M",
-        ).time()
-
+        start_time = datetime.strptime(start, "%H:%M").time()
+        end_time = datetime.strptime(end, "%H:%M").time()
     except ValueError:
         messages.error(request, "Invalid time format.")
         return redirect("create_timetable_entry")
 
     if start_time >= end_time:
-        messages.error(
-            request,
-            "Start time must be before end time.",
-        )
+        messages.error(request, "Start time must be before end time.")
         return redirect("create_timetable_entry")
 
-    department = get_object_or_404(
-        Department,
-        id=dept_id,
-    )
+    # ---------------- FETCH FK OBJECTS SAFELY ----------------
+    department = get_object_or_404(Department, id=dept_id)
+    teacher = get_object_or_404(User, id=teacher_id, is_staff=True)
+    subject = get_object_or_404(Subject, id=subject_id)
 
     try:
-
         with transaction.atomic():
 
-            # Lock timetable rows for this day
-            timetable_qs = (
-                Timetable.objects
-                .select_for_update()
-                .filter(day=day)
-            )
+            # Lock timetable rows for same day
+            timetable_qs = Timetable.objects.select_for_update().filter(day=day)
 
+            # ---------------- CONFLICT CHECK ----------------
             teacher_clash = timetable_qs.filter(
-                teacher_id=teacher_id,
+                teacher_id=teacher.id,
                 start_time__lt=end_time,
                 end_time__gt=start_time,
             ).exists()
@@ -1984,15 +1969,15 @@ def create_timetable_entry(request):
                 start_time__lt=end_time,
                 end_time__gt=start_time,
             ).exists()
+
             batch_clash = timetable_qs.filter(
                 batch=batch,
                 department=department,
                 start_time__lt=end_time,
-                end_time__gt=start_time
+                end_time__gt=start_time,
             ).exists()
 
             if teacher_clash or room_clash or batch_clash:
-
                 errors = []
 
                 if teacher_clash:
@@ -2001,47 +1986,31 @@ def create_timetable_entry(request):
                 if room_clash:
                     errors.append("Room conflict")
 
-                messages.error(
-                    request,
-                    " | ".join(errors),
-                )
+                if batch_clash:
+                    errors.append("Batch conflict")
 
-                return redirect(
-                    "create_timetable_entry"
-                )
+                messages.error(request, " | ".join(errors))
+                return redirect("create_timetable_entry")
 
+            # ---------------- CREATE ENTRY ----------------
             Timetable.objects.create(
                 department=department,
                 batch=batch,
-                subject_id=subject_id,
-                teacher_id=teacher_id,
+                subject=subject,
+                teacher=teacher,
                 day=day,
                 start_time=start_time,
                 end_time=end_time,
                 room=room,
             )
 
-        messages.success(
-            request,
-            "Timetable entry created successfully.",
-        )
-
+        messages.success(request, "Timetable entry created successfully.")
         return redirect("view_timetable")
 
     except Exception as exc:
-
-        logger.exception(
-            "create_timetable_entry failed: %s",
-            exc,
-        )
-
-        messages.error(
-            request,
-            "Unable to create timetable entry.",
-        )
-
+        logger.exception("create_timetable_entry failed: %s", exc)
+        messages.error(request, "Unable to create timetable entry.")
         return redirect("create_timetable_entry")
-
 # ---------------------------------------------------------------------------
 # 21. GRADE UPLOADS
 # ---------------------------------------------------------------------------
