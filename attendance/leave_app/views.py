@@ -2058,7 +2058,6 @@ def create_timetable_entry(request):
 
 @login_required
 @csrf_protect
-@require_POST
 @role_required("Mentor")
 def upload_grades(request):
     file = request.FILES.get("file")
@@ -2221,6 +2220,9 @@ def upload_grades(request):
     )
 
     return redirect("upload_grades")
+
+
+
 @login_required
 def student_grades(request):
     student, err = _student_required(request)
