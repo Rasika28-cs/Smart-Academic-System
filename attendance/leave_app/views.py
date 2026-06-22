@@ -786,7 +786,6 @@ def _create_attendance_for_leave(leave: LeaveRequest) -> None:
 # ---------------------------------------------------------------------------
 
 @login_required
-@require_POST
 @csrf_protect
 def mark_attendance(request):
 
@@ -794,12 +793,7 @@ def mark_attendance(request):
         request.user.is_staff
         or request.user.is_superuser
         or request.user.groups.filter(
-            name__in=[
-                "Teacher",
-                "Mentor",
-                
-                "HOD",
-            ]
+            name__in=["Teacher", "Mentor", "HOD"]
         ).exists()
     )
 
@@ -809,6 +803,7 @@ def mark_attendance(request):
         )
 
     today = date.today()
+
     batch = request.GET.get("batch", "").strip()
 
     students = Student.objects.all().order_by("roll_no")
@@ -824,92 +819,132 @@ def mark_attendance(request):
         ).values_list("student_id", flat=True)
     )
 
-    day = today.strftime("%a")
+    # ----------------------------
+    # SAVE ATTENDANCE
+    # ----------------------------
+    if request.method == "POST":
 
-    # --------------------------------------------------
-    # PRELOAD TIMETABLE ONCE (avoids N+1 queries)
-    # --------------------------------------------------
-    timetable_cache = {}
+        day = today.strftime("%a")
 
-    timetable_rows = (
-        Timetable.objects
-        .filter(day=day)
-        .select_related("subject", "department")
-    )
+        timetable_cache = {}
 
-    for row in timetable_rows:
-        key = (row.batch, row.department_id)
-        timetable_cache.setdefault(key, []).append(row)
+        timetable_rows = (
+            Timetable.objects
+            .filter(day=day)
+            .select_related("subject", "department")
+        )
 
-    with transaction.atomic():
+        for row in timetable_rows:
+            key = (row.batch, row.department_id)
+            timetable_cache.setdefault(key, []).append(row)
 
-        for student in students:
+        with transaction.atomic():
 
-            if student.id in students_on_leave_ids:
-                continue
+            for student in students:
 
-            status = request.POST.get(
-                f"status_{student.id}"
-            )
+                if student.id in students_on_leave_ids:
+                    continue
 
-            if status not in (
-                "Present",
-                "Absent",
-                "Leave",
-            ):
-                continue
-
-            updated = (
-                Attendance.objects
-                .filter(
-                    student=student,
-                    date=today,
+                status = request.POST.get(
+                    f"status_{student.id}"
                 )
-                .update(status=status)
-            )
 
-            if updated:
-                continue
+                if status not in (
+                    "Present",
+                    "Absent",
+                    "Leave",
+                ):
+                    continue
 
-            student_timetable = timetable_cache.get(
-                (
-                    student.batch,
-                    student.department_id,
-                ),
-                [],
-            )
+                updated = (
+                    Attendance.objects
+                    .filter(
+                        student=student,
+                        date=today,
+                    )
+                    .update(status=status)
+                )
 
-            if student_timetable:
+                if updated:
+                    continue
 
-                for slot in student_timetable:
+                student_timetable = timetable_cache.get(
+                    (
+                        student.batch,
+                        student.department_id,
+                    ),
+                    [],
+                )
+
+                if student_timetable:
+
+                    for slot in student_timetable:
+
+                        Attendance.objects.get_or_create(
+                            student=student,
+                            subject=slot.subject,
+                            date=today,
+                            defaults={
+                                "status": status
+                            },
+                        )
+
+                else:
 
                     Attendance.objects.get_or_create(
                         student=student,
-                        subject=slot.subject,
+                        subject=None,
                         date=today,
                         defaults={
                             "status": status
                         },
                     )
 
-            else:
+        messages.success(
+            request,
+            "Attendance marked successfully"
+        )
 
-                Attendance.objects.get_or_create(
-                    student=student,
-                    subject=None,
-                    date=today,
-                    defaults={
-                        "status": status
-                    },
-                )
+        return redirect("mentor_dashboard")
 
-    messages.success(
-        request,
-        "Attendance marked successfully"
+    # ----------------------------
+    # DISPLAY PAGE
+    # ----------------------------
+    student_data = []
+
+    for student in students:
+
+        existing = (
+            Attendance.objects
+            .filter(
+                student=student,
+                date=today
+            )
+            .first()
+        )
+
+        student_data.append({
+            "student": student,
+            "status": existing.status if existing else "Present",
+            "is_on_leave": student.id in students_on_leave_ids,
+        })
+
+    batches = (
+        Student.objects
+        .values_list("batch", flat=True)
+        .distinct()
+        .order_by("batch")
     )
 
-    return redirect("teacher_dashboard")
-
+    return render(
+        request,
+        "mark_attendance.html",
+        {
+            "student_data": student_data,
+            "batches": batches,
+            "selected_batch": batch,
+        }
+    )
 # ---------------------------------------------------------------------------
 # 8. TODAY LEAVES
 # ---------------------------------------------------------------------------
