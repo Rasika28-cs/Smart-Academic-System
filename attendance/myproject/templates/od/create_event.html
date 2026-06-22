@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Create Event - Smart Academic System</title>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <title>Create Event - Smart Academic System</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
       theme: {
@@ -36,126 +40,162 @@
       },
     }
   </script>
-<style>
+  <style>
     body {
       font-family: 'Inter', sans-serif;
       background-color: #F8FAFC;
       color: #0F172A;
       -webkit-font-smoothing: antialiased;
     }
+
     .material-symbols-outlined {
       font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       vertical-align: middle;
     }
+
     .saas-card {
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
     }
+
     .input-focus {
       transition: all 0.2s ease;
     }
+
     .input-focus:focus {
       border-color: #2563EB;
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
       outline: none;
     }
+
     .nav-link {
       transition: all 0.2s ease;
     }
+
     .nav-link:hover {
       background-color: #f1f5f9;
       color: #2563eb;
     }
   </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
-<!-- Top Navigation -->
-<nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
-<a class="flex items-center gap-2 font-bold text-primary text-lg no-underline" href="{% url 'student_dashboard' %}">
-<span class="material-symbols-outlined text-2xl">school</span>
-<span class="hidden sm:inline">Smart Attendance</span>
-</a>
-<ul class="flex gap-1 ml-auto list-none items-center">
-<li>
-<a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline" href="{% url 'student_dashboard' %}">
+  <!-- Top Navigation -->
+  <nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
+    <a class="flex items-center gap-2 font-bold text-primary text-lg no-underline" href="{% url 'student_dashboard' %}">
+      <span class="material-symbols-outlined text-2xl">school</span>
+      <span class="hidden sm:inline">Smart Attendance</span>
+    </a>
+    <ul class="flex gap-1 ml-auto list-none items-center">
+      <li>
+        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline"
+          href="{% url 'student_dashboard' %}">
           Dashboard
         </a>
-</li>
-<li>
-<a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline" href="{% url 'logout' %}">
+      </li>
+      <li>
+        <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline"
+          href="{% url 'logout' %}">
           Logout
         </a>
-</li>
-</ul>
-</nav>
-<!-- Page Content -->
-<main class="flex-1 container mx-auto px-4 py-8 md:py-12 flex justify-center items-start">
-<div class="w-full max-w-xl">
-<!-- Back Navigation -->
-<a class="inline-flex items-center text-sm font-medium text-text-muted hover:text-primary mb-6 group transition-colors" href="{% url 'student_dashboard' %}">
-<span class="material-symbols-outlined text-base mr-1 group-hover:-translate-x-1 transition-transform">arrow_back</span>
-      Back to Dashboard
-    </a>
-<div class="saas-card bg-surface rounded-saas p-6 md:p-8 border border-outline">
-<div class="mb-8">
-<div class="flex items-center gap-3 mb-2">
-<div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary">event_available</span>
-</div>
-<h1 class="text-2xl font-bold text-text-main">Create New Event</h1>
-</div>
-<p class="text-text-muted text-sm leading-relaxed">Fill in the details below to add a new on-duty event for student participation.</p>
-</div>
-<form class="space-y-6" enctype="multipart/form-data" method="POST">
-        {% csrf_token %}
-        
-        <div class="space-y-1.5">
-<label class="block text-sm font-semibold text-text-main" for="event_name">Event Name</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">campaign</span>
-<input class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm placeholder:text-text-muted/60" id="event_name" name="event_name" placeholder="e.g. International Tech Fest 2026" required="" type="text"/>
-</div>
-</div>
-<div class="space-y-1.5">
-<label class="block text-sm font-semibold text-text-main" for="college_name">College Name</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">account_balance</span>
-<input class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm placeholder:text-text-muted/60" id="college_name" name="college_name" placeholder="e.g. Anna University, Chennai" required="" type="text"/>
-</div>
-</div>
-<div class="space-y-1.5">
-<label class="block text-sm font-semibold text-text-main" for="event_date">Event Date</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">calendar_today</span>
-<input class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm" id="event_date" name="event_date" required="" type="date"/>
-</div>
-</div>
-<div class="space-y-1.5">
-<label class="block text-sm font-semibold text-text-main">Event Brochure (Optional)</label>
-<label class="group cursor-pointer flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-outline rounded-lg bg-background hover:bg-blue-50 hover:border-primary transition-all duration-200" for="brochureInput">
-<div class="flex flex-col items-center justify-center pt-5 pb-6">
-<span class="material-symbols-outlined text-3xl text-text-muted group-hover:text-primary mb-2">upload_file</span>
-<p class="text-xs text-text-muted px-4 text-center group-hover:text-primary" id="brochureName">Click to upload image or PDF brochure</p>
-</div>
-<input class="hidden" id="brochureInput" name="brochure" onchange="document.getElementById('brochureName').textContent = this.files[0]?.name || 'Click to upload image or PDF brochure'; document.getElementById('brochureName').classList.add('font-semibold');" type="file"/>
-</label>
-</div>
-<div class="pt-4">
-<button class="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-all duration-200 shadow-lg shadow-blue-200 active:scale-[0.98]" type="submit">
-<span class="material-symbols-outlined">add_circle</span>
-            Create Event
-          </button>
-</div>
-</form>
-</div>
-<p class="text-center mt-10 text-xs text-text-muted font-medium">
-      Need help? Contact the department administrator.
+      </li>
+    </ul>
+  </nav>
+  <!-- Page Content -->
+  <main class="flex-1 container mx-auto px-4 py-8 md:py-12 flex justify-center items-start">
+    <div class="w-full max-w-xl">
+      <div class="saas-card bg-surface rounded-saas p-6 md:p-8 border border-outline">
+        <div class="mb-8">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+              <span class="material-symbols-outlined text-primary">event_available</span>
+            </div>
+            <h1 class="text-2xl font-bold text-text-main">
+              {% if edit_mode %}
+              Edit Event
+              {% else %}
+              Create New Event
+              {% endif %}
+            </h1>
+          </div>
+          <p class="text-text-muted text-sm leading-relaxed">Fill in the details below to add a new on-duty event for
+            student participation.</p>
+        </div>
+        <form class="space-y-6" enctype="multipart/form-data" method="POST">
+          {% csrf_token %}
+
+          <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-text-main" for="event_name">Event Name</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">campaign</span>
+              <input
+                class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm placeholder:text-text-muted/60"
+                id="event_name" name="event_name" placeholder="e.g. International Tech Fest 2026"
+                value="{{ event.event_name|default:'' }}" required type="text" />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-text-main" for="college_name">College Name</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">account_balance</span>
+              <input
+                class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm placeholder:text-text-muted/60"
+                id="college_name" name="college_name" placeholder="e.g. Anna University, Chennai"
+                value="{{ event.college_name|default:'' }}" required type="text" />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-text-main" for="event_date">Event Date</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">calendar_today</span>
+              <input class="input-focus w-full pl-10 pr-4 py-2.5 bg-background border border-outline rounded-lg text-sm"
+                id="event_date" name="event_date" value="{{ event.event_date|date:'Y-m-d' }}" required type="date" />
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-sm font-semibold text-text-main">Event Brochure</label>
+            <label
+              class="group cursor-pointer flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-outline rounded-lg bg-background hover:bg-blue-50 hover:border-primary transition-all duration-200"
+              for="brochureInput">
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <span
+                  class="material-symbols-outlined text-3xl text-text-muted group-hover:text-primary mb-2">upload_file</span>
+                <p class="text-xs text-text-muted px-4 text-center group-hover:text-primary" id="brochureName">Click to
+                  upload image or PDF brochure</p>
+              </div>
+              <input class="hidden" id="brochureInput" name="brochure"
+                onchange="document.getElementById('brochureName').textContent = this.files[0]?.name || 'Click to upload image or PDF brochure'; document.getElementById('brochureName').classList.add('font-semibold');"
+                type="file" />
+            </label>
+          </div>
+          <div class="pt-4">
+            <button
+              class="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-all duration-200 shadow-lg shadow-blue-200 active:scale-[0.98]"
+              type="submit">
+              <span class="material-symbols-outlined">
+                {% if edit_mode %}edit{% else %}add_circle{% endif %}
+              </span>
+
+              {% if edit_mode %}
+              Update Event
+              {% else %}
+              Create Event
+              {% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+  <!-- Footer -->
+  <footer class="bg-surface border-t border-outline text-center py-6 px-4">
+    <p class="text-xs text-on-surface-variant">
+      © 2026 Smart Academic System • Department of CSE (Cyber Security)
     </p>
-</div>
-</main>
-<!-- Footer -->
-<footer class="bg-surface border-t border-outline text-center py-6 px-4">
-<p class="text-xs text-on-surface-variant">
-    © 2026 Smart Academic System • Department of Computer Science and Engineering
-  </p>
-</footer>
-</body></html>
+  </footer>
+</body>
+
+</html>

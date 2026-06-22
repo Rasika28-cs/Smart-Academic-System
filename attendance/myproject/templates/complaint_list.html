@@ -22,7 +22,8 @@
     .sa-btn-primary{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;text-decoration:none;}
     .sa-btn-primary:hover{background:#1342b0;}
     .sa-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);}
-    .sa-table{width:100%;border-collapse:collapse;}
+    .sa-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .sa-table{width:100%;border-collapse:collapse;min-width:600px;}
     .sa-table thead tr{background:linear-gradient(90deg,var(--primary),#2563eb);}
     .sa-table th{padding:12px 16px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.9);text-align:left;}
     .sa-table td{padding:13px 16px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
@@ -36,6 +37,11 @@
     .empty-state{text-align:center;padding:48px;color:var(--muted);}
     .empty-icon{font-size:2.5rem;margin-bottom:12px;}
     .sa-footer{background:var(--surface);border-top:1px solid var(--border);text-align:center;padding:16px;font-size:13px;color:var(--muted);}
+    @media (max-width: 480px) {
+      .sa-nav { padding: 0 12px; gap: 8px; }
+      .sa-nav-links a { padding: 4px 6px; font-size: 11px; }
+      .sa-page { padding: 24px 12px; }
+    }
   </style>
 </head>
 <body>
@@ -62,38 +68,40 @@
   </div>
 
   <div class="sa-card">
-    <table class="sa-table">
-      <thead>
-        <tr><th>Title</th><th>Description</th><th>Status</th><th>Date</th></tr>
-      </thead>
-      <tbody>
-        {% for c in complaints %}
-        <tr>
-          <td><strong>{{ c.title }}</strong></td>
-          <td style="color:var(--muted);max-width:300px;">{{ c.description }}</td>
-          <td>
-            {% if c.status == "Resolved" %}
-              <span class="sa-badge sa-badge-success">✓ Resolved</span>
-            {% elif c.status == "Pending" %}
-              <span class="sa-badge sa-badge-warning">⏳ Pending</span>
-            {% else %}
-              <span class="sa-badge sa-badge-muted">{{ c.status }}</span>
-            {% endif %}
-          </td>
-          <td style="color:var(--muted);font-size:13px;">{{ c.created_at }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="4">
-            <div class="empty-state">
-              <div class="empty-icon">📭</div>
-              <p>No complaints raised yet.</p>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="sa-table-wrapper">
+      <table class="sa-table">
+        <thead>
+          <tr><th>Title</th><th>Description</th><th>Status</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for c in complaints %}
+          <tr>
+            <td><strong>{{ c.title }}</strong></td>
+            <td style="color:var(--muted);max-width:300px;">{{ c.description }}</td>
+            <td>
+              {% if c.status == "Resolved" %}
+                <span class="sa-badge sa-badge-success">✓ Resolved</span>
+              {% elif c.status == "Pending" %}
+                <span class="sa-badge sa-badge-warning">⏳ Pending</span>
+              {% else %}
+                <span class="sa-badge sa-badge-muted">{{ c.status }}</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--muted);font-size:13px;">{{ c.created_at }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <p>No complaints raised yet.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 

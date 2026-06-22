@@ -1,13 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Leave Status & History - Smart Attendance</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
   <script>
     tailwind.config = {
       theme: {
@@ -32,33 +35,45 @@
       color: #0F172A;
       -webkit-font-smoothing: antialiased;
     }
+
     .material-symbols-outlined {
       font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
       vertical-align: middle;
     }
-    .nav-link { transition: all 0.2s ease; }
-    .nav-link:hover { background-color: #F1F5F9; color: #2563eb; }
+
+    .nav-link {
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      background-color: #F1F5F9;
+      color: #2563eb;
+    }
   </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
 
   <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 md:px-8 gap-4 sticky top-0 z-50">
-    <a href="{% url 'student_dashboard' %}" class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline min-w-0">
+    <a href="{% url 'student_dashboard' %}"
+      class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline min-w-0">
       <span class="material-symbols-outlined text-2xl shrink-0">school</span>
       <span class="hidden sm:inline truncate">Smart Attendance</span>
     </a>
     <ul class="flex gap-1 ml-auto list-none items-center shrink-0">
       <li>
-        <a href="{% url 'student_dashboard' %}" class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline">Dashboard</a>
+        <a href="{% url 'student_dashboard' %}"
+          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline">Dashboard</a>
       </li>
       <li>
-        <a href="{% url 'logout' %}" class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline">Logout</a>
+        <a href="{% url 'logout' %}"
+          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline">Logout</a>
       </li>
     </ul>
   </nav>
 
   <main class="flex-1 py-6 sm:py-8 px-4 md:px-6 max-w-5xl mx-auto w-full min-w-0">
-    
+
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
@@ -67,17 +82,14 @@
         </h1>
         <p class="text-slate-500 text-sm mt-1">Track your request histories and real-time outcomes</p>
       </div>
-      <a href="{% url 'student_dashboard' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-all shadow-sm">
-        <span class="material-symbols-outlined text-lg">arrow_back</span>
-        Dashboard
-      </a>
     </div>
 
     <div class="grid grid-cols-1 gap-6">
       {% for leave in leaves %}
-      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div
+        class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-          
+
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
               <span class="material-symbols-outlined">calendar_today</span>
@@ -95,24 +107,28 @@
             </div>
             <div>
               {% if leave.status == "PENDING" %}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-100">
-                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                  Pending
-                </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                Pending
+              </span>
               {% elif leave.status == "APPROVED" %}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Approved
-                </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                Approved
+              </span>
               {% elif leave.status == "REJECTED" %}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-100">
-                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                  Rejected
-                </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                Rejected
+              </span>
               {% else %}
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-500">
-                  {{ leave.status }}
-                </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-500">
+                {{ leave.status }}
+              </span>
               {% endif %}
             </div>
           </div>
@@ -121,7 +137,8 @@
 
         <div class="py-4">
           <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1.5">Reason for Absence</p>
-          <p class="text-sm text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-relaxed font-medium">
+          <p
+            class="text-sm text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-100 leading-relaxed font-medium">
             {{ leave.reason }}
           </p>
         </div>
@@ -129,16 +146,19 @@
         <div class="pt-4 border-t border-slate-100">
           <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-4">Workflow Roadmap</p>
           <div class="relative flex items-center justify-between w-full max-w-md">
-            
+
             <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-100 -z-10"></div>
             {% if leave.status == "PENDING" %}
-              <div class="absolute left-0 w-1/2 top-1/2 -translate-y-1/2 h-0.5 bg-amber-400 -z-10"></div>
+            <div class="absolute left-0 w-1/2 top-1/2 -translate-y-1/2 h-0.5 bg-amber-400 -z-10"></div>
             {% else %}
-              <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 {% if leave.status == 'APPROVED' %}bg-emerald-500{% else %}bg-rose-500{% endif %} -z-10"></div>
+            <div
+              class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 {% if leave.status == 'APPROVED' %}bg-emerald-500{% else %}bg-rose-500{% endif %} -z-10">
+            </div>
             {% endif %}
 
             <div class="flex flex-col items-center bg-white pr-4">
-              <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
+              <div
+                class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
                 <span class="material-symbols-outlined text-sm font-bold">check</span>
               </div>
               <span class="text-[11px] font-bold text-slate-800 mt-1">Submitted</span>
@@ -146,34 +166,39 @@
 
             <div class="flex flex-col items-center bg-white px-4">
               {% if leave.status == "PENDING" %}
-                <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center border border-amber-600 animate-pulse">
-                  <span class="material-symbols-outlined text-sm">hourglass_empty</span>
-                </div>
-                <span class="text-[11px] font-bold text-amber-600 mt-1">Reviewing</span>
+              <div
+                class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center border border-amber-600 animate-pulse">
+                <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+              </div>
+              <span class="text-[11px] font-bold text-amber-600 mt-1">Reviewing</span>
               {% else %}
-                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
-                  <span class="material-symbols-outlined text-sm font-bold">check</span>
-                </div>
-                <span class="text-[11px] font-bold text-slate-800 mt-1">Reviewed</span>
+              <div
+                class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                <span class="material-symbols-outlined text-sm font-bold">check</span>
+              </div>
+              <span class="text-[11px] font-bold text-slate-800 mt-1">Reviewed</span>
               {% endif %}
             </div>
 
             <div class="flex flex-col items-center bg-white pl-4">
               {% if leave.status == "PENDING" %}
-                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
-                  <span class="material-symbols-outlined text-sm">pending</span>
-                </div>
-                <span class="text-[11px] font-medium text-slate-400 mt-1">Decision</span>
+              <div
+                class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
+                <span class="material-symbols-outlined text-sm">pending</span>
+              </div>
+              <span class="text-[11px] font-medium text-slate-400 mt-1">Decision</span>
               {% elif leave.status == "APPROVED" %}
-                <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border border-emerald-600">
-                  <span class="material-symbols-outlined text-sm font-bold">done_all</span>
-                </div>
-                <span class="text-[11px] font-bold text-emerald-600 mt-1">Approved</span>
+              <div
+                class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border border-emerald-600">
+                <span class="material-symbols-outlined text-sm font-bold">done_all</span>
+              </div>
+              <span class="text-[11px] font-bold text-emerald-600 mt-1">Approved</span>
               {% elif leave.status == "REJECTED" %}
-                <div class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center border border-rose-600">
-                  <span class="material-symbols-outlined text-sm font-bold">close</span>
-                </div>
-                <span class="text-[11px] font-bold text-rose-600 mt-1">Rejected</span>
+              <div
+                class="w-8 h-8 rounded-full bg-rose-500 text-white flex items-center justify-center border border-rose-600">
+                <span class="material-symbols-outlined text-sm font-bold">close</span>
+              </div>
+              <span class="text-[11px] font-bold text-rose-600 mt-1">Rejected</span>
               {% endif %}
             </div>
 
@@ -196,9 +221,10 @@
 
   <footer class="mt-auto py-8 text-center border-t border-slate-200 bg-white">
     <p class="text-xs text-slate-500">
-      © 2026 Smart Academic System • Department of Computer Science and Engineering
+      © 2026 Smart Academic System • Department of CSE (Cyber Security)
     </p>
   </footer>
 
 </body>
+
 </html>
