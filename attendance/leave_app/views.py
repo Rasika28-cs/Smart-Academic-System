@@ -1207,6 +1207,26 @@ from django.db.models import (
     When,
 )
 
+from django.http import HttpResponse
+from django.db.models import (
+    Count,
+    Q,
+    F,
+    FloatField,
+    Case,
+    When,
+)
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+
+
 @login_required
 @role_required("HOD")
 def attendance_report_pdf(request):
@@ -1235,11 +1255,11 @@ def attendance_report_pdf(request):
                     total__gt=0,
                     then=(F("present") * 100.0) / F("total")
                 ),
-                default=100.0,  # New students with no attendance
+                default=100.0,
                 output_field=FloatField(),
             )
         )
-        .order_by("roll_no")
+        .order_by("batch", "roll_no")
     )
 
     response = HttpResponse(
@@ -1259,26 +1279,26 @@ def attendance_report_pdf(request):
         styles["Title"]
     )
 
-    data = [
-        [
-            "Roll No",
-            "Name",
-            "Department",
-            "Attendance %"
-        ]
-    ]
+    data = [[
+        "Roll No",
+        "Name",
+        "Batch",
+        "Department",
+        "Attendance %"
+    ]]
 
     for student in students:
         data.append([
             student.roll_no,
             student.name,
+            student.batch,
             managed_dept.code,
             f"{student.percentage:.2f}%"
         ])
 
     table = Table(
         data,
-        colWidths=[90, 150, 90, 100]
+        colWidths=[80, 140, 90, 80, 90]
     )
 
     table.setStyle(
@@ -1301,6 +1321,8 @@ def attendance_report_pdf(request):
     doc.build(elements)
 
     return response
+
+
 @login_required
 @role_required("HOD")
 def defaulter_report_pdf(request):

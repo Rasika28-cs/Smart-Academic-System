@@ -233,17 +233,29 @@
 
  <script>
 function updateAction(id, value) {
-    fetch(`/update-action/${id}/`, {
+    fetch(`/defaulters/update-action/${id}/`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-CSRFToken": "{{ csrf_token }}"
         },
-        body: JSON.stringify({ action: value })
+        body: JSON.stringify({
+            action: value
+        })
     })
-    .then(res => res.json())
-    .then(data => console.log(data))
-    .catch(err => alert("Error updating"));
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Updated:", data);
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Error updating");
+    });
 }
 </script>
 </body>
