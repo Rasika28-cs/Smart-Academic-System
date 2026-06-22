@@ -148,16 +148,15 @@ def _student_required(request) -> Tuple[Optional[Student], Optional[HttpResponse
 
 def _redirect_after_review(user, leave: Optional[LeaveRequest] = None):
     """Redirect the reviewer to their appropriate dashboard after acting on a leave."""
+
     if user.is_superuser:
         return redirect("teacher_dashboard")
-    if leave is not None and hasattr(leave, "student"):
-        
-        if leave.student.mentor == user:
-            return redirect("mentor_dashboard")
+
     if user.groups.filter(name="Mentor").exists():
         return redirect("mentor_dashboard")
-    
+
     return redirect("teacher_dashboard")
+
 
 def _validate_upload(file) -> Optional[str]:
     """
@@ -513,13 +512,22 @@ def apply_leave_api(request):
         from_date = datetime.strptime(data["from_date"], "%Y-%m-%d").date()
         to_date = datetime.strptime(data["to_date"], "%Y-%m-%d").date()
     except (KeyError, ValueError):
-        return JsonResponse({"status": "error", "message": "Invalid date format. Use YYYY-MM-DD."}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Invalid date format. Use YYYY-MM-DD."},
+            status=400
+        )
 
     if from_date < date.today():
-        return JsonResponse({"status": "error", "message": "Past date not allowed"}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Past date not allowed"},
+            status=400
+        )
 
     if from_date > to_date:
-        return JsonResponse({"status": "error", "message": "Invalid date range"}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Invalid date range"},
+            status=400
+        )
 
     overlap = LeaveRequest.objects.filter(
         student=student,
@@ -529,13 +537,19 @@ def apply_leave_api(request):
 
     if overlap.exists():
         return JsonResponse(
-            {"status": "error", "message": "A leave request already exists for this period"},
+            {
+                "status": "error",
+                "message": "A leave request already exists for this period"
+            },
             status=400
         )
 
     reason = data.get("reason", "").strip()
     if not reason:
-        return JsonResponse({"status": "error", "message": "Reason is required"}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Reason is required"},
+            status=400
+        )
 
     with transaction.atomic():
         LeaveRequest.objects.create(
@@ -546,19 +560,10 @@ def apply_leave_api(request):
             status="PENDING",
         )
 
-        # -----------------------------
-        # RECIPIENTS (clean + safe)
-        # -----------------------------
-        recipients = [
-            student.mentor,
-            
-        ]
-        recipients = [u for u in recipients if u]  # remove None safely
+        # Notify all mentors
+        recipients = User.objects.filter(groups__name="Mentor")
 
-        # -----------------------------
-        # SINGLE NOTIFICATION SYSTEM
-        # -----------------------------
-        if recipients:
+        if recipients.exists():
             send_notification(
                 title="New Leave Request",
                 message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
@@ -574,9 +579,8 @@ def apply_leave_api(request):
     )
 
     return JsonResponse({"status": "success"})
-# ---------------------------------------------------------------------------
-# 5. DASHBOARDS
-# ---------------------------------------------------------------------------
+
+
 
 
 @login_required
@@ -611,7 +615,6 @@ def teacher_dashboard(request):
 # 6. LEAVE REVIEW ENGINE
 # ---------------------------------------------------------------------------
 
-
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 
@@ -633,8 +636,6 @@ def review_leave(request, leave_id: int, action: str):
                 .select_related(
                     "student",
                     "student__user",
-                    "student__mentor",
-                    
                     "student__parent"
                 )
                 .select_for_update()
@@ -644,17 +645,19 @@ def review_leave(request, leave_id: int, action: str):
             # -------------------------
             # PERMISSION CHECK
             # -------------------------
-            is_mentor_of = getattr(leave.student.mentor, "id", None) == user.id
-            
+            is_mentor = user.groups.filter(name="Mentor").exists()
 
-            if not (is_mentor_of  or user.is_superuser):
+            if not (is_mentor or user.is_superuser):
                 raise PermissionDenied
 
             # -------------------------
             # ALREADY PROCESSED CHECK
             # -------------------------
             if leave.status != "PENDING":
-                messages.warning(request, f"This leave was already {leave.status}.")
+                messages.warning(
+                    request,
+                    f"This leave was already {leave.status}."
+                )
                 return _redirect_after_review(user, leave)
 
             # -------------------------
@@ -670,19 +673,18 @@ def review_leave(request, leave_id: int, action: str):
 
             leave.reviewed_by = user
             leave.reviewer_role = (
-                "Superuser" if user.is_superuser
-                
+                "Superuser"
+                if user.is_superuser
                 else "Mentor"
             )
             leave.reviewed_at = timezone.now()
             leave.save()
 
             # -------------------------
-            # NOTIFICATION (SAFE FIX)
+            # NOTIFICATION
             # -------------------------
             recipients = [leave.student.user]
 
-            # SAFE parent access
             parent_user = None
             try:
                 parent = leave.student.parent
@@ -718,6 +720,8 @@ def review_leave(request, leave_id: int, action: str):
         raise Http404
 
     return _redirect_after_review(user, leave)
+
+
 
 from collections import defaultdict
 from datetime import timedelta
