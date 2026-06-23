@@ -1,3 +1,6 @@
+{% load static %}
+<!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -6,7 +9,7 @@
   <title>Department of CSE (Cyber Security) – VCET Smart Academic System</title>
 </head>
 
-<body class="bg-background text-text font-sans flex flex-col min-h-screen">{% load static %}
+<body class="bg-background text-text font-sans flex flex-col min-h-screen">
   <link href="{% static 'assets/favicon.ico' %}" rel="icon" type="image/x-icon" />
   <link href="https://fonts.googleapis.com" rel="preconnect" />
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
@@ -656,7 +659,7 @@
         <!-- IMAGE -->
         <div class="relative">
           <div class="overflow-hidden rounded-3xl shadow-xl h-[300px] sm:h-[400px] lg:h-[450px]">
-            <img src="{% static 'images/cyber-security.png' %}" alt="Cyber Security Department"
+            <img src="/static/images/cyber-security.png" alt="Cyber Security Department"
               class="w-full h-full object-cover transition duration-700 hover:scale-105">
           </div>
 
@@ -946,70 +949,57 @@
   <section class="py-16 sm:py-24 px-4 sm:px-6 bg-surface" id="faculty">
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-6">
-        <div class="text-center mb-12 sm:mb-16">
+        <div>
           <p class="text-primary font-bold text-sm uppercase tracking-[0.25em] mb-4">
             Core Team
           </p>
 
-          <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text mb-6">
+          <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text">
             Our Academic <span class="text-primary">Faculty</span>
           </h2>
 
-          <div class="w-16 h-1.5 bg-accent rounded-full mx-auto mb-6"></div>
+          <div class="w-16 h-1.5 bg-accent mt-6 rounded-full"></div>
 
-          <p class="text-muted max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+          <!-- ADD TEXT HERE -->
+          <p class="text-muted max-w-2xl text-sm sm:text-base leading-relaxed mt-6">
             Meet our team of distinguished academicians, researchers, and mentors
             shaping the next generation of Cyber Security professionals.
           </p>
         </div>
-
-        {% if staff %}
-        <div class="faculty-grid">
-          {% for member in staff|slice:":8" %}
-          <div
-            class="group bg-slate-50 border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-200/60 transition-all hover:-translate-y-2">
-            <div class="h-44 sm:h-56 overflow-hidden relative">
-              {% if member.image %}
-              <img src="{{ member.image.url }}" alt="{{ member.name }}" class="w-full h-full object-cover object-top">
-              {% else %}
-              <div class="w-full h-full bg-slate-200 flex items-center justify-center">
-                <span class="material-symbols-outlined text-slate-400 text-5xl sm:text-6xl fill">account_circle</span>
-              </div>
-              {% endif %}
-              <div
-                class="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span class="bg-white/90 px-4 py-2 rounded-full text-primary text-xs font-bold shadow-xl">Profile</span>
-              </div>
-            </div>
-            <div class="p-4 sm:p-6 text-center">
-              <div class="font-extrabold text-text text-[14px] sm:text-[16px] mb-1 whitespace-nowrap">
-                {{ member.name }}
-              </div>
-              <div class="text-[10px] sm:text-[11px] font-black text-primary uppercase tracking-[0.15em] mb-2 sm:mb-3">
-                {{ member.role }}
-              </div>
-              <div class="text-xs text-muted font-medium bg-slate-100 py-1.5 px-3 rounded-lg inline-block line-clamp-1">
-                {{ member.qualification }}
-              </div>
+      </div>
+      {% if staff %}
+      <div class="faculty-grid">
+        {% for member in staff|slice:":8" %}
+        <div
+          class="group bg-slate-50 border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-200/60 transition-all hover:-translate-y-2">
+          <div class="h-44 sm:h-56 overflow-hidden relative"> {% if member.image %} <img src="{{ member.image.url }}"
+              alt="{{ member.name }}" class="w-full h-full object-cover object-top"> {% else %} <div
+              class="w-full h-full bg-slate-200 flex items-center justify-center"> <span
+                class="material-symbols-outlined text-slate-400 text-5xl sm:text-6xl fill">account_circle</span> </div>
+            {% endif %} <div
+              class="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span class="bg-white/90 px-4 py-2 rounded-full text-primary text-xs font-bold shadow-xl">Profile</span>
             </div>
           </div>
-          {% endfor %}
-        </div>
-        {% if staff|length > 8 %}
-        <div class="mt-12 sm:mt-16 text-center">
-          <a class="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-slate-100 text-text font-bold rounded-2xl hover:bg-primary hover:text-white transition-all shadow-soft active:scale-[0.98] text-sm sm:text-base"
-            href="#faculty">
-            View All Profiles <span class="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_forward</span>
-          </a>
-        </div>
-        {% endif %}
-        {% else %}
-        <div class="py-16 sm:py-24 text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
-          <span class="material-symbols-outlined text-slate-200 text-6xl sm:text-7xl mb-6">badge</span>
-          <p class="text-muted text-base sm:text-lg">Staff directory is currently being updated.</p>
-        </div>
-        {% endif %}
-      </div>
+          <div class="p-4 sm:p-6 text-center">
+            <div class="font-extrabold text-text text-[14px] sm:text-[16px] mb-1 whitespace-nowrap"> {{ member.name }}
+            </div>
+            <div class="text-[10px] sm:text-[11px] font-black text-primary uppercase tracking-[0.15em] mb-2 sm:mb-3"> {{
+              member.role }} </div>
+            <div class="text-xs text-muted font-medium bg-slate-100 py-1.5 px-3 rounded-lg inline-block line-clamp-1">
+              {{ member.qualification }} </div>
+          </div>
+        </div> {% endfor %}
+      </div> {% if staff|length > 8 %} <div class="mt-12 sm:mt-16 text-center"> <a
+          class="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-slate-100 text-text font-bold rounded-2xl hover:bg-primary hover:text-white transition-all shadow-soft active:scale-[0.98] text-sm sm:text-base"
+          href="#faculty"> View All Profiles <span
+            class="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_forward</span> </a> </div> {% endif %} {%
+      else %} <div
+        class="py-16 sm:py-24 text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem]"> <span
+          class="material-symbols-outlined text-slate-200 text-6xl sm:text-7xl mb-6">badge</span>
+        <p class="text-muted text-base sm:text-lg">Staff directory is currently being updated.</p>
+      </div> {% endif %}
+    </div>
   </section>
 
   <!-- ═══════════════════════════════════════
@@ -1018,15 +1008,24 @@
   <section class="py-16 sm:py-24 px-4 sm:px-6 bg-slate-50" id="achievements">
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-6">
-        <div>
-          <p class="text-primary font-bold text-sm uppercase tracking-[0.25em] mb-4">Milestones</p>
-          <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text">Legacy of <span
-              class="text-primary">Excellence</span></h2>
-          <div class="w-16 h-1.5 bg-primary mt-6 rounded-full"></div>
-        </div>
-        <p class="text-muted max-w-md text-sm sm:text-base">Celebrating the awards, publications, and professional wins
-          that mark our path of continuous growth.</p>
-      </div>
+  <div>
+    <p class="text-primary font-bold text-sm uppercase tracking-[0.25em] mb-4">
+      Milestones
+    </p>
+
+    <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text">
+      Legacy of <span class="text-primary">Excellence</span>
+    </h2>
+
+    <div class="w-16 h-1.5 bg-primary mt-6 rounded-full"></div>
+
+    <!-- Move description here -->
+    <p class="text-muted max-w-2xl text-sm sm:text-base leading-relaxed mt-6">
+      Celebrating the awards, publications, and professional wins that mark our
+      path of continuous growth.
+    </p>
+  </div>
+</div>
 
       {% if achievements %}
       <div class="achievement-grid">
