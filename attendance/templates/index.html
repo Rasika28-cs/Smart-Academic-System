@@ -840,8 +840,7 @@
               <div class="gallery-slides" id="gallerySlides">
                 {% for img in gallery_images %}
                 <div class="gallery-slide">
-                  <img alt="{{ img.title|default:'Gallery' }}"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-fPxUeS5t7uwxW3nTgGWS6GQ9jtBgkjg2rJwn-BDezOk3wKf0KG4JrFmEzcV73HQ1vg2eNmIAnPwGN6Q8zGTU0_vmyr-uNmNQ5Jo2lofMl_l1bzfWY6iAWDCABOcjngv-v-Vdq9GK9biYmJ7HCcIcAyZc_zMMM2lylHz8K01ezsGsBJPfmpi9XtS3ukDK6PNVXtxm6mFmf2pdLY3kU72fmPQxMx0Y1ltlGZ9FSnhF5TGcdurnTjxDZfHetagpo9176niLjy-I9SmZ" />
+                  <img alt="{{ img.title|default:'Gallery' }}" src="{{ img.image.url }}" />
                   {% if img.title %}
                   <div
                     class="absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent text-sm text-white font-semibold">
