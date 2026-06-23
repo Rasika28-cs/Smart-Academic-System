@@ -12,6 +12,7 @@
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
     rel="stylesheet" />
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
@@ -169,6 +170,7 @@
 
     body {
       overflow-x: hidden;
+      line-height: 1.6;
     }
 
     /* Hero CTA buttons: wrap cleanly on small screens */
@@ -474,13 +476,13 @@
           href="#about">About</a></li>
       <li><a
           class="px-4 py-2 text-sm font-semibold text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
+          href="#nge">Events</a></li>
+      <li><a
+          class="px-4 py-2 text-sm font-semibold text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
           href="#faculty">Faculty</a></li>
       <li><a
           class="px-4 py-2 text-sm font-semibold text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
           href="#achievements">Achievements</a></li>
-      <li><a
-          class="px-4 py-2 text-sm font-semibold text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
-          href="#nge">Events</a></li>
       <li><a
           class="px-4 py-2 text-sm font-semibold text-muted hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
           href="#contact">Contact</a></li>
@@ -504,11 +506,11 @@
     <a class="p-3 sm:p-4 text-base font-semibold text-text rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100"
       href="#about" onclick="closeMobile()">About</a>
     <a class="p-3 sm:p-4 text-base font-semibold text-text rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100"
+      href="#nge" onclick="closeMobile()">Events</a>
+    <a class="p-3 sm:p-4 text-base font-semibold text-text rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100"
       href="#faculty" onclick="closeMobile()">Faculty</a>
     <a class="p-3 sm:p-4 text-base font-semibold text-text rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100"
       href="#achievements" onclick="closeMobile()">Achievements</a>
-    <a class="p-3 sm:p-4 text-base font-semibold text-text rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100"
-      href="#nge" onclick="closeMobile()">Events</a>
     <a class="p-3 sm:p-4 text-base font-semibold text-text rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100"
       href="#contact" onclick="closeMobile()">Contact</a>
     <div class="flex gap-3 mt-2">
@@ -526,7 +528,8 @@
   <!-- ═══════════════════════════════════════
      HERO
 ══════════════════════════════════════════ -->
-  <section class="hero-section relative bg-[#020617] py-16 sm:py-20 lg:py-28 px-4 sm:px-6 overflow-hidden">
+  <section
+    class="hero-section relative bg-[#020617] pt-6 sm:pt-10 lg:pt-14 pb-16 sm:pb-20 lg:pb-28 px-4 sm:px-6 overflow-hidden">
     <div class="absolute inset-0 pointer-events-none overflow-hidden">
       <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[120px] rounded-full"></div>
       <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/20 blur-[120px] rounded-full"></div>
@@ -541,17 +544,19 @@
       </div>
       <h1
         class="hero-h1 text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-white leading-[1.05] mb-5 sm:mb-8 tracking-tight px-2">
-        Empowering the <span
-          class="text-primary-600 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">Cyber
-          Defenders</span> of Tomorrow
+
+        Welcome to the Department of <br>
+        <span class="text-primary-600 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+          CSE Cyber Security
+        </span>
+
       </h1>
       <p class="hero-sub text-base sm:text-lg md:text-2xl text-slate-400 font-medium mb-3 sm:mb-4 tracking-wide">
         Securing Digital Futures, Inspiring Cyber Leadership</p>
       <p
         class="hero-desc max-w-2xl mx-auto text-slate-500 text-sm sm:text-base md:text-lg mb-8 sm:mb-12 leading-relaxed px-4">
-        The Department of CSE (Cyber Security) at VCET offers a rigorous four-year undergraduate program blending
-        computer science fundamentals with advanced cybersecurity — covering Ethical Hacking, Cryptography, Forensics,
-        Penetration Testing, and more — preparing industry-ready professionals for a rapidly evolving digital world.
+        The CSE (Cyber Security) Department at VCET offers a 4-year program focused on computer science fundamentals and
+        advanced cybersecurity skills, preparing students for industry careers.
       </p>
       <div class="hero-cta-group mb-12 sm:mb-20 px-4">
         <a class="px-7 sm:px-10 py-3.5 sm:py-4 bg-primary text-white rounded-2xl font-bold flex items-center gap-3 hover:bg-primary-700 hover:shadow-2xl hover:shadow-primary/30 transition-all active:scale-[0.97] text-sm sm:text-base"
@@ -621,7 +626,7 @@
           </h2>
 
           <div class="space-y-5 text-muted leading-relaxed">
-            <p class="text-lg">
+            <p>
               The Department of Computer Science and Engineering (Cyber Security)
               provides students with a strong foundation in computing alongside
               specialized expertise in modern cyber security technologies.
@@ -638,7 +643,7 @@
         <!-- IMAGE -->
         <div class="relative">
           <div class="overflow-hidden rounded-3xl shadow-xl h-[300px] sm:h-[400px] lg:h-[450px]">
-            <img src="YOUR_IMAGE_HERE.jpg" alt="Cyber Security Department"
+            <img src="{% static 'images/cyber-security.png' %}" alt="Cyber Security Department"
               class="w-full h-full object-cover transition duration-700 hover:scale-105">
           </div>
 
@@ -946,8 +951,7 @@
           class="group bg-slate-50 border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-200/60 transition-all hover:-translate-y-2">
           <div class="h-44 sm:h-56 overflow-hidden relative">
             {% if member.image %}
-            <img src="{{ member.image.url }}" alt="{{ member.name }}">
-            <p>{{ member.image.url }}</p>
+            <img src="{{ member.image.url }}" alt="{{ member.name }}" class="w-full h-full object-cover object-top">
             {% else %}
             <div class="w-full h-full bg-slate-200 flex items-center justify-center">
               <span class="material-symbols-outlined text-slate-400 text-5xl sm:text-6xl fill">account_circle</span>
@@ -1176,9 +1180,16 @@
             <a class="w-10 h-10 sm:w-11 sm:h-11 bg-white/5 rounded-xl flex items-center justify-center hover:bg-primary transition-all border border-white/5 group"
               href="https://www.instagram.com/vcet_cyse_2024?igsh=ejlvYXNvMnNnY2kw" target="_blank"
               aria-label="Instagram">
-              <span class="material-symbols-outlined text-[18px] sm:text-[20px] group-hover:text-white">
-                photo_camera
-              </span>
+
+              <svg class="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] group-hover:scale-110 transition"
+                viewBox="0 0 24 24" fill="currentColor">
+
+                <path
+                  d="M7 2C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 0 5-2.24 5-5V7c0-2.76-2.24-5-5-5H7zm10 2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h10z" />
+                <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2.2a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6z" />
+                <circle cx="17.5" cy="6.5" r="1.2" />
+
+              </svg>
             </a>
 
           </div>
