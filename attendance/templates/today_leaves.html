@@ -1,14 +1,18 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1" name="viewport" />
   <title>Today's Active Leaves - Smart Academic System</title>
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
 
   <script>
     tailwind.config = {
@@ -18,7 +22,7 @@
             primary: "#2563EB",
             success: "#10B981",
             warning: "#F59E0B",
-            danger:  "#EF4444",
+            danger: "#EF4444",
           },
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
@@ -77,8 +81,7 @@
 
   <!-- ───────────── Navigation ───────────── -->
   <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
-    <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline"
-       href="{% url 'dashboard' %}">
+    <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'dashboard' %}">
       <span class="material-symbols-outlined text-2xl">school</span>
       <span class="hidden sm:inline">Smart Attendance</span>
     </a>
@@ -86,13 +89,13 @@
     <ul class="flex gap-1 ml-auto list-none items-center">
       <li>
         <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 no-underline"
-           href="{% url 'dashboard' %}">
+          href="{% url 'dashboard' %}">
           Dashboard
         </a>
       </li>
       <li>
         <a class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-red-500 no-underline"
-           href="{% url 'logout' %}">
+          href="{% url 'logout' %}">
           Logout
         </a>
       </li>
@@ -137,15 +140,13 @@
 
       <!-- Batch Filter -->
       <form method="GET">
-        <select name="batch"
-                onchange="this.form.submit()"
-                class="px-7 py-2 border border-slate-200 rounded-xl bg-white text-sm
+        <select name="batch" onchange="this.form.submit()" class="px-7 py-2 border border-slate-200 rounded-xl bg-white text-sm
                        focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">All Batches</option>
           {% for batch in batches %}
-            <option value="{{ batch }}" {% if batch == selected_batch %}selected{% endif %}>
-              {{ batch }}
-            </option>
+          <option value="{{ batch }}" {% if batch==selected_batch %}selected{% endif %}>
+            {{ batch }}
+          </option>
           {% endfor %}
         </select>
       </form>
@@ -221,80 +222,76 @@
               <!-- Status Badge -->
               <td class="px-6 py-5 whitespace-nowrap">
                 {% if leave.status == "PENDING" %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
                                bg-amber-50 text-amber-700 border border-amber-100">
-                    Pending
-                  </span>
+                  Pending
+                </span>
                 {% elif leave.status == "APPROVED" %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
                                bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    Approved
-                  </span>
+                  Approved
+                </span>
                 {% elif leave.status == "REJECTED" %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
                                bg-rose-50 text-rose-700 border border-rose-100">
-                    Rejected
-                  </span>
+                  Rejected
+                </span>
                 {% else %}
-                  <span class="px-2.5 py-1 text-xs font-semibold rounded-full
+                <span class="px-2.5 py-1 text-xs font-semibold rounded-full
                                bg-slate-100 text-slate-500">
-                    {{ leave.status }}
-                  </span>
+                  {{ leave.status }}
+                </span>
                 {% endif %}
               </td>
 
               <!-- Action Buttons -->
-             <!-- Action Buttons -->
-<td class="px-6 py-5 text-right whitespace-nowrap">
-  {% if leave.status == "PENDING" %}
-    <div class="flex items-center justify-end gap-2">
-      <!-- Approve Button via POST Form -->
-      <form method="POST" action="{% url 'review_leave' leave.id 'approve' %}" class="inline">
-        {% csrf_token %}
-        <button type="submit"
-                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+              <!-- Action Buttons -->
+              <td class="px-6 py-5 text-right whitespace-nowrap">
+                {% if leave.status == "PENDING" %}
+                <div class="flex items-center justify-end gap-2">
+                  <!-- Approve Button via POST Form -->
+                  <form method="POST" action="{% url 'review_leave' leave.id 'approve' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
                        bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold
                        transition shadow-sm">
-          <span class="material-symbols-outlined text-sm">check</span>
-          Approve
-        </button>
-      </form>
-      
-      <!-- Reject Button via POST Form -->
-      <form method="POST" action="{% url 'review_leave' leave.id 'reject' %}" class="inline">
-        {% csrf_token %}
-        <button type="submit"
-                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                      <span class="material-symbols-outlined text-sm">check</span>
+                      Approve
+                    </button>
+                  </form>
+
+                  <!-- Reject Button via POST Form -->
+                  <form method="POST" action="{% url 'review_leave' leave.id 'reject' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
                        bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold
                        transition shadow-sm">
-          <span class="material-symbols-outlined text-sm">close</span>
-          Reject
-        </button>
-      </form>
-    </div>
-  {% else %}
-    <div class="flex items-center justify-end gap-2">
-      <button disabled
-              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                      <span class="material-symbols-outlined text-sm">close</span>
+                      Reject
+                    </button>
+                  </form>
+                </div>
+                {% else %}
+                <div class="flex items-center justify-end gap-2">
+                  <button disabled class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
                      bg-slate-100 text-slate-400 text-xs font-semibold
                      cursor-not-allowed border border-slate-200">
-        <span class="material-symbols-outlined text-sm text-slate-300">check</span>
-        Approve
-      </button>
-      <button disabled
-              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                    <span class="material-symbols-outlined text-sm text-slate-300">check</span>
+                    Approve
+                  </button>
+                  <button disabled class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
                      bg-slate-100 text-slate-400 text-xs font-semibold
                      cursor-not-allowed border border-slate-200">
-        <span class="material-symbols-outlined text-sm text-slate-300">close</span>
-        Reject
-      </button>
-      <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg
+                    <span class="material-symbols-outlined text-sm text-slate-300">close</span>
+                    Reject
+                  </button>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg
                    bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200">
-        Completed
-      </span>
-    </div>
-  {% endif %}
-</td>
+                    Completed
+                  </span>
+                </div>
+                {% endif %}
+              </td>
 
             </tr>
             {% empty %}
@@ -335,4 +332,5 @@
   </footer>
 
 </body>
+
 </html>

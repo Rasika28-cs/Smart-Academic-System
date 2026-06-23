@@ -1,141 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Student List - Smart Academic System</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student List - Smart Academic System</title>
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
-<style>
-  body {
-    font-family: 'Inter', sans-serif;
-    background: #f8fafc;
-    color: #0f172a;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-  .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #2563eb;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-  }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
 
-  .card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    overflow: hidden;
-  }
-</style>
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 sticky top-0 z-50">
-  <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'dashboard' %}">
-    <span class="material-symbols-outlined text-2xl">school</span>
-    <span class="hidden sm:inline">Smart Attendance</span>
-  </a>
-  <ul class="flex gap-1 ml-auto items-center">
-    <li>
-      <a class="nav-link px-3 py-2 rounded-lg text-sm text-slate-500 no-underline"
-         href="{% url 'dashboard' %}">Dashboard</a>
-    </li>
-    <li>
-      <a class="nav-link px-3 py-2 rounded-lg text-sm text-red-500 no-underline"
-         href="{% url 'logout' %}">Logout</a>
-    </li>
-  </ul>
-</nav>
+  <!-- HEADER -->
+  <nav class="h-16 bg-white border-b border-slate-200 flex items-center px-6 md:px-8 sticky top-0 z-50">
+    <a class="flex items-center gap-2 font-bold text-blue-600 text-lg no-underline" href="{% url 'dashboard' %}">
+      <span class="material-symbols-outlined text-2xl">school</span>
+      <span class="hidden sm:inline">Smart Attendance</span>
+    </a>
+    <ul class="flex gap-1 ml-auto items-center">
+      <li>
+        <a class="nav-link px-3 py-2 rounded-lg text-sm text-slate-500 no-underline"
+          href="{% url 'dashboard' %}">Dashboard</a>
+      </li>
+      <li>
+        <a class="nav-link px-3 py-2 rounded-lg text-sm text-red-500 no-underline" href="{% url 'logout' %}">Logout</a>
+      </li>
+    </ul>
+  </nav>
 
-<!-- CONTENT -->
-<main class="flex-1 max-w-5xl mx-auto w-full p-6">
+  <!-- CONTENT -->
+  <main class="flex-1 max-w-5xl mx-auto w-full p-6">
 
-  <!-- Header row (Title + Batch filter aligned) -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
+    <!-- Header row (Title + Batch filter aligned) -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
 
-    <div>
-      <h2 class="text-2xl font-bold">Student List</h2>
-      <p class="text-sm text-slate-500">All enrolled students in your department</p>
+      <div>
+        <h2 class="text-2xl font-bold">Student List</h2>
+        <p class="text-sm text-slate-500">All enrolled students in your department</p>
+      </div>
+
+      <!-- Batch Filter -->
+      <form method="get">
+        <select name="batch" onchange="this.form.submit()"
+          class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+          <option value="">All Batches</option>
+
+          {% for b in batches %}
+          <option value="{{ b }}" {% if selected_batch==b %}selected{% endif %}>
+            {{ b }}
+          </option>
+          {% endfor %}
+
+        </select>
+      </form>
+
     </div>
 
-    <!-- Batch Filter -->
-    <form method="get">
-      <select name="batch"
-        onchange="this.form.submit()"
-        class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <div class="card shadow-sm">
 
-        <option value="">All Batches</option>
+      <table class="w-full">
 
-        {% for b in batches %}
-        <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>
-          {{ b }}
-        </option>
-        {% endfor %}
+        <thead class="bg-slate-100">
+          <tr>
+            <th class="text-left p-4 text-xs uppercase text-slate-500 font-semibold">
+              Student
+            </th>
+          </tr>
+        </thead>
 
-      </select>
-    </form>
+        <tbody>
 
-  </div>
+          {% for student in students %}
+          <tr class="border-t hover:bg-slate-50 transition">
 
-  <div class="card shadow-sm">
+            <td class="p-4">
+              <div class="flex items-center gap-3">
 
-    <table class="w-full">
+                <div class="avatar">
+                  {{ student.name|slice:":1" }}
+                </div>
 
-      <thead class="bg-slate-100">
-        <tr>
-          <th class="text-left p-4 text-xs uppercase text-slate-500 font-semibold">
-            Student
-          </th>
-        </tr>
-      </thead>
+                <strong class="text-slate-900">
+                  {{ student.name }}
+                </strong>
 
-      <tbody>
-
-        {% for student in students %}
-        <tr class="border-t hover:bg-slate-50 transition">
-
-          <td class="p-4">
-            <div class="flex items-center gap-3">
-
-              <div class="avatar">
-                {{ student.name|slice:":1" }}
               </div>
+            </td>
 
-              <strong class="text-slate-900">
-                {{ student.name }}
-              </strong>
+          </tr>
+          {% endfor %}
 
-            </div>
-          </td>
+        </tbody>
 
-        </tr>
-        {% endfor %}
+      </table>
 
-      </tbody>
+    </div>
 
-    </table>
+  </main>
 
-  </div>
-
-</main>
-
-<!-- FOOTER -->
-<footer class="mt-auto py-6 text-center border-t text-xs text-slate-500">
-  © 2026 Smart Academic System • Department of CSE (CS)
-</footer>
+  <!-- FOOTER -->
+  <footer class="mt-auto py-6 text-center border-t text-xs text-slate-500">
+    © 2026 Smart Academic System • Department of CSE (CS)
+  </footer>
 
 </body>
+
 </html>

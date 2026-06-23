@@ -1,21 +1,19 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My Attendance - Smart Attendance</title>
+  <title>My Attendance - Smart Academic System</title>
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-    rel="stylesheet"
-  />
+    rel="stylesheet" />
 
   <script>
     tailwind.config = {
@@ -97,28 +95,21 @@
 <body class="min-h-screen flex flex-col">
   <!-- Top Navigation -->
   <nav class="h-16 bg-surface border-b border-outline flex items-center px-6 md:px-8 gap-4 sticky top-0 z-50">
-    <a
-      href="{% url 'student_dashboard' %}"
-      class="flex items-center gap-2 font-bold text-primary text-lg no-underline"
-    >
+    <a href="{% url 'student_dashboard' %}" class="flex items-center gap-2 font-bold text-primary text-lg no-underline">
       <span class="material-symbols-outlined text-2xl">school</span>
       <span class="hidden sm:inline">Smart Attendance</span>
     </a>
 
     <ul class="flex gap-1 ml-auto list-none items-center">
       <li>
-        <a
-          href="{% url 'student_dashboard' %}"
-          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline"
-        >
+        <a href="{% url 'student_dashboard' %}"
+          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-on-surface-variant no-underline">
           Dashboard
         </a>
       </li>
       <li>
-        <a
-          href="{% url 'logout' %}"
-          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline"
-        >
+        <a href="{% url 'logout' %}"
+          class="nav-link px-3 py-2 rounded-lg text-[13px] font-medium text-error no-underline">
           Logout
         </a>
       </li>
@@ -160,15 +151,15 @@
             </td>
             <td class="px-6 py-4">
               {% if record.status == "Present" %}
-                <span class="status-badge status-badge-present">
-                  <span class="material-symbols-outlined text-sm">check_circle</span>
-                  Present
-                </span>
+              <span class="status-badge status-badge-present">
+                <span class="material-symbols-outlined text-sm">check_circle</span>
+                Present
+              </span>
               {% else %}
-                <span class="status-badge status-badge-absent">
-                  <span class="material-symbols-outlined text-sm">cancel</span>
-                  Absent
-                </span>
+              <span class="status-badge status-badge-absent">
+                <span class="material-symbols-outlined text-sm">cancel</span>
+                Absent
+              </span>
               {% endif %}
             </td>
           </tr>
@@ -189,11 +180,12 @@
     </div>
   </main>
 
-<!-- Footer -->
-<footer class="bg-surface border-t border-outline text-center py-6 px-4">
-  <p class="text-xs text-on-surface-variant">
-    &copy; 2026 Smart Academic System • Department of CSE (Cyber Security)
-  </p>
-</footer>
+  <!-- Footer -->
+  <footer class="bg-surface border-t border-outline text-center py-6 px-4">
+    <p class="text-xs text-on-surface-variant">
+      &copy; 2026 Smart Academic System • Department of CSE (Cyber Security)
+    </p>
+  </footer>
 </body>
+
 </html>

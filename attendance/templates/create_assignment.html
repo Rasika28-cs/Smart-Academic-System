@@ -6,6 +6,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ page_title|default:"Create Assignment" }} - Smart Academic System</title>
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link
@@ -136,7 +138,8 @@
             <select name="subject" id="subject" class="input-field" required>
               <option value="" disabled selected>Select Subject</option>
               {% for subject in subjects %}
-              <option value="{{ subject.id }}" {% if assignment and assignment.subject.id == subject.id %} selected {% endif %}>
+              <option value="{{ subject.id }}" {% if assignment and assignment.subject.id==subject.id %} selected {%
+                endif %}>
                 {{ subject.name }}
               </option>
               {% endfor %}

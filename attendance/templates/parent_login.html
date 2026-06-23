@@ -5,7 +5,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Login - Smart Academic System</title>
+    <title>Parent Login - Smart Academic System</title>
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -170,22 +171,22 @@
     </footer>
 
     <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const passwordInput = document.getElementById("password");
-    const toggleButton = document.getElementById("togglePassword");
-    const eyeIcon = document.getElementById("eyeIcon");
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput = document.getElementById("password");
+            const toggleButton = document.getElementById("togglePassword");
+            const eyeIcon = document.getElementById("eyeIcon");
 
-    toggleButton.addEventListener("click", function () {
-        if (passwordInput.type === "password") {
-            passwordInput.type = "text";
-            eyeIcon.textContent = "visibility_off";
-        } else {
-            passwordInput.type = "password";
-            eyeIcon.textContent = "visibility";
-        }
-    });
-});
-</script>
+            toggleButton.addEventListener("click", function () {
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    eyeIcon.textContent = "visibility_off";
+                } else {
+                    passwordInput.type = "password";
+                    eyeIcon.textContent = "visibility";
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

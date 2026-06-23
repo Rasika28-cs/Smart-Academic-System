@@ -5,7 +5,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Class Incharge Leave Requests - Smart Academic System</title>
+  <title>Leave Requests - Smart Academic System</title>
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -94,7 +95,7 @@
           class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
           <option value="">All Years</option>
           {% for batch in batches %}
-          <option value="{{ batch }}" {% if batch == selected_batch %}selected{% endif %}>{{ batch }}</option>
+          <option value="{{ batch }}" {% if batch==selected_batch %}selected{% endif %}>{{ batch }}</option>
           {% endfor %}
         </select>
       </form>
