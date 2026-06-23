@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',
+    'django.contrib.staticfiles',
+    'cloudinary',
 
     # Custom apps
     'leave_app.apps.LeaveAppConfig',
@@ -44,6 +47,14 @@ INSTALLED_APPS = [
     'events',
     'department',
 ]
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('do5ma4oaa'),
+    'API_KEY': os.environ.get('783743373927575'),
+    'API_SECRET': os.environ.get('MMVRvpZUflTzCqH-ybrJCEqfizs'),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
