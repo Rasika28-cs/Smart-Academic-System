@@ -950,27 +950,14 @@
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-6">
         <div>
-          <p class="text-primary font-bold text-sm uppercase tracking-[0.25em] mb-4">
-            Core Team
-          </p>
-
-          <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text">
-            Our Academic <span class="text-primary">Faculty</span>
-          </h2>
-
+          <p class="text-primary font-bold text-sm uppercase tracking-[0.25em] mb-4">Core Team</p>
+          <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text">Our Academic <span
+              class="text-primary">Faculty</span></h2>
           <div class="w-16 h-1.5 bg-accent mt-6 rounded-full"></div>
-
-          <!-- ADD TEXT HERE -->
-          <p class="text-muted max-w-2xl text-sm sm:text-base leading-relaxed mt-6">
-            Meet our team of distinguished academicians, researchers, and mentors
-            shaping the next generation of Cyber Security professionals.
-          </p>
         </div>
-      </div>
-      {% if staff %}
-      <div class="faculty-grid">
-        {% for member in staff|slice:":8" %}
-        <div
+        <p class="text-muted max-w-md text-sm sm:text-base leading-relaxed">Meet our team of distinguished academicians,
+          researchers, and mentors shaping the next generation of Cyber Security professionals.</p>
+      </div> {% if staff %} <div class="faculty-grid"> {% for member in staff|slice:":8" %} <div
           class="group bg-slate-50 border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-200/60 transition-all hover:-translate-y-2">
           <div class="h-44 sm:h-56 overflow-hidden relative"> {% if member.image %} <img src="{{ member.image.url }}"
               alt="{{ member.name }}" class="w-full h-full object-cover object-top"> {% else %} <div
@@ -989,8 +976,7 @@
             <div class="text-xs text-muted font-medium bg-slate-100 py-1.5 px-3 rounded-lg inline-block line-clamp-1">
               {{ member.qualification }} </div>
           </div>
-        </div> {% endfor %}
-      </div> {% if staff|length > 8 %} <div class="mt-12 sm:mt-16 text-center"> <a
+        </div> {% endfor %} </div> {% if staff|length > 8 %} <div class="mt-12 sm:mt-16 text-center"> <a
           class="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-slate-100 text-text font-bold rounded-2xl hover:bg-primary hover:text-white transition-all shadow-soft active:scale-[0.98] text-sm sm:text-base"
           href="#faculty"> View All Profiles <span
             class="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_forward</span> </a> </div> {% endif %} {%
@@ -1008,44 +994,24 @@
   <section class="py-16 sm:py-24 px-4 sm:px-6 bg-slate-50" id="achievements">
     <div class="max-w-6xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-16 gap-6">
-  <div>
-    <p class="text-primary font-bold text-sm uppercase tracking-[0.25em] mb-4">
-      Milestones
-    </p>
-
-    <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text">
-      Legacy of <span class="text-primary">Excellence</span>
-    </h2>
-
-    <div class="w-16 h-1.5 bg-primary mt-6 rounded-full"></div>
-
-    <!-- Move description here -->
-    <p class="text-muted max-w-2xl text-sm sm:text-base leading-relaxed mt-6">
-      Celebrating the awards, publications, and professional wins that mark our
-      path of continuous growth.
-    </p>
-  </div>
-</div>
-
-      {% if achievements %}
-      <div class="achievement-grid">
-        {% for item in achievements|slice:":6" %}
-        <div
+        <div>
+          <p class="text-primary font-bold text-sm uppercase tracking-[0.25em] mb-4">Milestones</p>
+          <h2 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-text">Legacy of <span
+              class="text-primary">Excellence</span></h2>
+          <div class="w-16 h-1.5 bg-primary mt-6 rounded-full"></div>
+        </div>
+        <p class="text-muted max-w-md text-sm sm:text-base">Celebrating the awards, publications, and professional wins
+          that mark our path of continuous growth.</p>
+      </div> {% if achievements %} <div class="achievement-grid"> {% for item in achievements|slice:":6" %} <div
           class="bg-surface rounded-[2rem] shadow-soft border border-slate-100 overflow-hidden group hover:shadow-card transition-all flex flex-col">
-          <div class="h-40 sm:h-48 overflow-hidden relative">
-            {% if item.image %}
-            <img alt="{{ item.title }}"
+          <div class="h-40 sm:h-48 overflow-hidden relative"> {% if item.image %} <img alt="{{ item.title }}"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTm2_U4TrdQ06R3usXnuvgBMJ_s0J5zCeAonnrO940vRsbmkiYWrH68DOXxiaEvtSo6YDSAn0zbKqRW7mCwHFHvjOyBXSvwqV2P5_neXnu5W-tApZkGjyWQW7zMdz2cLVoyc4HItV629jqomxOiGyUg_BecU5TeCU6kNt6x7N02db2LhgAnK3TFacRyGS191tjTl0-nOHHpMOoGemBgEtGmreMBDlEOVSQ_-9GA_rv4IiImODgMs2e1bgxgJPES_1NZWe-MHA-woC1" />
-            {% else %}
-            <div class="w-full h-full bg-primary/5 flex items-center justify-center">
-              <span class="material-symbols-outlined text-primary/30 text-5xl fill">military_tech</span>
-            </div>
-            {% endif %}
+            {% else %} <div class="w-full h-full bg-primary/5 flex items-center justify-center"> <span
+                class="material-symbols-outlined text-primary/30 text-5xl fill">military_tech</span> </div> {% endif %}
             <div
               class="absolute top-4 sm:top-5 left-4 sm:left-5 px-3 sm:px-4 py-1.5 bg-white shadow-xl rounded-xl text-[11px] font-black text-primary uppercase">
-              {{ item.date|date:"Y" }}
-            </div>
+              {{ item.date|date:"Y" }} </div>
           </div>
           <div class="p-6 sm:p-8 flex-1 flex flex-col">
             <h4
@@ -1055,26 +1021,16 @@
             <div
               class="mt-auto pt-4 sm:pt-5 border-t border-slate-50 text-[11px] text-muted font-bold flex items-center gap-2">
               <span class="material-symbols-outlined text-[16px] text-accent fill">workspace_premium</span> Verified
-              Achievement
-            </div>
+              Achievement </div>
           </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% if achievements|length > 6 %}
-      <div class="mt-12 sm:mt-16 text-center">
-        <a class="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-primary text-white font-bold rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary/30 transition-all active:scale-[0.98] text-sm sm:text-base"
-          href="#achievements">
-          Explore Hall of Fame <span class="material-symbols-outlined">stars</span>
-        </a>
-      </div>
-      {% endif %}
-      {% else %}
-      <div class="py-16 sm:py-24 text-center bg-white border border-slate-200 rounded-[2.5rem] shadow-soft">
-        <span class="material-symbols-outlined text-slate-200 text-6xl sm:text-7xl mb-6">military_tech</span>
+        </div> {% endfor %} </div> {% if achievements|length > 6 %} <div class="mt-12 sm:mt-16 text-center"> <a
+          class="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-primary text-white font-bold rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary/30 transition-all active:scale-[0.98] text-sm sm:text-base"
+          href="#achievements"> Explore Hall of Fame <span class="material-symbols-outlined">stars</span> </a> </div> {%
+      endif %} {% else %} <div
+        class="py-16 sm:py-24 text-center bg-white border border-slate-200 rounded-[2.5rem] shadow-soft"> <span
+          class="material-symbols-outlined text-slate-200 text-6xl sm:text-7xl mb-6">military_tech</span>
         <p class="text-muted text-base sm:text-lg">New achievements are being documented.</p>
-      </div>
-      {% endif %}
+      </div> {% endif %}
     </div>
   </section>
 
