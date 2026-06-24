@@ -289,3 +289,49 @@ class StudentGrade(models.Model):
         return f"{self.student.roll_no} - {self.subject_code}"
     
     
+
+
+    # ─────────────────────────────
+# ABSENTEE RECORD
+# ─────────────────────────────
+class Absentee(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    date = models.DateField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'subject', 'date')
+
+    def __str__(self):
+        return f"{self.student.roll_no} - Absent - {self.date}"
+    
+class LeaveAttendance(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    date = models.DateField()
+
+    leave_request = models.ForeignKey(
+        LeaveRequest,
+        on_delete=models.CASCADE,
+        related_name="attendance_records"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'subject', 'date')
+
+    def __str__(self):
+        return f"{self.student.roll_no} - Leave - {self.date}"

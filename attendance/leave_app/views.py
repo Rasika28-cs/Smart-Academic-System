@@ -775,11 +775,31 @@ def _create_attendance_for_leave(leave: LeaveRequest) -> None:
 # ---------------------------------------------------------------------------
 # 7. ATTENDANCE MARKING
 # ---------------------------------------------------------------------------
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect
+from django.core.exceptions import PermissionDenied
+from django.contrib import messages
+from django.db import transaction
+from datetime import date
+
+from .models import (
+    Student,
+    Attendance,
+    Timetable,
+    LeaveRequest,
+    Absentee,
+    LeaveAttendance
+)
+
 
 @login_required
 @csrf_protect
 def mark_attendance(request):
 
+    # ----------------------------
+    # PERMISSION CHECK
+    # ----------------------------
     is_teacher = (
         request.user.is_staff
         or request.user.is_superuser
@@ -789,12 +809,9 @@ def mark_attendance(request):
     )
 
     if not is_teacher:
-        raise PermissionDenied(
-            "Only authorised staff can mark attendance."
-        )
+        raise PermissionDenied("Only authorised staff can mark attendance.")
 
     today = date.today()
-
     batch = request.GET.get("batch", "").strip()
 
     students = Student.objects.all().order_by("roll_no")
@@ -802,130 +819,130 @@ def mark_attendance(request):
     if batch:
         students = students.filter(batch=batch)
 
-    students_on_leave_ids = set(
-        LeaveRequest.objects.filter(
-            from_date__lte=today,
-            to_date__gte=today,
-            status="APPROVED",
-        ).values_list("student_id", flat=True)
+    # ----------------------------
+    # APPROVED LEAVES TODAY
+    # ----------------------------
+    leave_qs = LeaveRequest.objects.filter(
+        from_date__lte=today,
+        to_date__gte=today,
+        status="APPROVED"
     )
+
+    students_on_leave = {
+        obj["student_id"]: obj["id"]
+        for obj in leave_qs.values("student_id", "id")
+    }
+
+    # ----------------------------
+    # TIMETABLE CACHE
+    # ----------------------------
+    day = today.strftime("%a")
+
+    timetable_cache = {}
+
+    timetable_rows = Timetable.objects.filter(
+        day=day
+    ).select_related("subject", "department")
+
+    for row in timetable_rows:
+        key = (row.batch, row.department_id)
+        timetable_cache.setdefault(key, []).append(row)
 
     # ----------------------------
     # SAVE ATTENDANCE
     # ----------------------------
     if request.method == "POST":
 
-        day = today.strftime("%a")
-
-        timetable_cache = {}
-
-        timetable_rows = (
-            Timetable.objects
-            .filter(day=day)
-            .select_related("subject", "department")
-        )
-
-        for row in timetable_rows:
-            key = (row.batch, row.department_id)
-            timetable_cache.setdefault(key, []).append(row)
-
         with transaction.atomic():
 
             for student in students:
 
-                if student.id in students_on_leave_ids:
+                status = request.POST.get(f"status_{student.id}")
+
+                if status not in ["Present", "Absent", "Leave"]:
                     continue
 
-                status = request.POST.get(
-                    f"status_{student.id}"
+                student_slots = timetable_cache.get(
+                    (student.batch, student.department_id),
+                    []
                 )
 
-                if status not in (
-                    "Present",
-                    "Absent",
-                    "Leave",
-                ):
-                    continue
+                # ----------------------------
+                # HANDLE LEAVE STUDENT
+                # ----------------------------
+                if student.id in students_on_leave:
 
-                updated = (
-                    Attendance.objects
-                    .filter(
-                        student=student,
-                        date=today,
-                    )
-                    .update(status=status)
-                )
+                    leave_req_id = students_on_leave[student.id]
 
-                if updated:
-                    continue
+                    leave_req = LeaveRequest.objects.get(id=leave_req_id)
 
-                student_timetable = timetable_cache.get(
-                    (
-                        student.batch,
-                        student.department_id,
-                    ),
-                    [],
-                )
+                    for slot in student_slots:
 
-                if student_timetable:
-
-                    for slot in student_timetable:
-
-                        Attendance.objects.get_or_create(
+                        LeaveAttendance.objects.get_or_create(
                             student=student,
                             subject=slot.subject,
                             date=today,
                             defaults={
-                                "status": status
-                            },
+                                "leave_request": leave_req
+                            }
                         )
 
-                else:
+                    continue
 
-                    Attendance.objects.get_or_create(
+                # ----------------------------
+                # UPDATE OR CREATE ATTENDANCE
+                # ----------------------------
+                for slot in student_slots:
+
+                    attendance, created = Attendance.objects.get_or_create(
                         student=student,
-                        subject=None,
+                        subject=slot.subject,
                         date=today,
-                        defaults={
-                            "status": status
-                        },
+                        defaults={"status": status}
                     )
 
-        messages.success(
-            request,
-            "Attendance marked successfully"
-        )
+                    if not created:
+                        attendance.status = status
+                        attendance.save()
 
-        return redirect("mentor_dashboard")
+                # ----------------------------
+                # ABSENT TRACKING
+                # ----------------------------
+                if status == "Absent":
+                    for slot in student_slots:
 
-    # ----------------------------
-    # DISPLAY PAGE
-    # ----------------------------
+                        Absentee.objects.get_or_create(
+                            student=student,
+                            subject=slot.subject,
+                            date=today
+                        )
+
+    messages.success(request, "Attendance marked successfully")
+    return redirect("mentor_dashboard")
+
+
+# ----------------------------
+# DISPLAY PAGE
+# ----------------------------
     student_data = []
 
     for student in students:
 
-        existing = (
-            Attendance.objects
-            .filter(
-                student=student,
-                date=today
-            )
-            .first()
-        )
+        existing = Attendance.objects.filter(
+            student=student,
+            date=today
+        ).first()
 
         student_data.append({
             "student": student,
             "status": existing.status if existing else "Present",
-            "is_on_leave": student.id in students_on_leave_ids,
+            "is_on_leave": student.id in students_on_leave,
         })
 
-    batches = (
-        Student.objects
-        .values_list("batch", flat=True)
-        .distinct()
-        .order_by("batch")
-    )
+    batches = Student.objects.values_list(
+        "batch",
+        flat=True
+    ).distinct().order_by("batch")
 
     return render(
         request,
@@ -936,10 +953,6 @@ def mark_attendance(request):
             "selected_batch": batch,
         }
     )
-# ---------------------------------------------------------------------------
-# 8. TODAY LEAVES
-# ---------------------------------------------------------------------------
-
 
 @login_required
 def today_leaves(request):
