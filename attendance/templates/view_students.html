@@ -81,7 +81,7 @@
           <option value="">All Batches</option>
 
           {% for b in batches %}
-          <option value="{{ b }}" {% if selected_batch==b %}selected{% endif %}>
+          <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>
             {{ b }}
           </option>
           {% endfor %}

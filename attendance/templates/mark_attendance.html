@@ -76,7 +76,7 @@
           <option value="">All Batches</option>
 
           {% for b in batches %}
-          <option value="{{ b }}" {% if selected_batch==b %}selected{% endif %}>
+          <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>
             {{ b }}
           </option>
           {% endfor %}
@@ -125,9 +125,9 @@
               <select name="status_{{ item.student.id }}"
                 class="w-full h-10 px-3 border rounded-lg text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-500
                      {% if item.is_on_leave %}border-yellow-200 bg-yellow-50 text-yellow-800{% else %}border-slate-200{% endif %}">
-                <option value="Present" {% if item.status=="Present" %}selected{% endif %}>Present</option>
-                <option value="Absent" {% if item.status=="Absent" %}selected{% endif %}>Absent</option>
-                <option value="Leave" {% if item.status=="Leave" %}selected{% endif %}>Leave</option>
+                <option value="Present" {% if item.status == "Present" %}selected{% endif %}>Present</option>
+                <option value="Absent" {% if item.status == "Absent" %}selected{% endif %}>Absent</option>
+                <option value="Leave" {% if item.status == "Leave" %}selected{% endif %}>Leave</option>
               </select>
             </div>
 
