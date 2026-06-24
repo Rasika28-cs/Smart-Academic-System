@@ -803,24 +803,43 @@
             </div>
             <div class="tbl-wrap">
               <table>
-                <thead>
-                  <tr><th>Name</th><th>Roll No.</th><th>Year</th><th>Dept</th></tr>
-                </thead>
-                <tbody>
-                  {% for d in defaulter_list %}
-                  <tr>
-                    <td style="font-weight:600;">{{ d.name }}</td>
-                    <td style="color:var(--muted); font-weight: 500;">{{ d.roll_no }}</td>
-                    <td>{{ d.year }}</td>
-                    <td><span class="badge badge-red">{{ d.department }}</span></td>
-                  </tr>
-                  {% empty %}
-                  <tr><td colspan="4"><div class="empty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Zero entries in defaulter directory.
-                  </div></td></tr>
-                  {% endfor %}
-                </tbody>
+               <thead>
+  <tr>
+    <th>Name</th>
+    <th>Roll No.</th>
+    <th>Year</th>
+    <th>Dept</th>
+    <th>Staff</th>
+    <th>Action Taken</th>
+  </tr>
+</thead>
+
+<tbody>
+  {% for d in defaulter_list %}
+  <tr>
+    <td style="font-weight:600;">{{ d.name }}</td>
+    <td style="color:var(--muted); font-weight:500;">{{ d.roll_no }}</td>
+    <td>{{ d.year }}</td>
+    <td>
+      <span class="badge badge-red">{{ d.department }}</span>
+    </td>
+    <td>{{ d.staff_name }}</td>
+    <td>{{ d.action_taken }}</td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="6">
+      <div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Zero entries in defaulter directory.
+      </div>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
+                
               </table>
             </div>
           </div>
