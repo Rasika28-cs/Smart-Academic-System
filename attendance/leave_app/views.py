@@ -954,6 +954,7 @@ def mark_attendance(request):
         }
     )
 
+
 @login_required
 def today_leaves(request):
     if not request.user.is_staff:
