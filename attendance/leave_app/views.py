@@ -30,7 +30,6 @@ from functools import wraps
 from typing import Optional, Tuple
 
 import pandas as pd
-import qrcode
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -1399,13 +1398,6 @@ def defaulter_report_pdf(request):
 def calculator(request):
     return render(request, "calculator.html")
 
-
-def generate_qr(request):
-    url = request.build_absolute_uri(reverse("home"))
-    img = qrcode.make(url)
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    return HttpResponse(buffer.getvalue(), content_type="image/png")
 
 
 # ---------------------------------------------------------------------------
