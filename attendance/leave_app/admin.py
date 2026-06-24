@@ -3,8 +3,11 @@ from .models import (
     Student, LeaveRequest, Attendance, Department,
     Subject, Timetable, Assignment,
     Notification, ParentProfile,
-    DefaulterStudent
+    DefaulterStudent,
+    Absentee,
+    LeaveAttendance
 )
+
 class LeaveRequestAdmin(admin.ModelAdmin):
     list_display = ('student', 'from_date', 'to_date', 'status', 'created_at')
     list_filter = ('status', 'from_date')
@@ -29,3 +32,5 @@ admin.site.register(DefaulterStudent)
 admin.site.register(Notification)
 admin.site.register(ParentProfile)
 admin.site.register(LeaveRequest, LeaveRequestAdmin)
+admin.site.register(Absentee)
+admin.site.register(LeaveAttendance)
