@@ -624,7 +624,7 @@
             </div>
           </div>
           <div class="card-body">
-            {% for s in students|dictsort:"perc"|slice:":5" %}
+            {% for s in critical_students %}
             <div class="perf-item">
               <div class="perf-rank">{{ forloop.counter }}</div>
               <div class="perf-info">

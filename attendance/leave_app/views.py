@@ -1035,6 +1035,10 @@ def hod_dashboard(request):
         below=Count("id", filter=Q(perc__lt=75)),
         total=Count("id"),
     )
+    # Critical Attendance Students (< 70%)
+    critical_students = students.filter(
+        perc__lt=70
+    ).order_by("perc")[:5]
 
     today_dt = date.today()
     start_date = today_dt - timedelta(days=21)
@@ -1187,6 +1191,7 @@ def hod_dashboard(request):
             "defaulter_list": defaulter_list,
             "grade_uploads": grade_uploads,
             "recent_grades": recent_grades,
+            "critical_students": critical_students,
         },
     )
 
