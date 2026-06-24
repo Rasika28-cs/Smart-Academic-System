@@ -144,7 +144,7 @@
                        focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">All Batches</option>
           {% for batch in batches %}
-          <option value="{{ batch }}" {% if batch==selected_batch %}selected{% endif %}>
+          <option value="{{ batch }}" {% if batch == selected_batch %}selected{% endif %}>
             {{ batch }}
           </option>
           {% endfor %}

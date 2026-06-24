@@ -122,7 +122,7 @@
           <option value="">All Batches</option>
 
           {% for b in batches %}
-          <option value="{{ b }}" {% if selected_batch==b %}selected{% endif %}>
+          <option value="{{ b }}" {% if selected_batch == b %}selected{% endif %}>
             {{ b }}
           </option>
           {% endfor %}
@@ -215,15 +215,15 @@
 
                   <option value="" {% if not s.action_taken %}selected{% endif %}>Pending</option>
 
-                  <option value="Letter" {% if s.action_taken=="Letter" %}selected{% endif %}>Letter</option>
+                  <option value="Letter" {% if s.action_taken == "Letter" %}selected{% endif %}>Letter</option>
 
-                  <option value="Letter + Assignment" {% if s.action_taken=="Letter + Assignment" %}selected{% endif %}>
+                  <option value="Letter + Assignment" {% if s.action_taken == "Letter + Assignment" %}selected{% endif %}>
                     Letter + Assignment</option>
 
-                  <option value="Letter + Seminar" {% if s.action_taken=="Letter + Seminar" %}selected{% endif %}>Letter
+                  <option value="Letter + Seminar" {% if s.action_taken == "Letter + Seminar" %}selected{% endif %}>Letter
                     + Seminar</option>
 
-                  <option value="Parent Called" {% if s.action_taken=="Parent Called" %}selected{% endif %}>Parent
+                  <option value="Parent Called" {% if s.action_taken == "Parent Called" %}selected{% endif %}>Parent
                     Called</option>
 
                 </select>
