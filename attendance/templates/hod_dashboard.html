@@ -82,22 +82,22 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .logo-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 9px;
-      background: var(--blue);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.logo-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .logo-icon svg {
-      width: 18px;
-      height: 18px;
-      color: #fff;
-    }
-
+/* replace svg rule with this */
+.logo-icon .material-symbols-outlined {
+  font-size: 18px;
+  color: #fff;
+  font-variation-settings: 'FILL' 1;
+}
     .logo-name {
       font-size: 14px;
       font-weight: 700;
@@ -992,17 +992,14 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-            <path d="M2 17l10 5 10-5" />
-            <path d="M2 12l10 5 10-5" />
-          </svg>
+          <span class="material-symbols-outlined">school</span>
         </div>
         <div>
-          <div class="logo-name">AttendanceIQ</div>
+          <div class="logo-name">SAS</div>
           <div class="logo-sub">HOD Portal</div>
         </div>
       </div>
+
 
       <div class="sidebar-section">Overview</div>
       <a href="#overview" class="nav-item active">
@@ -1414,9 +1411,9 @@
               <input class="search-input" type="text" name="search" placeholder="Search by name or roll number…"
                 value="{{ search_query }}" />
               <select name="sort" class="date-input">
-                <option value="high" {% if request.GET.sort == "high" or not request.GET.sort %}selected{% endif %}>Sort:
+                <option value="high" {% if request.GET.sort=="high" or not request.GET.sort %}selected{% endif %}>Sort:
                   Highest first</option>
-                <option value="low" {% if request.GET.sort == "low" %}selected{% endif %}>Sort: Lowest first</option>
+                <option value="low" {% if request.GET.sort=="low" %}selected{% endif %}>Sort: Lowest first</option>
               </select>
               <button type="submit" class="btn btn-primary">Apply Filters</button>
               {% if search_query %}
@@ -1775,15 +1772,15 @@
   </script>
 
   <script>
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', function () {
-    if (window.innerWidth <= 768) {
-      setTimeout(() => {
-        closeSidebar();
-      }, 100);
-    }
-  });
-});
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function () {
+        if (window.innerWidth <= 768) {
+          setTimeout(() => {
+            closeSidebar();
+          }, 100);
+        }
+      });
+    });
   </script>
 </body>
 
