@@ -786,7 +786,6 @@ from datetime import date
 from .models import (
     Student,
     Attendance,
-    Timetable,
     LeaveRequest,
     Absentee,
     LeaveAttendance
@@ -833,20 +832,6 @@ def mark_attendance(request):
         for obj in leave_qs.values("student_id", "id")
     }
 
-    # ----------------------------
-    # TIMETABLE CACHE
-    # ----------------------------
-    day = today.strftime("%a")
-
-    timetable_cache = {}
-
-    timetable_rows = Timetable.objects.filter(
-        day=day
-    ).select_related("subject", "department")
-
-    for row in timetable_rows:
-        key = (row.batch, row.department_id)
-        timetable_cache.setdefault(key, []).append(row)
 
     # ----------------------------
     # SAVE ATTENDANCE
@@ -862,10 +847,7 @@ def mark_attendance(request):
                 if status not in ["Present", "Absent", "Leave"]:
                     continue
 
-                student_slots = timetable_cache.get(
-                    (student.batch, student.department_id),
-                    []
-                )
+                
 
                 # ----------------------------
                 # HANDLE LEAVE STUDENT
@@ -876,46 +858,43 @@ def mark_attendance(request):
 
                     leave_req = LeaveRequest.objects.get(id=leave_req_id)
 
-                    for slot in student_slots:
+                    LeaveAttendance.objects.get_or_create(
+                        student=student,
+                        date=today,
+                        defaults={
+                            "leave_request": leave_req
+                        }
+                    )
 
-                        LeaveAttendance.objects.get_or_create(
-                            student=student,
-                            subject=slot.subject,
-                            date=today,
-                            defaults={
-                                "leave_request": leave_req
-                            }
-                        )
+                    Attendance.objects.update_or_create(
+                        student=student,
+                        date=today,
+                        defaults={"status": "Leave"}
+                    )
 
                     continue
 
                 # ----------------------------
                 # UPDATE OR CREATE ATTENDANCE
                 # ----------------------------
-                for slot in student_slots:
+                attendance, created = Attendance.objects.get_or_create(
+                    student=student,
+                    date=today,
+                    defaults={"status": status}
+                )
 
-                    attendance, created = Attendance.objects.get_or_create(
-                        student=student,
-                        subject=slot.subject,
-                        date=today,
-                        defaults={"status": status}
-                    )
-
-                    if not created:
-                        attendance.status = status
-                        attendance.save()
+                if not created:
+                    attendance.status = status
+                    attendance.save()
 
                 # ----------------------------
                 # ABSENT TRACKING
                 # ----------------------------
                 if status == "Absent":
-                    for slot in student_slots:
-
-                        Absentee.objects.get_or_create(
-                            student=student,
-                            subject=slot.subject,
-                            date=today
-                        )
+                    Absentee.objects.get_or_create(
+                        student=student,
+                        date=today
+                    )
 
         messages.success(request, "Attendance marked successfully")
         return redirect("mentor_dashboard")

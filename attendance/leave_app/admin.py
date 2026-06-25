@@ -41,8 +41,8 @@ class TimetableAdmin(admin.ModelAdmin):
 # ABSENTEE ADMIN
 # -------------------------
 class AbsenteeAdmin(admin.ModelAdmin):
-    list_display = ('student', 'subject', 'date')
-    list_filter = ('date', 'subject')
+    list_display = ('student', 'date')
+    list_filter = ('date',)
     search_fields = ('student__name', 'student__roll_no')
 
 

@@ -977,8 +977,10 @@
           <div class="h-44 sm:h-56 overflow-hidden relative"> {% if member.image %} <img src="{{ member.image.url }}"
               alt="{{ member.name }}" class="w-full h-full object-cover object-top"> {% else %} <div
               class="w-full h-full bg-slate-200 flex items-center justify-center"> <span
-                class="material-symbols-outlined text-slate-400 text-5xl sm:text-6xl fill">account_circle</span> </div>
-            {% endif %} <div
+                class="material-symbols-outlined text-slate-400 text-5xl sm:text-6xl fill">account_circle</span>
+            </div>
+            {% endif %}
+            <div
               class="absolute inset-0 bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <span class="bg-white/90 px-4 py-2 rounded-full text-primary text-xs font-bold shadow-xl">Profile</span>
             </div>
@@ -991,16 +993,16 @@
             <div class="text-xs text-muted font-medium bg-slate-100 py-1.5 px-3 rounded-lg inline-block line-clamp-1">
               {{ member.qualification }} </div>
           </div>
-        </div> {% endfor %}
-      </div> {% if staff|length > 8 %} <div class="mt-12 sm:mt-16 text-center"> <a
-          class="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 bg-slate-100 text-text font-bold rounded-2xl hover:bg-primary hover:text-white transition-all shadow-soft active:scale-[0.98] text-sm sm:text-base"
-          href="#faculty"> View All Profiles <span
-            class="material-symbols-outlined text-[18px] sm:text-[20px]">arrow_forward</span> </a> </div> {% endif %} {%
-      else %} <div
-        class="py-16 sm:py-24 text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem]"> <span
-          class="material-symbols-outlined text-slate-200 text-6xl sm:text-7xl mb-6">badge</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="py-16 sm:py-24 text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem]">
+        <span class="material-symbols-outlined text-slate-200 text-6xl sm:text-7xl mb-6">badge</span>
         <p class="text-muted text-base sm:text-lg">Staff directory is currently being updated.</p>
-      </div> {% endif %}
+      </div>
+      {% endif %}
     </div>
   </section>
 

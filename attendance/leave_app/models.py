@@ -134,17 +134,14 @@ class Attendance(models.Model):
     ]
 
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
 
     class Meta:
-        unique_together = ('student', 'subject', 'date')
+        unique_together = ('student', 'date')
 
     def __str__(self):
         return f"{self.student.name} - {self.date} - {self.status}"
-
-
 # ─────────────────────────────
 # TIMETABLE (FIXED)
 # ─────────────────────────────
@@ -296,30 +293,20 @@ class StudentGrade(models.Model):
 # ─────────────────────────────
 class Absentee(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    subject = models.ForeignKey(
-        Subject,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    
     date = models.DateField()
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('student', 'subject', 'date')
+        unique_together = ('student', 'date')
 
     def __str__(self):
         return f"{self.student.roll_no} - Absent - {self.date}"
     
 class LeaveAttendance(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    subject = models.ForeignKey(
-        Subject,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    
     date = models.DateField()
 
     leave_request = models.ForeignKey(
@@ -331,7 +318,7 @@ class LeaveAttendance(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('student', 'subject', 'date')
+        unique_together = ('student', 'date')
 
     def __str__(self):
         return f"{self.student.roll_no} - Leave - {self.date}"
