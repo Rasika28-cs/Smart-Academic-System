@@ -1414,9 +1414,9 @@
               <input class="search-input" type="text" name="search" placeholder="Search by name or roll number…"
                 value="{{ search_query }}" />
               <select name="sort" class="date-input">
-                <option value="high" {% if request.GET.sort=="high" or not request.GET.sort %}selected{% endif %}>Sort:
+                <option value="high" {% if request.GET.sort == "high" or not request.GET.sort %}selected{% endif %}>Sort:
                   Highest first</option>
-                <option value="low" {% if request.GET.sort=="low" %}selected{% endif %}>Sort: Lowest first</option>
+                <option value="low" {% if request.GET.sort == "low" %}selected{% endif %}>Sort: Lowest first</option>
               </select>
               <button type="submit" class="btn btn-primary">Apply Filters</button>
               {% if search_query %}
