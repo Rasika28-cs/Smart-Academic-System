@@ -1060,48 +1060,6 @@ def hod_dashboard(request):
         for d in trend_data
     ]
 
-    subject_stats = (
-        Attendance.objects.filter(
-            student__department=managed_dept
-        )
-        .values(
-            "subject__name",
-            "subject__code"
-        )
-        .annotate(
-            total=Count("id"),
-            present=Count(
-                "id",
-                filter=Q(status="Present")
-            ),
-            leave=Count(
-                "id",
-                filter=Q(status="Leave")
-            ),
-        )
-        .annotate(
-            perc=Case(
-                When(
-                    total__gt=0,
-                    then=(F("present") * 100.0) / F("total")
-                ),
-                default=0.0,
-                output_field=FloatField(),
-            )
-        )
-        .order_by("subject__name")
-    )
-
-    sub_names = [
-        s["subject__name"] or "General"
-        for s in subject_stats
-    ]
-
-    sub_percs = [
-        round(s["perc"], 2)
-        for s in subject_stats
-    ]
-
     total_stats = Attendance.objects.filter(
         student__department=managed_dept
     ).aggregate(
@@ -1167,8 +1125,6 @@ def hod_dashboard(request):
             "percentages": json.dumps(percentages),
             "trend_labels": json.dumps(trend_labels),
             "trend_values": json.dumps(trend_values),
-            "sub_names": json.dumps(sub_names),
-            "sub_percs": json.dumps(sub_percs),
             "dist_data": json.dumps(dist_data),
             "total_students": stats["total"],
             "above_75_count": stats["above"],
