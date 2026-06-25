@@ -1,537 +1,1270 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HOD Dashboard – {{ managed_dept.name }}</title>
- 
-<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+
+  <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
     /* ── Reset & Base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
-      --blue:       #1a56db;
-      --blue-dark:  #1342b0;
+      --blue: #1a56db;
+      --blue-dark: #1342b0;
       --blue-light: #e8f0fd;
-      --green:      #0ea472;
-      --green-light:#e6f7f1;
-      --amber:      #d97706;
-      --amber-light:#fef3c7;
-      --red:        #dc2626;
-      --red-light:  #fee2e2;
-      --bg:         #f8fafc;
-      --surface:    #ffffff;
-      --border:     #e2e8f0;
-      --text:       #0f172a;
-      --muted:      #64748b;
-      --radius:     12px;
-      --shadow:     0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.03);
+      --green: #0ea472;
+      --green-light: #e6f7f1;
+      --amber: #d97706;
+      --amber-light: #fef3c7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .05), 0 4px 12px rgba(0, 0, 0, .03);
       --font: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    html { font-size: 16px; scroll-behavior: smooth; }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
     /* ── Layout ── */
-    .layout { display: flex; min-height: 100vh; }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
 
     /* ── Sidebar ── */
     .sidebar {
-      width: 240px; flex-shrink: 0;
+      width: 240px;
+      flex-shrink: 0;
       background: var(--surface);
       border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
       z-index: 50;
     }
+
     .sidebar-logo {
-      display: flex; align-items: center; gap: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       padding: 20px 20px 18px;
       border-bottom: 1px solid var(--border);
     }
-    .logo-icon {
-      width: 34px; height: 34px; border-radius: 9px;
-      background: var(--blue);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .logo-icon svg { width: 18px; height: 18px; color: #fff; }
-    .logo-name { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
-    .logo-sub  { font-size: 11px; color: var(--muted); }
 
-    .sidebar-section { padding: 18px 12px 8px; font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
-    .nav-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 12px; border-radius: 8px; margin: 1px 8px;
-      font-size: 13.5px; font-weight: 500; color: var(--muted);
-      text-decoration: none; transition: background .15s, color .15s;
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .nav-item:hover { background: var(--bg); color: var(--text); }
-    .nav-item.active { background: var(--blue-light); color: var(--blue); }
-    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .logo-icon svg {
+      width: 18px;
+      height: 18px;
+      color: #fff;
+    }
+
+    .logo-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.3px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .sidebar-section {
+      padding: 18px 12px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      margin: 1px 8px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+
+    .nav-item:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    .nav-item svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
 
     .sidebar-footer {
-      margin-top: auto; padding: 14px 12px;
+      margin-top: auto;
+      padding: 14px 12px;
       border-top: 1px solid var(--border);
     }
+
     .user-card {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 10px; border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
     }
+
     .avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--blue-light); display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; color: var(--blue); flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue);
+      flex-shrink: 0;
     }
-    .user-info { flex: 1; min-width: 0; }
-    .user-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-role { font-size: 11px; color: var(--muted); }
+
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
     .logout-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px; border-radius: 8px; margin: 4px 8px 0;
-      font-size: 13px; font-weight: 500; color: var(--red);
-      text-decoration: none; transition: background .15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 4px 8px 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--red);
+      text-decoration: none;
+      transition: background .15s;
     }
-    .logout-btn:hover { background: var(--red-light); }
-    .logout-btn svg { width: 15px; height: 15px; }
+
+    .logout-btn:hover {
+      background: var(--red-light);
+    }
+
+    .logout-btn svg {
+      width: 15px;
+      height: 15px;
+    }
 
     /* ── Main ── */
-    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
 
     /* ── Topbar ── */
     .topbar {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 0 28px;
-      height: 58px; display: flex; align-items: center;
-      gap: 16px; position: sticky; top: 0; z-index: 40;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
     }
-    .menu-btn { display: none; background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; }
-    .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
-    .topbar-dept { font-size: 13px; color: var(--muted); }
-    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+    .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 4px;
+    }
+
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .topbar-dept {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
-      text-decoration: none; cursor: pointer; transition: all .15s; border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all .15s;
+      border: none;
     }
-    .btn svg { width: 14px; height: 14px; }
-    .btn-ghost { background: none; color: var(--muted); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: var(--bg); color: var(--text); }
-    .btn-primary { background: var(--blue); color: #fff; }
-    .btn-primary:hover { background: var(--blue-dark); }
-    .btn-danger  { background: none; color: var(--red); border: 1px solid #fca5a5; }
-    .btn-danger:hover { background: var(--red-light); }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .btn-ghost {
+      background: none;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--blue-dark);
+    }
+
+    .btn-danger {
+      background: none;
+      color: var(--red);
+      border: 1px solid #fca5a5;
+    }
+
+    .btn-danger:hover {
+      background: var(--red-light);
+    }
 
     /* ── Content ── */
-    .content { padding: 28px; flex: 1; }
+    .content {
+      padding: 28px;
+      flex: 1;
+    }
 
     /* ── Page Header ── */
-    .page-header { margin-bottom: 24px; }
-    .page-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
-    .page-header p  { font-size: 14px; color: var(--muted); margin-top: 3px; }
-
-    /* ── KPI Grid ── */
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
-
-    .kpi-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 20px 22px;
-      box-shadow: var(--shadow); position: relative; overflow: hidden;
-    }
-    .kpi-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0;
-      height: 3px; border-radius: var(--radius) var(--radius) 0 0;
-    }
-    .kpi-card.blue::before   { background: var(--blue); }
-    .kpi-card.green::before  { background: var(--green); }
-    .kpi-card.amber::before  { background: var(--amber); }
-    .kpi-card.red::before    { background: var(--red); }
-
-    .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-    .kpi-value { font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
-    .kpi-value.blue  { color: var(--blue); }
-    .kpi-value.green { color: var(--green); }
-    .kpi-value.amber { color: var(--amber); }
-    .kpi-value.red   { color: var(--red); }
-    .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
-
-    .kpi-icon {
-      position: absolute; top: 18px; right: 18px;
-      width: 36px; height: 36px; border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .kpi-icon.blue  { background: var(--blue-light);  color: var(--blue); }
-    .kpi-icon.green { background: var(--green-light); color: var(--green); }
-    .kpi-icon.amber { background: var(--amber-light); color: var(--amber); }
-    .kpi-icon.red   { background: var(--red-light);   color: var(--red); }
-    .kpi-icon svg { width: 18px; height: 18px; }
-
-    /* ── Risk Bar ── */
-    .risk-bar-wrap { margin-top: 12px; }
-    .risk-bar-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-    .risk-bar-fill  { height: 100%; border-radius: 99px; transition: width .4s ease; }
-
-    /* ── Charts Row ── */
-    .charts-row { display: grid; grid-template-columns: 1fr 340px; gap: 14px; margin-bottom: 24px; }
-
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); box-shadow: var(--shadow);
+    .page-header {
       margin-bottom: 24px;
     }
-    .card-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
-    }
-    .card-title { font-size: 14px; font-weight: 600; }
-    .card-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
-    .card-body  { padding: 20px 22px; }
 
-    .chart-wrap { position: relative; height: 220px; }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.5px;
+    }
+
+    .page-header p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── KPI Grid ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .kpi-card.blue::before {
+      background: var(--blue);
+    }
+
+    .kpi-card.green::before {
+      background: var(--green);
+    }
+
+    .kpi-card.amber::before {
+      background: var(--amber);
+    }
+
+    .kpi-card.red::before {
+      background: var(--red);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .kpi-value.blue {
+      color: var(--blue);
+    }
+
+    .kpi-value.green {
+      color: var(--green);
+    }
+
+    .kpi-value.amber {
+      color: var(--amber);
+    }
+
+    .kpi-value.red {
+      color: var(--red);
+    }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .kpi-icon {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-icon.blue {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+
+    .kpi-icon.green {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    .kpi-icon.amber {
+      background: var(--amber-light);
+      color: var(--amber);
+    }
+
+    .kpi-icon.red {
+      background: var(--red-light);
+      color: var(--red);
+    }
+
+    .kpi-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Risk Bar ── */
+    .risk-bar-wrap {
+      margin-top: 12px;
+    }
+
+    .risk-bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+
+    /* ── Charts Row ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .card-body {
+      padding: 20px 22px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 220px;
+    }
 
     /* ── Dist Cards ── */
-    .dist-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .dist-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
     .dist-card {
-      border-radius: var(--radius); padding: 16px 18px;
-      display: flex; align-items: center; gap: 14px;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
-    .dist-card.present { background: var(--green-light); }
-    .dist-card.leave   { background: var(--amber-light); }
-    .dist-card.absent  { background: var(--red-light);   }
+
+    .dist-card.present {
+      background: var(--green-light);
+    }
+
+    .dist-card.leave {
+      background: var(--amber-light);
+    }
+
+    .dist-card.absent {
+      background: var(--red-light);
+    }
+
     .dist-icon {
-      width: 40px; height: 40px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
-    .dist-card.present .dist-icon { background: #bbf7d0; color: var(--green); }
-    .dist-card.leave   .dist-icon { background: #fde68a; color: var(--amber); }
-    .dist-card.absent  .dist-icon { background: #fecaca; color: var(--red);   }
-    .dist-icon svg { width: 20px; height: 20px; }
-    .dist-val  { font-size: 24px; font-weight: 700; line-height: 1; }
-    .dist-card.present .dist-val { color: var(--green); }
-    .dist-card.leave   .dist-val { color: var(--amber); }
-    .dist-card.absent  .dist-val { color: var(--red); }
-    .dist-lbl  { font-size: 12px; font-weight: 600; margin-top: 2px; }
-    .dist-card.present .dist-lbl { color: #047857; }
-    .dist-card.leave   .dist-lbl { color: #92400e; }
-    .dist-card.absent  .dist-lbl { color: #991b1b; }
+
+    .dist-card.present .dist-icon {
+      background: #bbf7d0;
+      color: var(--green);
+    }
+
+    .dist-card.leave .dist-icon {
+      background: #fde68a;
+      color: var(--amber);
+    }
+
+    .dist-card.absent .dist-icon {
+      background: #fecaca;
+      color: var(--red);
+    }
+
+    .dist-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .dist-val {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .dist-card.present .dist-val {
+      color: var(--green);
+    }
+
+    .dist-card.leave .dist-val {
+      color: var(--amber);
+    }
+
+    .dist-card.absent .dist-val {
+      color: var(--red);
+    }
+
+    .dist-lbl {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .dist-card.present .dist-lbl {
+      color: #047857;
+    }
+
+    .dist-card.leave .dist-lbl {
+      color: #92400e;
+    }
+
+    .dist-card.absent .dist-lbl {
+      color: #991b1b;
+    }
 
     /* ── Performers Row ── */
-    .performers-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .performers-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
 
     .perf-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
     }
-    .perf-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .perf-rank {
-      width: 24px; height: 24px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700; flex-shrink: 0;
-    }
-    .top   .perf-rank { background: var(--green-light); color: var(--green); }
-    .bottom .perf-rank { background: var(--red-light);   color: var(--red); }
-    .perf-info { flex: 1; min-width: 0; }
-    .perf-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .perf-roll { font-size: 11px; color: var(--muted); }
-    .perf-pct  { font-size: 14px; font-weight: 700; flex-shrink: 0; }
-    .top    .perf-pct { color: var(--green); }
-    .bottom .perf-pct { color: var(--red);   }
 
-    .perf-bar-wrap { margin-top: 5px; }
-    .perf-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
-    .perf-bar-fill { height: 100%; border-radius: 99px; }
-    .top    .perf-bar-fill { background: var(--green); }
-    .bottom .perf-bar-fill { background: var(--red); }
+    .perf-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .perf-rank {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .top .perf-rank {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    .bottom .perf-rank {
+      background: var(--red-light);
+      color: var(--red);
+    }
+
+    .perf-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .perf-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .perf-roll {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .perf-pct {
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .top .perf-pct {
+      color: var(--green);
+    }
+
+    .bottom .perf-pct {
+      color: var(--red);
+    }
+
+    .perf-bar-wrap {
+      margin-top: 5px;
+    }
+
+    .perf-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .perf-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+
+    .top .perf-bar-fill {
+      background: var(--green);
+    }
+
+    .bottom .perf-bar-fill {
+      background: var(--red);
+    }
 
     /* ── Bottom Row ── */
-    .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
 
     /* ── Tables ── */
-    .tbl-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    thead tr { border-bottom: 1px solid var(--border); background: var(--bg); }
-    th { padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
-    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tbody tr { transition: background .1s; }
-    tbody tr:hover { background: var(--bg); }
+    .tbl-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead tr {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    th {
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr {
+      transition: background .1s;
+    }
+
+    tbody tr:hover {
+      background: var(--bg);
+    }
 
     /* ── Badges ── */
     .badge {
-      display: inline-flex; align-items: center;
-      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
     }
-    .badge-green  { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
-    .badge-amber  { background: var(--amber-light); color: var(--amber); border: 1px solid #fde68a; }
-    .badge-red    { background: var(--red-light);   color: var(--red); border: 1px solid #fecaca; }
-    .badge-blue   { background: var(--blue-light);  color: var(--blue); border: 1px solid #bfdbfe; }
+
+    .badge-green {
+      background: var(--green-light);
+      color: var(--green);
+      border: 1px solid #a7f3d0;
+    }
+
+    .badge-amber {
+      background: var(--amber-light);
+      color: var(--amber);
+      border: 1px solid #fde68a;
+    }
+
+    .badge-red {
+      background: var(--red-light);
+      color: var(--red);
+      border: 1px solid #fecaca;
+    }
+
+    .badge-blue {
+      background: var(--blue-light);
+      color: var(--blue);
+      border: 1px solid #bfdbfe;
+    }
 
     /* ── Search bar ── */
-    .search-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+    .search-form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
     .search-input {
-      flex: 1; min-width: 200px;
-      padding: 8px 12px 8px 36px; border: 1px solid var(--border); border-radius: 8px;
-      font-size: 13px; color: var(--text); background: var(--bg);
-      outline: none; transition: border .15s;
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border .15s;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: 10px center;
+      background-repeat: no-repeat;
+      background-position: 10px center;
     }
-    .search-input:focus { border-color: var(--blue); background-color: var(--surface); }
+
+    .search-input:focus {
+      border-color: var(--blue);
+      background-color: var(--surface);
+    }
+
     .date-input {
-      padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
-      font-size: 13px; color: var(--text); background: var(--bg); outline: none; transition: border .15s;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border .15s;
     }
-    .date-input:focus { border-color: var(--blue); background-color: var(--surface); }
+
+    .date-input:focus {
+      border-color: var(--blue);
+      background-color: var(--surface);
+    }
 
     /* ── Pct pill ── */
-    .pct-cell { display: flex; align-items: center; gap: 8px; }
-    .mini-bar  { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; max-width: 80px; }
-    .mini-fill { height: 100%; border-radius: 99px; }
+    .pct-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      max-width: 80px;
+    }
+
+    .mini-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
 
     /* ── Section Divider Label ── */
-    .section-label { font-size: 13px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; margin-top: 8px; display: flex; align-items: center; gap: 8px; }
-    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .section-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 12px;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
 
     /* ── Empty state ── */
-    .empty { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 13px; width: 100%; }
-    .empty svg { width: 36px; height: 36px; margin: 0 auto 10px; display: block; opacity: .35; }
+    .empty {
+      text-align: center;
+      padding: 36px 20px;
+      color: var(--muted);
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .empty svg {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 10px;
+      display: block;
+      opacity: .35;
+    }
 
     /* ── Mobile ── */
     @media (max-width: 1024px) {
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .charts-row { grid-template-columns: 1fr; }
-      .performers-row { grid-template-columns: 1fr; }
-      .bottom-row { grid-template-columns: 1fr; }
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .charts-row {
+        grid-template-columns: 1fr;
+      }
+
+      .performers-row {
+        grid-template-columns: 1fr;
+      }
+
+      .bottom-row {
+        grid-template-columns: 1fr;
+      }
     }
+
     @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .sidebar.open { display: flex; position: fixed; inset: 0; width: 260px; box-shadow: 8px 0 32px rgba(0,0,0,.12); }
-      .menu-btn { display: flex; }
-      .dist-row { grid-template-columns: 1fr; }
-      .content { padding: 16px; }
-      .topbar { padding: 0 16px; }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 260px;
+        z-index: 60;
+
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        display: flex;
+        /* keep flex always */
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .menu-btn {
+        display: flex;
+      }
+
+      .dist-row {
+        grid-template-columns: 1fr;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .topbar {
+        padding: 0 16px;
+      }
     }
+
+
     @media (max-width: 480px) {
-      .kpi-grid { grid-template-columns: 1fr; }
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
     }
-    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 49; }
-    .overlay.open { display: block; }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .4);
+      z-index: 49;
+    }
+
+    .overlay.open {
+      display: block;
+    }
   </style>
 </head>
+
 <body>
 
-<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
-<div class="layout">
+  <div class="layout">
 
-  <!-- ── Sidebar ── -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-      </div>
-      <div>
-        <div class="logo-name">AttendanceIQ</div>
-        <div class="logo-sub">HOD Portal</div>
-      </div>
-    </div>
-
-    <div class="sidebar-section">Overview</div>
-    <a href="#overview" class="nav-item active">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      Dashboard
-    </a>
-    <a href="#alerts" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Critical Alerts
-    </a>
-    <a href="#performers" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      Performers
-    </a>
-    <a href="#students" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Students Roster
-    </a>
-    <a href="#daily" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Daily Records
-    </a>
-    <a href="#defaulters" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-      Defaulter Records
-    </a>
-    <a href="#grades" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      Grades
-    </a>
-
-    <div class="sidebar-section">Reports</div>
-    <a href="{% url 'attendance_report_pdf' %}" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Attendance PDF
-    </a>
-    <a href="{% url 'defaulter_report_pdf' %}" class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Defaulter PDF
-    </a>
-
-    <div class="sidebar-footer">
-      <div class="user-card">
-        <div class="avatar">{{ request.user.username|slice:":2"|upper }}</div>
-        <div class="user-info">
-          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-          <div class="user-role">Head of Department</div>
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <div>
+          <div class="logo-name">AttendanceIQ</div>
+          <div class="logo-sub">HOD Portal</div>
         </div>
       </div>
-      <a href="{% url 'logout' %}" class="logout-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Log out
+
+      <div class="sidebar-section">Overview</div>
+      <a href="#overview" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        Dashboard
       </a>
-    </div>
-  </aside>
+      <a href="#alerts" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        Critical Alerts
+      </a>
+      <a href="#performers" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+        Top Performers
+      </a>
+      <a href="#students" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        Student Records
+      </a>
+      <a href="#daily" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        Daily Records
+      </a>
+      <a href="#defaulters" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        Defaulter Records
+      </a>
+      <a href="#grades" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+        Grades
+      </a>
 
-  <!-- ── Main ── -->
-  <div class="main">
+      <div class="sidebar-section">Download Reports</div>
+      <a href="{% url 'attendance_report_pdf' %}" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+        Attendance PDF
+      </a>
+      <a href="{% url 'defaulter_report_pdf' %}" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+        Defaulter PDF
+      </a>
 
-    <!-- Topbar -->
-    <header class="topbar">
-      <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <div>
-        <div class="topbar-title">Department Overview</div>
-      </div>
-      <div class="topbar-dept">{{ managed_dept.name }} &nbsp;·&nbsp; <strong>{{ managed_dept.code }}</strong></div>
-      <div class="topbar-actions">
-        <a href="{% url 'attendance_report_pdf' %}" class="btn btn-ghost">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export PDF
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="avatar">{{ request.user.username|slice:":2"|upper }}</div>
+          <div class="user-info">
+            <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="user-role">Head of Department</div>
+          </div>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Logout
         </a>
       </div>
-    </header>
+    </aside>
 
-    <!-- Content -->
-    <div class="content" id="overview">
+    <!-- ── Main ── -->
+    <div class="main">
 
-      <!-- Page Header -->
-      <div class="page-header">
-        <h1>{{ managed_dept.name }}</h1>
-        <p>Real-time attendance matrices and academic performance analytics.</p>
-      </div>
+      <!-- Topbar -->
+      <header class="topbar">
+        <button class="menu-btn" onclick="openSidebar()" aria-label="Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <div>
+          <div class="topbar-title">Department Overview</div>
+        </div>
+        <div class="topbar-dept">{{ managed_dept.name }} &nbsp;·&nbsp; <strong>{{ managed_dept.code }}</strong></div>
+        <div class="topbar-actions">
+          <a href="{% url 'attendance_report_pdf' %}" class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export PDF
+          </a>
+        </div>
+      </header>
 
-      <!-- ── FIRST SECTION: Top KPIs ── -->
-      <div class="kpi-grid">
+      <!-- Content -->
+      <div class="content" id="overview">
 
-        <div class="kpi-card blue">
-          <div class="kpi-icon blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          </div>
-          <div class="kpi-label">Total Students</div>
-          <div class="kpi-value blue">{{ total_students }}</div>
-          <div class="kpi-sub">Enrolled in department</div>
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1>{{ managed_dept.name }}</h1>
+          <p>Real-time attendance matrices and academic performance analytics.</p>
         </div>
 
-        <div class="kpi-card green">
-          <div class="kpi-icon green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <!-- ── FIRST SECTION: Top KPIs ── -->
+        <div class="kpi-grid">
+
+          <div class="kpi-card blue">
+            <div class="kpi-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+            </div>
+            <div class="kpi-label">Total Students</div>
+            <div class="kpi-value blue">{{ total_students }}</div>
+            <div class="kpi-sub">Enrolled in department</div>
           </div>
-          <div class="kpi-label">Above Threshold (&gt;=75%)</div>
-          <div class="kpi-value green">{{ above_75_count }}</div>
-          <div class="kpi-sub">Meeting standard criteria</div>
+
+          <div class="kpi-card green">
+            <div class="kpi-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <div class="kpi-label">Above Threshold (&gt;=75%)</div>
+            <div class="kpi-value green">{{ above_75_count }}</div>
+            <div class="kpi-sub">Meeting standard criteria</div>
+          </div>
+
+          <div class="kpi-card red">
+            <div class="kpi-icon red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <div class="kpi-label">Below Threshold (&lt;75%)</div>
+            <div class="kpi-value red">{{ below_75_count }}</div>
+            <div class="kpi-sub">Defaulters requiring review</div>
+            <div class="risk-bar-wrap">
+              <div class="risk-bar-track">
+                <div class="risk-bar-fill"
+                  style="width: {% if total_students %}{% widthratio below_75_count total_students 100 %}{% else %}0{% endif %}%; background: var(--red);">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card green">
+            <div class="kpi-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div class="kpi-label">Dept. Average</div>
+            <div class="kpi-value green">{{ department_average }}%</div>
+            <div class="kpi-sub">Cumulative average rate</div>
+          </div>
+
         </div>
 
-        <div class="kpi-card red">
-          <div class="kpi-icon red">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <!-- ── SECOND SECTION: Charts & Distribution ── -->
+        <div class="charts-row">
+          <!-- Trend Chart -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Attendance Over Time</div>
+                <div class="card-sub">Present students timeline (past 21 days)</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-wrap">
+                <canvas id="trendChart"></canvas>
+              </div>
+            </div>
           </div>
-          <div class="kpi-label">Below Threshold (&lt;75%)</div>
-          <div class="kpi-value red">{{ below_75_count }}</div>
-          <div class="kpi-sub">Defaulters requiring review</div>
-          <div class="risk-bar-wrap">
-            <div class="risk-bar-track">
-              <div class="risk-bar-fill" style="width: {% if total_students %}{% widthratio below_75_count total_students 100 %}{% else %}0{% endif %}%; background: var(--red);"></div>
+
+          <!-- Donut Chart & Live Metrics -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Attendance Distribution</div>
+                <div class="card-sub">All-time statuses compared</div>
+              </div>
+            </div>
+            <div class="card-body" style="padding-bottom: 12px;">
+              <div class="chart-wrap" style="height: 160px;">
+                <canvas id="donutChart"></canvas>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--green);">
+                  <span style="display:inline-flex; align-items:center; gap:6px;"><span
+                      style="width:8px; height:8px; border-radius:50%; background:var(--green);"></span>Present</span>
+                  <span>{{ dist_data.0 }}</span>
+                </div>
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--amber);">
+                  <span style="display:inline-flex; align-items:center; gap:6px;"><span
+                      style="width:8px; height:8px; border-radius:50%; background:var(--amber);"></span>On Leave</span>
+                  <span>{{ dist_data.1 }}</span>
+                </div>
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--red);">
+                  <span style="display:inline-flex; align-items:center; gap:6px;"><span
+                      style="width:8px; height:8px; border-radius:50%; background:var(--red);"></span>Absent</span>
+                  <span>{{ dist_data.2 }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="kpi-card green">
-          <div class="kpi-icon green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <div class="kpi-label">Dept. Average</div>
-          <div class="kpi-value green">{{ department_average }}%</div>
-          <div class="kpi-sub">Cumulative average rate</div>
-        </div>
 
-      </div>
-
-      <!-- ── SECOND SECTION: Charts & Distribution ── -->
-      <div class="charts-row">
-        <!-- Trend Chart -->
-        <div class="card" style="margin-bottom:0;">
-          <div class="card-header">
+        <!-- ── THIRD SECTION: High Priority Alerts ── -->
+        <div id="alerts"></div>
+        <p class="section-label" style="color:var(--red);">🚨 High Priority Alerts</p>
+        <div class="card" style="border: 1.5px solid #fca5a5; background: #fffdfd;">
+          <div class="card-header" style="background: #fef2f2; border-bottom: 1px solid #fee2e2;">
             <div>
-              <div class="card-title">Attendance Trend</div>
-              <div class="card-sub">Present students timeline (past 21 days)</div>
+              <div class="card-title" style="color:var(--red); font-weight:700;">Critical Defaulter Monitoring</div>
+              <div class="card-sub" style="color:#991b1b;">Immediate visibility of active students below the mandatory
+                75% threshold.</div>
             </div>
+            <span class="badge badge-red" style="padding: 4px 10px;">{{ below_75_count }} Defaulters Found</span>
           </div>
-          <div class="card-body">
-            <div class="chart-wrap">
-              <canvas id="trendChart"></canvas>
-            </div>
-          </div>
-        </div>
 
-        <!-- Donut Chart & Live Metrics -->
-        <div class="card" style="margin-bottom:0;">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Attendance Distribution</div>
-              <div class="card-sub">All-time statuses compared</div>
-            </div>
-          </div>
-          <div class="card-body" style="padding-bottom: 12px;">
-            <div class="chart-wrap" style="height: 160px;">
-              <canvas id="donutChart"></canvas>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--green);">
-                <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:8px; height:8px; border-radius:50%; background:var(--green);"></span>Present</span>
-                <span>{{ dist_data.0 }}</span>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--amber);">
-                <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:8px; height:8px; border-radius:50%; background:var(--amber);"></span>On Leave</span>
-                <span>{{ dist_data.1 }}</span>
-              </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--red);">
-                <span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:8px; height:8px; border-radius:50%; background:var(--red);"></span>Absent</span>
-                <span>{{ dist_data.2 }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      <!-- ── THIRD SECTION: High Priority Alerts ── -->
-      <div id="alerts"></div>
-      <p class="section-label" style="color:var(--red);">🚨 High Priority Alerts</p>
-      <div class="card" style="border: 1.5px solid #fca5a5; background: #fffdfd;">
-        <div class="card-header" style="background: #fef2f2; border-bottom: 1px solid #fee2e2;">
-          <div>
-            <div class="card-title" style="color:var(--red); font-weight:700;">Critical Defaulter Monitoring</div>
-            <div class="card-sub" style="color:#991b1b;">Immediate visibility of active students below the mandatory 75% threshold.</div>
-          </div>
-          <span class="badge badge-red" style="padding: 4px 10px;">{{ below_75_count }} Defaulters Found</span>
-        </div>
-        
-        {% if below_75_count > 0 %}
+          {% if below_75_count > 0 %}
           <div class="tbl-wrap">
             <table>
               <thead>
@@ -545,449 +1278,513 @@
               </thead>
               <tbody>
                 {% for s in students %}
-                  {% if s.perc < 75 %}
-                    <tr>
-                      <td style="font-weight: 600;">{{ s.name }}</td>
-                      <td style="color: var(--muted); font-weight: 500;">{{ s.roll_no }}</td>
-                      <td>
-                        <strong style="color:var(--green);">{{ s.p }}</strong> / {{ s.total }}
-                      </td>
-                      <td>
-                        <div class="pct-cell">
-                          <div class="mini-bar">
-                            <div class="mini-fill" style="width: {{ s.perc|floatformat:0 }}%; background: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};"></div>
-                          </div>
-                          <span style="font-weight:700; color: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};">{{ s.perc|floatformat:1 }}%</span>
+                {% if s.perc < 75 %} <tr>
+                  <td style="font-weight: 600;">{{ s.name }}</td>
+                  <td style="color: var(--muted); font-weight: 500;">{{ s.roll_no }}</td>
+                  <td>
+                    <strong style="color:var(--green);">{{ s.p }}</strong> / {{ s.total }}
+                  </td>
+                  <td>
+                    <div class="pct-cell">
+                      <div class="mini-bar">
+                        <div class="mini-fill"
+                          style="width: {{ s.perc|floatformat:0 }}%; background: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};">
                         </div>
-                      </td>
-                      <td>
-                        {% if s.perc < 70 %}
-                          <span class="badge badge-red" style="font-weight:700;">⚠️ Critical Risk (&lt;70%)</span>
-                        {% else %}
-                          <span class="badge badge-amber" style="font-weight:700;">Defaulter Warning (&lt;75%)</span>
-                        {% endif %}
-                      </td>
-                    </tr>
+                      </div>
+                      <span
+                        style="font-weight:700; color: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};">{{
+                        s.perc|floatformat:1 }}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    {% if s.perc < 70 %} <span class="badge badge-red" style="font-weight:700;">⚠️ Critical Risk
+                      (&lt;70%)</span>
+                      {% else %}
+                      <span class="badge badge-amber" style="font-weight:700;">Defaulter Warning (&lt;75%)</span>
+                      {% endif %}
+                  </td>
+                  </tr>
                   {% endif %}
+                  {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty"
+            style="background:#f0fdf4; border-radius: 0 0 var(--radius) var(--radius); padding: 40px 20px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            <strong style="color:#15803d; font-size:14px;">Academic Compliance Perfect!</strong>
+            <p style="color:#166534; font-size:12px; margin-top:4px;">No students are currently falling below the 75%
+              baseline attendance rate.</p>
+          </div>
+          {% endif %}
+        </div>
+
+
+        <!-- ── FOURTH SECTION: Top & Bottom Performers ── -->
+        <div id="performers"></div>
+        <p class="section-label">🏆 Student Benchmarks</p>
+        <div class="performers-row">
+          <!-- Top Performers Card -->
+          <div class="card top" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title" style="color:var(--green);">🏆 Top Performers</div>
+                <div class="card-sub">Highest attendance in the department</div>
+              </div>
+            </div>
+            <div class="card-body">
+              {% for s in students|dictsortreversed:"perc"|slice:":5" %}
+              <div class="perf-item">
+                <div class="perf-rank">{{ forloop.counter }}</div>
+                <div class="perf-info">
+                  <div class="perf-name">{{ s.name }}</div>
+                  <div class="perf-roll">{{ s.roll_no }}</div>
+                  <div class="perf-bar-wrap">
+                    <div class="perf-bar">
+                      <div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
+              </div>
+              {% empty %}
+              <div class="empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                </svg>
+                No student records registered
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Bottom Performers Card -->
+          <div class="card bottom" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title" style="color:var(--red);">⚠️ Needs Attention</div>
+                <div class="card-sub">Lowest attendance in the department</div>
+              </div>
+            </div>
+            <div class="card-body">
+              {% for s in critical_students %}
+              <div class="perf-item">
+                <div class="perf-rank">{{ forloop.counter }}</div>
+                <div class="perf-info">
+                  <div class="perf-name">{{ s.name }}</div>
+                  <div class="perf-roll">{{ s.roll_no }}</div>
+                  <div class="perf-bar-wrap">
+                    <div class="perf-bar">
+                      <div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
+              </div>
+              {% empty %}
+              <div class="empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                No student records registered
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ── FIFTH SECTION: Detailed Student Table ── -->
+        <div id="students"></div>
+        <p class="section-label">📋 Students List</p>
+        <div class="card full-table-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Student List</div>
+              <div class="card-sub">Showing {{ total_students }} registered student{{ total_students|pluralize }}</div>
+            </div>
+          </div>
+          <div class="card-body" style="padding-bottom:8px;">
+            <form method="get" class="search-form">
+              <input class="search-input" type="text" name="search" placeholder="Search by name or roll number…"
+                value="{{ search_query }}" />
+              <select name="sort" class="date-input">
+                <option value="high" {% if request.GET.sort=="high" or not request.GET.sort %}selected{% endif %}>Sort:
+                  Highest first</option>
+                <option value="low" {% if request.GET.sort=="low" %}selected{% endif %}>Sort: Lowest first</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Apply Filters</button>
+              {% if search_query %}
+              <a href="?" class="btn btn-ghost">Clear</a>
+              {% endif %}
+            </form>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Roll No.</th>
+                  <th>Present</th>
+                  <th>Leave</th>
+                  <th>Absent</th>
+                  <th>Total</th>
+                  <th>Attendance</th>
+                  <th>Risk Category</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in students %}
+                <tr>
+                  <td style="color:var(--muted); font-size:12px;">{{ forloop.counter }}</td>
+                  <td style="font-weight:600;">{{ s.name }}</td>
+                  <td style="color:var(--muted); font-weight: 500;">{{ s.roll_no }}</td>
+                  <td><span style="color:var(--green); font-weight:600;">{{ s.p }}</span></td>
+                  <td><span style="color:var(--amber); font-weight:600;">{{ s.l }}</span></td>
+                  <td><span style="color:var(--red); font-weight:600;">{{ s.a }}</span></td>
+                  <td><strong>{{ s.total }}</strong></td>
+                  <td>
+                    <div class="pct-cell">
+                      <div class="mini-bar">
+                        <div class="mini-fill"
+                          style="width:{{ s.perc|floatformat:0 }}%; background: {% if s.perc == 100 %}#10b981{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};">
+                        </div>
+                      </div>
+                      <span
+                        style="font-size:13px; font-weight:700; color:{% if s.perc == 100 %}#059669{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};">{{
+                        s.perc|floatformat:1 }}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    {% if s.perc == 100 %}
+                    <span class="badge badge-green"
+                      style="background:#d1fae5; color:#065f46; border-color:#34d399;">Full (100%)</span>
+                    {% elif s.perc >= 75 %}
+                    <span class="badge badge-green">Regular Student</span>
+                    {% elif s.perc >= 70 %}
+                    <span class="badge badge-amber">Defaulter Warning</span>
+                    {% else %}
+                    <span class="badge badge-red">Critical Risk</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="9">
+                    <div class="empty">No student metrics found matching the filter query.</div>
+                  </td>
+                </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
-        {% else %}
-          <div class="empty" style="background:#f0fdf4; border-radius: 0 0 var(--radius) var(--radius); padding: 40px 20px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <strong style="color:#15803d; font-size:14px;">Academic Compliance Perfect!</strong>
-            <p style="color:#166534; font-size:12px; margin-top:4px;">No students are currently falling below the 75% baseline attendance rate.</p>
-          </div>
-        {% endif %}
-      </div>
+        </div>
 
 
-      <!-- ── FOURTH SECTION: Top & Bottom Performers ── -->
-      <div id="performers"></div>
-      <p class="section-label">🏆 Student Benchmarks</p>
-      <div class="performers-row">
-        <!-- Top Performers Card -->
-        <div class="card top" style="margin-bottom:0;">
+        <!-- ── SIXTH SECTION: Auxiliary Administration Panels ── -->
+
+        <!-- Daily Attendance Record Lookup -->
+        <div id="daily"></div>
+        <p class="section-label">📅 Daily Status Query</p>
+        <div class="card">
           <div class="card-header">
             <div>
-              <div class="card-title" style="color:var(--green);">🏆 Top Performers</div>
-              <div class="card-sub">Highest attendance in the department</div>
+              <div class="card-title">Filter Attendance by Date</div>
+              <div class="card-sub">Examine individual check-ins of a specific working day</div>
             </div>
           </div>
-          <div class="card-body">
-            {% for s in students|dictsortreversed:"perc"|slice:":5" %}
-            <div class="perf-item">
-              <div class="perf-rank">{{ forloop.counter }}</div>
-              <div class="perf-info">
-                <div class="perf-name">{{ s.name }}</div>
-                <div class="perf-roll">{{ s.roll_no }}</div>
-                <div class="perf-bar-wrap">
-                  <div class="perf-bar"><div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div></div>
-                </div>
-              </div>
-              <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
-            </div>
-            {% empty %}
-            <div class="empty">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-              No student records registered
-            </div>
-            {% endfor %}
+          <div class="card-body" style="padding-bottom:8px;">
+            <form method="get" class="search-form">
+              <input type="hidden" name="search" value="{{ search_query }}" />
+              <input type="hidden" name="sort" value="{{ request.GET.sort }}" />
+              <input class="date-input" type="date" name="date"
+                value="{% if selected_date %}{{ selected_date|date:'Y-m-d' }}{% endif %}" />
+              <button type="submit" class="btn btn-primary">Retrieve Ledger</button>
+              {% if selected_date %}
+              <a href="?" class="btn btn-ghost">Clear Query</a>
+              {% endif %}
+            </form>
           </div>
-        </div>
-
-        <!-- Bottom Performers Card -->
-        <div class="card bottom" style="margin-bottom:0;">
-          <div class="card-header">
-            <div>
-              <div class="card-title" style="color:var(--red);">⚠️ Needs Attention</div>
-              <div class="card-sub">Lowest attendance in the department</div>
-            </div>
-          </div>
-          <div class="card-body">
-            {% for s in critical_students %}
-            <div class="perf-item">
-              <div class="perf-rank">{{ forloop.counter }}</div>
-              <div class="perf-info">
-                <div class="perf-name">{{ s.name }}</div>
-                <div class="perf-roll">{{ s.roll_no }}</div>
-                <div class="perf-bar-wrap">
-                  <div class="perf-bar"><div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div></div>
-                </div>
-              </div>
-              <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
-            </div>
-            {% empty %}
-            <div class="empty">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
-              No student records registered
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-
-      <!-- ── FIFTH SECTION: Detailed Student Table ── -->
-      <div id="students"></div>
-      <p class="section-label">📋 Comprehensive Roster</p>
-      <div class="card full-table-card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Student Ledger</div>
-            <div class="card-sub">Showing {{ total_students }} registered student{{ total_students|pluralize }}</div>
-          </div>
-        </div>
-        <div class="card-body" style="padding-bottom:8px;">
-          <form method="get" class="search-form">
-            <input
-              class="search-input"
-              type="text"
-              name="search"
-              placeholder="Search by name or roll number…"
-              value="{{ search_query }}"
-            />
-            <select name="sort" class="date-input">
-              <option value="high" {% if request.GET.sort == "high" or not request.GET.sort %}selected{% endif %}>Sort: Highest first</option>
-              <option value="low"  {% if request.GET.sort == "low" %}selected{% endif %}>Sort: Lowest first</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Apply Filters</button>
-            {% if search_query %}
-            <a href="?" class="btn btn-ghost">Clear</a>
-            {% endif %}
-          </form>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Roll No.</th>
-                <th>Present</th>
-                <th>Leave</th>
-                <th>Absent</th>
-                <th>Total</th>
-                <th>Attendance</th>
-                <th>Risk Category</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for s in students %}
-              <tr>
-                <td style="color:var(--muted); font-size:12px;">{{ forloop.counter }}</td>
-                <td style="font-weight:600;">{{ s.name }}</td>
-                <td style="color:var(--muted); font-weight: 500;">{{ s.roll_no }}</td>
-                <td><span style="color:var(--green); font-weight:600;">{{ s.p }}</span></td>
-                <td><span style="color:var(--amber); font-weight:600;">{{ s.l }}</span></td>
-                <td><span style="color:var(--red); font-weight:600;">{{ s.a }}</span></td>
-                <td><strong>{{ s.total }}</strong></td>
-                <td>
-                  <div class="pct-cell">
-                    <div class="mini-bar">
-                      <div class="mini-fill" style="width:{{ s.perc|floatformat:0 }}%; background: {% if s.perc == 100 %}#10b981{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};"></div>
-                    </div>
-                    <span style="font-size:13px; font-weight:700; color:{% if s.perc == 100 %}#059669{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};">{{ s.perc|floatformat:1 }}%</span>
-                  </div>
-                </td>
-                <td>
-                  {% if s.perc == 100 %}
-                    <span class="badge badge-green" style="background:#d1fae5; color:#065f46; border-color:#34d399;">Full (100%)</span>
-                  {% elif s.perc >= 75 %}
-                    <span class="badge badge-green">Regular Student</span>
-                  {% elif s.perc >= 70 %}
-                    <span class="badge badge-amber">Defaulter Warning</span>
-                  {% else %}
-                    <span class="badge badge-red">Critical Risk</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="9"><div class="empty">No student metrics found matching the filter query.</div></td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-
-      <!-- ── SIXTH SECTION: Auxiliary Administration Panels ── -->
-      
-      <!-- Daily Attendance Record Lookup -->
-      <div id="daily"></div>
-      <p class="section-label">📅 Daily Status Query</p>
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Filter Attendance by Date</div>
-            <div class="card-sub">Examine individual check-ins of a specific working day</div>
-          </div>
-        </div>
-        <div class="card-body" style="padding-bottom:8px;">
-          <form method="get" class="search-form">
-            <input type="hidden" name="search" value="{{ search_query }}" />
-            <input type="hidden" name="sort"   value="{{ request.GET.sort }}" />
-            <input class="date-input" type="date" name="date" value="{% if selected_date %}{{ selected_date|date:'Y-m-d' }}{% endif %}" />
-            <button type="submit" class="btn btn-primary">Retrieve Ledger</button>
-            {% if selected_date %}
-            <a href="?" class="btn btn-ghost">Clear Query</a>
-            {% endif %}
-          </form>
-        </div>
-        {% if selected_date %}
-        <div class="tbl-wrap">
-          <table>
-            <thead>
-              <tr><th>Student Name</th><th>Roll No.</th><th>Status Indicator</th></tr>
-            </thead>
-            <tbody>
-              {% for r in daily_records %}
-              <tr>
-                <td style="font-weight:600;">{{ r.student.name }}</td>
-                <td style="color:var(--muted); font-weight: 500;">{{ r.student.roll_no }}</td>
-                <td>
-                  {% if r.status == "Present" %}
+          {% if selected_date %}
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Roll No.</th>
+                  <th>Status Indicator</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in daily_records %}
+                <tr>
+                  <td style="font-weight:600;">{{ r.student.name }}</td>
+                  <td style="color:var(--muted); font-weight: 500;">{{ r.student.roll_no }}</td>
+                  <td>
+                    {% if r.status == "Present" %}
                     <span class="badge badge-green">Present</span>
-                  {% elif r.status == "Leave" %}
+                    {% elif r.status == "Leave" %}
                     <span class="badge badge-amber">Leave</span>
-                  {% else %}
+                    {% else %}
                     <span class="badge badge-red">Absent</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="3"><div class="empty">No records captured for {{ selected_date }}.</div></td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3">
+                    <div class="empty">No records captured for {{ selected_date }}.</div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
-      </div>
 
 
-      <!-- Database Defaulter Logs & Recent Academic Grades -->
-      <div class="bottom-row">
+        <!-- Database Defaulter Logs & Recent Academic Grades -->
+        <div class="bottom-row">
 
-        <!-- DB Defaulters List -->
-        <div id="defaulters">
-          <p class="section-label" style="margin-top:0;">📂 Logged Defaulters</p>
-          <div class="card" style="height: calc(100% - 30px);">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Database Defaulter Registry</div>
-                <div class="card-sub">Academic compliance logs</div>
+          <!-- DB Defaulters List -->
+          <div id="defaulters">
+            <p class="section-label" style="margin-top:0;">📂 Defaulters</p>
+            <div class="card" style="height: calc(100% - 30px);">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Defaulter Registry</div>
+                  <div class="card-sub">Academic compliance logs</div>
+                </div>
+                <a href="{% url 'defaulter_report_pdf' %}" class="btn btn-danger"
+                  style="font-size:12px; padding:5px 10px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:13px; height:13px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  PDF
+                </a>
               </div>
-              <a href="{% url 'defaulter_report_pdf' %}" class="btn btn-danger" style="font-size:12px; padding:5px 10px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px; height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                PDF
-              </a>
-            </div>
-            <div class="tbl-wrap">
-              <table>
-               <thead>
-  <tr>
-    <th>Name</th>
-    <th>Roll No.</th>
-    <th>Year</th>
-    <th>Dept</th>
-    <th>Staff</th>
-    <th>Action Taken</th>
-  </tr>
-</thead>
+              <div class="tbl-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Roll No.</th>
+                      <th>Year</th>
+                      <th>Dept</th>
+                      <th>Staff</th>
+                      <th>Action Taken</th>
+                    </tr>
+                  </thead>
 
-<tbody>
-  {% for d in defaulter_list %}
-  <tr>
-    <td style="font-weight:600;">{{ d.name }}</td>
-    <td style="color:var(--muted); font-weight:500;">{{ d.roll_no }}</td>
-    <td>{{ d.year }}</td>
-    <td>
-      <span class="badge badge-red">{{ d.department }}</span>
-    </td>
-    <td>{{ d.staff_incharge }}</td>
-    <td>{{ d.action_taken }}</td>
-  </tr>
-  {% empty %}
-  <tr>
-    <td colspan="6">
-      <div class="empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        Zero entries in defaulter directory.
-      </div>
-    </td>
-  </tr>
-  {% endfor %}
-</tbody>
-                
-              </table>
+                  <tbody>
+                    {% for d in defaulter_list %}
+                    <tr>
+                      <td style="font-weight:600;">{{ d.name }}</td>
+                      <td style="color:var(--muted); font-weight:500;">{{ d.roll_no }}</td>
+                      <td>{{ d.year }}</td>
+                      <td>
+                        <span class="badge badge-red">{{ d.department }}</span>
+                      </td>
+                      <td>{{ d.staff_incharge }}</td>
+                      <td>{{ d.action_taken }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="6">
+                        <div class="empty">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          Zero entries in defaulter directory.
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+
+                </table>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Recent Grades Uploads -->
-        <div id="grades">
-          <p class="section-label" style="margin-top:0;">🎓 Recent Grades</p>
-          <div class="card" style="height: calc(100% - 30px);">
-            <div class="card-header">
-              <div>
-                <div class="card-title">Recent Grades Ledger</div>
-                <div class="card-sub">Latest 50 grades posted</div>
+          <!-- Recent Grades Uploads -->
+          <div id="grades">
+            <p class="section-label" style="margin-top:0;">🎓 Recent Grades</p>
+            <div class="card" style="height: calc(100% - 30px);">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Recent Grades Ledger</div>
+                  <div class="card-sub">Latest 50 grades posted</div>
+                </div>
               </div>
-            </div>
-            <div class="tbl-wrap">
-              <table>
-                <thead>
-                  <tr><th>Student</th><th>Subject</th><th>Grade</th><th>Upload ID</th></tr>
-                </thead>
-                <tbody>
-                  {% for g in recent_grades %}
-                  <tr>
-                    <td style="font-weight:600;">{{ g.student.name }}</td>
-                    <td style="color:var(--muted); font-weight: 500;">{{ g.subject|default:"—" }}</td>
-                    <td>
-                      {% if g.grade %}
+              <div class="tbl-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Subject</th>
+                      <th>Grade</th>
+                      <th>Upload ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for g in recent_grades %}
+                    <tr>
+                      <td style="font-weight:600;">{{ g.student.name }}</td>
+                      <td style="color:var(--muted); font-weight: 500;">{{ g.subject|default:"—" }}</td>
+                      <td>
+                        {% if g.grade %}
                         <span class="badge badge-blue">{{ g.grade }}</span>
-                      {% else %}—{% endif %}
-                    </td>
-                    <td style="font-size:12px; color:var(--muted);">{{ g.upload.id|default:"—" }}</td>
-                  </tr>
-                  {% empty %}
-                  <tr><td colspan="4"><div class="empty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
-                    No grade cards uploaded yet.
-                  </div></td></tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+                        {% else %}—{% endif %}
+                      </td>
+                      <td style="font-size:12px; color:var(--muted);">{{ g.upload.id|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="4">
+                        <div class="empty">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          </svg>
+                          No grade cards uploaded yet.
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
+
         </div>
+        <!-- End of bottom row -->
 
       </div>
-      <!-- End of bottom row -->
-
+      <!-- End of content -->
     </div>
-    <!-- End of content -->
+    <!-- End of main layout -->
+
   </div>
-  <!-- End of main layout -->
 
-</div>
+  <script>
+    // ── Mobile Sidebar Controls ──
+    function openSidebar() {
+      document.getElementById('sidebar').classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
 
-<script>
-  // ── Mobile Sidebar Controls ──
-  function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('overlay').classList.add('open');
-  }
-  function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('open');
-  }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
 
-  // ── Chart.js Global Configurations ──
-  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
-  Chart.defaults.font.size = 12;
-  Chart.defaults.color = '#64748b';
+    // ── Chart.js Global Configurations ──
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#64748b';
 
-  // ── Trend Chart (Past 21 Days Timeline) ──
-  const trendLabels = {{ trend_labels|safe }};
-  const trendValues = {{ trend_values|safe }};
-  const trendCtx = document.getElementById('trendChart').getContext('2d');
+    // ── Trend Chart (Past 21 Days Timeline) ──
+    const trendLabels = {{ trend_labels| safe }};
+    const trendValues = {{ trend_values| safe }};
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
 
-  const gradientFill = trendCtx.createLinearGradient(0, 0, 0, 220);
-  gradientFill.addColorStop(0, 'rgba(26,86,219,0.18)');
-  gradientFill.addColorStop(1, 'rgba(26,86,219,0.00)');
+    const gradientFill = trendCtx.createLinearGradient(0, 0, 0, 220);
+    gradientFill.addColorStop(0, 'rgba(26,86,219,0.18)');
+    gradientFill.addColorStop(1, 'rgba(26,86,219,0.00)');
 
-  new Chart(trendCtx, {
-    type: 'line',
-    data: {
-      labels: trendLabels,
-      datasets: [{
-        data: trendValues,
-        borderColor: '#1a56db',
-        borderWidth: 2,
-        backgroundColor: gradientFill,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#1a56db',
-        pointRadius: 3,
-        pointHoverRadius: 5,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0f172a',
-          titleColor: '#fff',
-          bodyColor: '#94a3b8',
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: { label: ctx => `  ${ctx.parsed.y} present` }
-        }
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: trendLabels,
+        datasets: [{
+          data: trendValues,
+          borderColor: '#1a56db',
+          borderWidth: 2,
+          backgroundColor: gradientFill,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#1a56db',
+          pointRadius: 3,
+          pointHoverRadius: 5,
+        }]
       },
-      scales: {
-        x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } },
-        y: { grid: { color: '#e2e8f0' }, ticks: { precision: 0 }, beginAtZero: true }
-      }
-    }
-  });
-
-  // ── Donut Chart (All-Time Distributions) ──
-  const distData = {{ dist_data|safe }};
-  const donutCtx = document.getElementById('donutChart').getContext('2d');
-  new Chart(donutCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Present', 'Leave', 'Absent'],
-      datasets: [{
-        data: distData,
-        backgroundColor: ['#0ea472', '#d97706', '#dc2626'],
-        borderWidth: 0,
-        hoverOffset: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '68%',
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0f172a',
-          titleColor: '#fff',
-          bodyColor: '#94a3b8',
-          padding: 10,
-          cornerRadius: 8,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleColor: '#fff',
+            bodyColor: '#94a3b8',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: ctx => `  ${ctx.parsed.y} present` }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } },
+          y: { grid: { color: '#e2e8f0' }, ticks: { precision: 0 }, beginAtZero: true }
         }
       }
+    });
+
+    // ── Donut Chart (All-Time Distributions) ──
+    const distData = {{ dist_data| safe }};
+    const donutCtx = document.getElementById('donutChart').getContext('2d');
+    new Chart(donutCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Present', 'Leave', 'Absent'],
+        datasets: [{
+          data: distData,
+          backgroundColor: ['#0ea472', '#d97706', '#dc2626'],
+          borderWidth: 0,
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleColor: '#fff',
+            bodyColor: '#94a3b8',
+            padding: 10,
+            cornerRadius: 8,
+          }
+        }
+      }
+    });
+  </script>
+
+  <script>
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', function () {
+    if (window.innerWidth <= 768) {
+      setTimeout(() => {
+        closeSidebar();
+      }, 100);
     }
   });
-</script>
+});
+  </script>
 </body>
+
 </html>

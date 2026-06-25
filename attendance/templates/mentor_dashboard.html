@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1" name="viewport" />
     <title>Faculty Dashboard - Smart Academic System</title>
-<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
 
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
@@ -207,6 +207,11 @@
         .tile-red {
             background: #fef2f2;
             color: #dc2626;
+        }
+
+        .tile-pink {
+            color: #e668a7;
+            background: #fce7f3;
         }
 
         .tile h3 {
@@ -522,13 +527,15 @@
             <p>Welcome, {{ user.get_full_name|default:user.username }}!</p>
         </div>
         <div class="tiles">
-            <a class="tile" href="{% url 'view_students' %}">
-                <div class="tile-icon tile-blue"><span class="material-symbols-outlined">group</span></div>
+
+            <a class="tile" href="{% url 'today_leaves' %}">
+                <div class="tile-icon tile-amber"><span class="material-symbols-outlined">event_busy</span></div>
                 <div>
-                    <h3>View Students</h3>
-                    <p>Browse all enrolled students and their profiles</p>
+                    <h3>Leave Requests</h3>
+                    <p>Review and process today's leave submissions</p>
                 </div>
             </a>
+
             <a class="tile" href="{% url 'mark_attendance' %}">
                 <div class="tile-icon tile-green"><span class="material-symbols-outlined">how_to_reg</span></div>
                 <div>
@@ -536,11 +543,15 @@
                     <p>Record and update today's student attendance</p>
                 </div>
             </a>
-            <a class="tile" href="{% url 'today_leaves' %}">
-                <div class="tile-icon tile-amber"><span class="material-symbols-outlined">event_busy</span></div>
+
+            <!-- Upload Defaulters -->
+            <a class="tile" href="{% url 'defaulter_list' %}">
+                <div class="tile-icon tile-red">
+                    <span class="material-symbols-outlined">upload_file</span>
+                </div>
                 <div>
-                    <h3>Leave Requests</h3>
-                    <p>Review and process today's leave submissions</p>
+                    <h3>Upload Defaulters</h3>
+                    <p>Upload Excel file of defaulter students and Manage follow-up actions</p>
                 </div>
             </a>
 
@@ -552,16 +563,7 @@
                 </div>
             </a>
 
-            <!-- Upload Defaulters -->
-            <a class="tile" href="{% url 'defaulter_list' %}">
-                <div class="tile-icon tile-green">
-                    <span class="material-symbols-outlined">upload_file</span>
-                </div>
-                <div>
-                    <h3>Upload Defaulters</h3>
-                    <p>Upload Excel file of defaulter students and Manage follow-up actions</p>
-                </div>
-            </a>
+
 
             <!-- Upload Grades -->
             <a class="tile" href="{% url 'upload_grades' %}">
@@ -574,6 +576,14 @@
                     <p>Upload CSV / Excel / PDF marks</p>
                 </div>
             </a>
+            <a class="tile" href="{% url 'view_students' %}">
+                <div class="tile-icon tile-pink"><span class="material-symbols-outlined">group</span></div>
+                <div>
+                    <h3>View Students</h3>
+                    <p>Browse all enrolled students and their profiles</p>
+                </div>
+            </a>
+
         </div>
         <!-- Summary Alert Card -->
         <div class="summary-card">
