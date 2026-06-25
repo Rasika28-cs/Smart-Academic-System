@@ -470,9 +470,15 @@
                 padding: 0 16px;
             }
 
-            .sa-nav-links a {
-                padding: 8px 12px;
+            .sa-nav-links {
+                gap: 4px;
             }
+
+            .sa-nav-links a {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
 
             .page-header h1 {
                 font-size: 1.5rem;
@@ -483,8 +489,15 @@
             }
 
             #notification-dropdown {
-                width: calc(100vw - 32px);
-                right: -60px;
+                position: fixed;
+                top: 70px;
+                right: 16px;
+                left: 16px;
+                width: auto;
+            }
+
+            .hide-mobile {
+                display: none;
             }
         }
     </style>
@@ -494,7 +507,8 @@
     <nav class="sa-nav">
 
         <a class="sa-nav-brand" href="#">
-            <span class="material-symbols-outlined">school</span> Smart Attendance
+            <span class="material-symbols-outlined">school</span>
+            <span class="hide-mobile">Smart Attendance</span>
         </a>
         <ul class="sa-nav-links">
             <li><a href="#" style="background:var(--primary-container); color:var(--primary);">Dashboard</a></li>
@@ -523,8 +537,8 @@
     </nav>
     <div class="sa-page">
         <div class="page-header">
-            <h1>👩‍🏫 Welcome, {{ user.get_full_name|default:user.username }}!</h1>
-            <p>Class incharge Dashboard</p>
+            <h1>Welcome, {{ user.get_full_name|default:user.username }}!</h1>
+            <p>Staff Dashboard</p>
         </div>
         <div class="tiles">
 
