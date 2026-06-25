@@ -82,22 +82,23 @@
       border-bottom: 1px solid var(--border);
     }
 
-.logo-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--blue);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-/* replace svg rule with this */
-.logo-icon .material-symbols-outlined {
-  font-size: 18px;
-  color: #fff;
-  font-variation-settings: 'FILL' 1;
-}
+    /* replace svg rule with this */
+    .logo-icon .material-symbols-outlined {
+      font-size: 18px;
+      color: #fff;
+      font-variation-settings: 'FILL' 1;
+    }
+
     .logo-name {
       font-size: 14px;
       font-weight: 700;
@@ -1228,19 +1229,19 @@
                   style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--green);">
                   <span style="display:inline-flex; align-items:center; gap:6px;"><span
                       style="width:8px; height:8px; border-radius:50%; background:var(--green);"></span>Present</span>
-                  <span>{{ dist_data.0 }}</span>
+                  <span>{{ present_count }}</span>
                 </div>
                 <div
                   style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--amber);">
                   <span style="display:inline-flex; align-items:center; gap:6px;"><span
                       style="width:8px; height:8px; border-radius:50%; background:var(--amber);"></span>On Leave</span>
-                  <span>{{ dist_data.1 }}</span>
+                  <span>{{ leave_count }}</span>
                 </div>
                 <div
                   style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--red);">
                   <span style="display:inline-flex; align-items:center; gap:6px;"><span
                       style="width:8px; height:8px; border-radius:50%; background:var(--red);"></span>Absent</span>
-                  <span>{{ dist_data.2 }}</span>
+                  <span>{{ absent_count }}</span>
                 </div>
               </div>
             </div>

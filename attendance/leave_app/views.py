@@ -1068,11 +1068,9 @@ def hod_dashboard(request):
         a=Count("id", filter=Q(status="Absent")),
     )
 
-    dist_data = [
-        total_stats["p"] or 0,
-        total_stats["l"] or 0,
-        total_stats["a"] or 0,
-    ]
+    present_count = total_stats["p"] or 0
+    leave_count = total_stats["l"] or 0
+    absent_count = total_stats["a"] or 0
 
     top_students = list(students[:12])
 
@@ -1125,7 +1123,9 @@ def hod_dashboard(request):
             "percentages": json.dumps(percentages),
             "trend_labels": json.dumps(trend_labels),
             "trend_values": json.dumps(trend_values),
-            "dist_data": json.dumps(dist_data),
+            "present_count": present_count,
+            "leave_count": leave_count,
+            "absent_count": absent_count,
             "total_students": stats["total"],
             "above_75_count": stats["above"],
             "below_75_count": stats["below"],
