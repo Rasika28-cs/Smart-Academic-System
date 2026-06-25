@@ -917,8 +917,8 @@ def mark_attendance(request):
                             date=today
                         )
 
-    messages.success(request, "Attendance marked successfully")
-    return redirect("mentor_dashboard")
+        messages.success(request, "Attendance marked successfully")
+        return redirect("mentor_dashboard")
 
 
 # ----------------------------
