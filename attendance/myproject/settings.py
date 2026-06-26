@@ -150,3 +150,14 @@ SECURE_HSTS_PRELOAD = not DEBUG
 
 ATTENDANCE_PENALTY = 3
 WHITENOISE_MANIFEST_STRICT = False
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = "smartacademicsystemsas@gmail.com"
+EMAIL_HOST_PASSWORD = "hgsr naht ejvy eele"
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
