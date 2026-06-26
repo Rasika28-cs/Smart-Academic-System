@@ -32,7 +32,6 @@ def view_od_status(request):
 # ─────────────────────────────────────────────
 # APPLY OD
 # ─────────────────────────────────────────────
-
 @require_POST
 @login_required
 def apply_od(request, event_id):
@@ -52,29 +51,41 @@ def apply_od(request, event_id):
 
     status = "approved" if approved_count < 8 else "pending"
 
-    ODApplication.objects.create(
+    # =========================
+    # 1. CREATE OD (CRITICAL)
+    # =========================
+    od = ODApplication.objects.create(
         student=request.user,
         event=event,
         date=event.event_date,
         status=status,
     )
 
-    # Notify staff
+    # =========================
+    # 2. STAFF USERS
+    # =========================
     staff_users = User.objects.filter(
         is_staff=True,
         is_active=True
     )
 
-    notif = Notification.objects.create(
-        title="New OD Request",
-        message=f"{request.user.username} applied for OD: {event.event_name}",
-        type="od",
-        url=reverse("staff_panel"),
-    )
+    # =========================
+    # 3. NOTIFICATION (SAFE)
+    # =========================
+    try:
+        notif = Notification.objects.create(
+            title="New OD Request",
+            message=f"{request.user.username} applied for OD: {event.event_name}",
+            type="od",
+            url=reverse("staff_panel"),
+        )
+        notif.users.set(staff_users)
+    except Exception as e:
+        print("Notification Error:", e)
 
-    notif.users.set(staff_users)
-
-    # Email notification
+    # =========================
+    # 4. EMAIL (NEVER BLOCK REQUEST)
+    # =========================
     staff_emails = list(
         staff_users.exclude(email="")
         .values_list("email", flat=True)
@@ -82,9 +93,10 @@ def apply_od(request, event_id):
     )
 
     if staff_emails:
-        send_mail(
-            subject="New OD Request - Smart Academic Student System",
-            message=f"""
+        try:
+            send_mail(
+                subject="New OD Request - Smart Academic Student System",
+                message=f"""
 A new On-Duty (OD) request has been submitted.
 
 Student Username : {request.user.username}
@@ -96,15 +108,16 @@ Event Date : {event.event_date}
 
 Current Status : {status.upper()}
 
-Please log in to the Smart Academic Student System to review the request.
+Please log in to review the request.
 """,
-            from_email=None,  # Uses DEFAULT_FROM_EMAIL
-            recipient_list=staff_emails,
-            fail_silently=True,
-        )
+                from_email=None,
+                recipient_list=staff_emails,
+                fail_silently=True,
+            )
+        except Exception as e:
+            print("OD Email Error:", e)
 
     return redirect("event_list")
-
 # ─────────────────────────────────────────────
 # STAFF PANEL
 # ─────────────────────────────────────────────
