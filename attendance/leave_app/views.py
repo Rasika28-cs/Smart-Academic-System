@@ -496,14 +496,21 @@ def is_student_on_leave(student: Student, check_date: date) -> bool:
 @login_required
 @require_POST
 def apply_leave_api(request):
-    student, err = _student_required(request)
-    if err:
-        return JsonResponse({"status": "error", "message": "Not a student"}, status=403)
+    student = _get_student(request)
+
+    if not student:
+        return JsonResponse(
+            {"status": "error", "message": "Not a student"},
+            status=403
+        )
 
     try:
         data = json.loads(request.body)
     except (json.JSONDecodeError, ValueError):
-        return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Invalid JSON"},
+            status=400
+        )
 
     try:
         from_date = datetime.strptime(data["from_date"], "%Y-%m-%d").date()
@@ -534,7 +541,7 @@ def apply_leave_api(request):
 
     if overlap.exists():
         return JsonResponse(
-            {"status": "error", "message": "A leave request already exists for this period"},
+            {"status": "error", "message": "Leave already exists for this period"},
             status=400
         )
 
@@ -545,74 +552,61 @@ def apply_leave_api(request):
             status=400
         )
 
-    # =========================
-    # 1. SAVE LEAVE FIRST (IMPORTANT)
-    # =========================
-    with transaction.atomic():
-        leave = LeaveRequest.objects.create(
-            student=student,
-            from_date=from_date,
-            to_date=to_date,
-            reason=reason,
-            status="PENDING",
-        )
-
-    # =========================
-    # 2. NOTIFICATIONS (SAFE BLOCK)
-    # =========================
-    recipients = User.objects.filter(
-        groups__name="Mentor",
-        is_active=True
+    # =====================
+    # SAVE FIRST (CRITICAL)
+    # =====================
+    leave = LeaveRequest.objects.create(
+        student=student,
+        from_date=from_date,
+        to_date=to_date,
+        reason=reason,
+        status="PENDING",
     )
 
-    if recipients.exists():
-        try:
+    # =====================
+    # NOTIFICATIONS (SAFE)
+    # =====================
+    try:
+        recipients = User.objects.filter(groups__name="Mentor", is_active=True)
+
+        if recipients.exists():
             send_notification(
                 title="New Leave Request",
-                message=f"{student.name} submitted leave {from_date} to {to_date}.",
+                message=f"{student.name} applied leave {from_date} to {to_date}",
                 notif_type="leave",
                 url=reverse("today_leaves"),
                 users=recipients
             )
-        except Exception as e:
-            print("Notification Error:", e)
 
-        mentor_emails = list(
-            recipients.exclude(email="")
-            .values_list("email", flat=True)
-            .distinct()
-        )
+            emails = list(
+                recipients.exclude(email="")
+                .values_list("email", flat=True)
+                .distinct()
+            )
 
-        # =========================
-        # 3. EMAIL (NEVER BREAK API)
-        # =========================
-        if mentor_emails:
-            try:
-                send_mail(
-                    subject="New Leave Request - Smart Academic System",
-                    message=f"""
-A new leave request has been submitted.
-
-Student Name : {student.name}
-Roll Number  : {student.roll_no}
-Register No  : {student.reg_no}
-
-From : {from_date}
-To   : {to_date}
-
-Reason:
-{reason}
+            if emails:
+                try:
+                    send_mail(
+                        subject="New Leave Request",
+                        message=f"""
+Student: {student.name}
+From: {from_date}
+To: {to_date}
+Reason: {reason}
 """,
-                    from_email=None,
-                    recipient_list=mentor_emails,
-                    fail_silently=True,
-                )
-            except Exception as e:
-                print("Email Error:", e)
+                        from_email=None,
+                        recipient_list=emails,
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    print("Email error:", e)
 
-    # =========================
-    # 4. ACTIVITY LOG
-    # =========================
+    except Exception as e:
+        print("Notification block error:", e)
+
+    # =====================
+    # LOG (SAFE)
+    # =====================
     try:
         ActivityLog.objects.create(
             user=request.user,
@@ -620,14 +614,12 @@ Reason:
             ip_address=request.META.get("REMOTE_ADDR", ""),
         )
     except Exception as e:
-        print("Activity Log Error:", e)
+        print("Activity log error:", e)
 
     return JsonResponse({
         "status": "success",
         "message": "Leave applied successfully"
     })
-
-
 @login_required
 @require_POST
 def apply_leave_api(request):
@@ -1642,7 +1634,7 @@ def upload_defaulters(request):
         messages.error(request, "Failed to process file.")
         return redirect("defaulter_list")
 
-        
+
 @login_required
 def defaulter_list(request):
     batch = request.GET.get("batch", "")
