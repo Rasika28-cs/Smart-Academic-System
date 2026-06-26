@@ -1566,7 +1566,6 @@ def mark_as_read(request, id: int):
     notif.read_by.add(request.user)
     return JsonResponse({"status": "ok"})
 
-
 @login_required
 @csrf_protect
 @require_POST
@@ -1595,6 +1594,7 @@ def upload_defaulters(request):
         uploaded_count = 0
 
         for _, row in df.iterrows():
+
             roll_no_str = str(row["Roll No"]).strip()
             reason_str = str(row["Reason"]).strip()
 
@@ -1641,91 +1641,8 @@ def upload_defaulters(request):
         logger.exception("upload_defaulters failed: %s", exc)
         messages.error(request, "Failed to process file.")
         return redirect("defaulter_list")
-    
-    """Upload defaulter list from an Excel file. Restricted to HOD."""
 
-    file = request.FILES.get("excel_file")
-    err = _validate_upload(file)
-    if err:
-        return JsonResponse({"status": "error", "message": err}, status=400)
-
-    try:
-        df = pd.read_excel(file, engine="openpyxl")
-        df.columns = df.columns.str.strip()
-
-        required_cols = ["Roll No", "Name", "Staff Incharge", "Dept", "Year", "Reason"]
-        missing = [c for c in required_cols if c not in df.columns]
-
-        if missing:
-            return JsonResponse(
-                {"status": "error", "message": f"Missing columns: {', '.join(missing)}"},
-                status=400,
-            )
-
-        df["Dept"] = df["Dept"].fillna("").astype(str).str.strip().str.upper()
-
-        uploaded_count = 0
-
-        for _, row in df.iterrows():
-
-            roll_no_str = str(row["Roll No"]).strip()
-            reason_str = str(row["Reason"]).strip()
-            dept_str = str(row["Dept"]).strip()
-
-            if not roll_no_str or roll_no_str.lower() == "nan":
-                continue
-
-            existing = DefaulterStudent.objects.filter(roll_no=roll_no_str).first()
-            should_notify = not existing or existing.reason != reason_str
-
-            DefaulterStudent.objects.update_or_create(
-                roll_no=roll_no_str,
-                defaults={
-                    "name": str(row["Name"]).strip(),
-                    "staff_incharge": str(row["Staff Incharge"]).strip(),
-                    "department": dept_str,
-                    "year": int(float(row["Year"])),  # safer conversion
-                    "reason": reason_str,
-                },
-            )
-
-            if should_notify:
-                try:
-                    student_obj = Student.objects.select_related("user").get(
-                        roll_no=roll_no_str
-                    )
-
-                    if student_obj.user:
-                        send_notification(
-                            title="Defaulter Alert",
-                            message=f"You have been marked as a defaulter. Reason: {reason_str}",
-                            notif_type="defaulter",
-                            url=reverse("student_defaulter"),
-                            users=[student_obj.user],
-                        )
-
-                except Student.DoesNotExist:
-                    pass
-
-            uploaded_count += 1
-
-        logger.info(
-            "upload_defaulters: %d records by %s",
-            uploaded_count,
-            request.user,
-        )
-
-        return JsonResponse(
-            {"status": "success", "message": f"{uploaded_count} records uploaded"}
-        )
-
-    except Exception as exc:
-        logger.exception("upload_defaulters failed: %s", exc)
-        return JsonResponse(
-            {"status": "error", "message": "Failed to process file."},
-            status=500,
-        )
-
+        
 @login_required
 def defaulter_list(request):
     batch = request.GET.get("batch", "")
