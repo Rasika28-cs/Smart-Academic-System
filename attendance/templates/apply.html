@@ -156,50 +156,114 @@
       © 2026 Smart Academic System • Department of CSE (Cyber Security)
     </p>
   </footer>
-  <script>
-    document.getElementById("leaveForm").addEventListener("submit", function (e) {
-      e.preventDefault();
+<script>
+document.getElementById("leaveForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-      const csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
-      const msgElement = document.getElementById("msg");
-      const reason = document.getElementById("reason").value.trim();
+    const csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    const msgElement = document.getElementById("msg");
 
-      if (!reason) {
+    const from_date = document.getElementById("from_date").value;
+    const to_date = document.getElementById("to_date").value;
+    const reason = document.getElementById("reason").value.trim();
+
+    // ========================
+    // BASIC VALIDATION
+    // ========================
+    if (!from_date || !to_date) {
         msgElement.innerHTML =
-          "<span class='text-red-600 flex items-center justify-center gap-1'><span class='material-symbols-outlined text-sm'>warning</span> Reason cannot be empty.</span>";
+            "<span class='text-red-600'>Please select both dates.</span>";
+        return;
+    }
+
+    if (!reason) {
+        msgElement.innerHTML =
+            "<span class='text-red-600'>Reason cannot be empty.</span>";
         document.getElementById("reason").focus();
         return;
-      }
+    }
 
-      msgElement.innerHTML = "<span class='text-on-surface-variant animate-pulse'>Processing your request...</span>";
-      fetch("{% url 'apply_leave_api' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken
-        },
-        body: JSON.stringify({
-          from_date: document.getElementById("from_date").value,
-          to_date: document.getElementById("to_date").value,
-          reason: reason
-        })
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === "success") {
-            msgElement.innerHTML = "<span class='text-emerald-600 flex items-center justify-center gap-1'><span class='material-symbols-outlined text-sm'>check_circle</span> Leave Applied Successfully!</span>";
-            setTimeout(() => {
-              window.location.href = "{% url 'student_dashboard' %}";
-            }, 1200);
-          } else {
-            msgElement.innerHTML = "<span class='text-red-600 flex items-center justify-center gap-1'><span class='material-symbols-outlined text-sm'>warning</span> " + data.message + "</span>";
-          }
-        })
-        .catch(() => {
-          msgElement.innerHTML = "<span class='text-red-600'>Server Connection Error. Please try again.</span>";
+    msgElement.innerHTML =
+        "<span class='text-on-surface-variant animate-pulse'>Processing your request...</span>";
+
+    try {
+
+        // ========================
+        // API CALL
+        // ========================
+        const response = await fetch("{% url 'apply_leave_api' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
+            },
+            body: JSON.stringify({
+                from_date: from_date,
+                to_date: to_date,
+                reason: reason
+            })
         });
-    });
-  </script>
+
+        // ========================
+        // DEBUG INFO (IMPORTANT)
+        // ========================
+        console.log("STATUS:", response.status);
+        console.log("CONTENT-TYPE:", response.headers.get("content-type"));
+
+        const text = await response.text();
+        console.log("RAW RESPONSE:", text);
+
+        let data;
+
+        // ========================
+        // SAFE JSON PARSE
+        // ========================
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error("❌ INVALID JSON FROM SERVER");
+            console.error(text);
+
+            msgElement.innerHTML =
+                "<span class='text-red-600'>Server returned invalid response. Check Django terminal.</span>";
+
+            return;
+        }
+
+        console.log("PARSED DATA:", data);
+
+        // ========================
+        // SUCCESS HANDLING
+        // ========================
+        if (response.ok && data.status === "success") {
+
+            msgElement.innerHTML =
+                "<span class='text-green-600'>✔ Leave Applied Successfully!</span>";
+
+            setTimeout(() => {
+                window.location.href = "{% url 'student_dashboard' %}";
+            }, 1200);
+
+        } else {
+
+            msgElement.innerHTML =
+                "<span class='text-red-600'>" +
+                (data.message || "Unknown error") +
+                "</span>";
+        }
+
+    } catch (err) {
+
+        // ========================
+        // NETWORK / SERVER ERROR
+        // ========================
+        console.error("FETCH ERROR:", err);
+
+        msgElement.innerHTML =
+            "<span class='text-red-600'>Server Connection Error. Open Console for details.</span>";
+    }
+});
+</script>
 </body>
 
 </html>

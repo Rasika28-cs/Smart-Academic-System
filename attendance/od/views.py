@@ -70,7 +70,7 @@ def apply_od(request, event_id):
     )
 
     # =========================
-    # 3. NOTIFICATION (SAFE)
+    # 3. NOTIFICATION (SAFE BLOCK)
     # =========================
     try:
         notif = Notification.objects.create(
@@ -86,38 +86,44 @@ def apply_od(request, event_id):
     # =========================
     # 4. EMAIL (NEVER BLOCK REQUEST)
     # =========================
-    staff_emails = list(
-        staff_users.exclude(email="")
-        .values_list("email", flat=True)
-        .distinct()
-    )
+    try:
+        staff_emails = list(
+            staff_users.exclude(email="")
+            .values_list("email", flat=True)
+            .distinct()
+        )
 
-    if staff_emails:
-        try:
-            send_mail(
-                subject="New OD Request - Smart Academic Student System",
-                message=f"""
+        if staff_emails:
+            try:
+                send_mail(
+                    subject="New OD Request - Smart Academic System",
+                    message=f"""
 A new On-Duty (OD) request has been submitted.
 
-Student Username : {request.user.username}
+Student Username: {request.user.username}
 
-Event Details
--------------
-Event Name : {event.event_name}
-Event Date : {event.event_date}
+Event Name: {event.event_name}
+Event Date: {event.event_date}
 
-Current Status : {status.upper()}
+Status: {status.upper()}
 
 Please log in to review the request.
 """,
-                from_email=None,
-                recipient_list=staff_emails,
-                fail_silently=True,
-            )
-        except Exception as e:
-            print("OD Email Error:", e)
+                    from_email=None,
+                    recipient_list=staff_emails,
+                    fail_silently=True,
+                )
+            except Exception as e:
+                print("OD Email Error:", e)
 
+    except Exception as e:
+        print("Email Block Error:", e)
+
+    # =========================
+    # 5. RETURN SAFE RESPONSE
+    # =========================
     return redirect("event_list")
+
 # ─────────────────────────────────────────────
 # STAFF PANEL
 # ─────────────────────────────────────────────
