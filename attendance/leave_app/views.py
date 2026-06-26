@@ -493,6 +493,15 @@ def is_student_on_leave(student: Student, check_date: date) -> bool:
 # ---------------------------------------------------------------------------
 # 4. LEAVE APPLICATION API
 # ---------------------------------------------------------------------------
+from django.core.mail import send_mail
+from django.db import transaction
+from django.http import JsonResponse
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.contrib.auth.models import User
+from datetime import datetime, date
+import json
 
 
 @login_required
@@ -551,7 +560,6 @@ def apply_leave_api(request):
         )
 
     with transaction.atomic():
-
         LeaveRequest.objects.create(
             student=student,
             from_date=from_date,
@@ -567,7 +575,6 @@ def apply_leave_api(request):
         )
 
         if recipients.exists():
-
             # In-app notification
             send_notification(
                 title="New Leave Request",
@@ -606,13 +613,12 @@ Reason
 
 Please log in to the Smart Academic Student System to review the request.
 """,
-                        from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                        from_email=None,
                         recipient_list=mentor_emails,
-                        fail_silently=False,
+                        fail_silently=True,
                     )
-
                 except Exception as e:
-                    print(f"Email sending failed: {e}")
+                    print("Email Error:", e)
 
     ActivityLog.objects.create(
         user=request.user,
