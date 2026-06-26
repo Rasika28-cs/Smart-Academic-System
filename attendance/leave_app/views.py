@@ -493,227 +493,135 @@ def is_student_on_leave(student: Student, check_date: date) -> bool:
 # ---------------------------------------------------------------------------
 # 4. LEAVE APPLICATION API
 # ---------------------------------------------------------------------------
-from datetime import datetime, date
-import json
-import traceback
-
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.http import JsonResponse
-from django.urls import reverse
-from django.views.decorators.http import require_POST
-
-
 @login_required
 @require_POST
 def apply_leave_api(request):
-    try:
-        print("========== APPLY LEAVE API ==========")
+    student = _get_student(request)
 
-        # -----------------------------
-        # Get student
-        # -----------------------------
-        student = _get_student(request)
-
-        if not student:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Student account not found."
-                },
-                status=403
-            )
-
-        print("Student:", student)
-
-        # -----------------------------
-        # Read JSON
-        # -----------------------------
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Invalid JSON."
-                },
-                status=400
-            )
-
-        print("Request Data:", data)
-
-        # -----------------------------
-        # Dates
-        # -----------------------------
-        from_date = data.get("from_date")
-        to_date = data.get("to_date")
-        reason = data.get("reason", "").strip()
-
-        if not from_date or not to_date:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "From date and To date are required."
-                },
-                status=400
-            )
-
-        if not reason:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Reason is required."
-                },
-                status=400
-            )
-
-        try:
-            from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
-            to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
-        except ValueError:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Invalid date format."
-                },
-                status=400
-            )
-
-        if from_date < date.today():
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Past dates are not allowed."
-                },
-                status=400
-            )
-
-        if from_date > to_date:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "From date cannot be after To date."
-                },
-                status=400
-            )
-
-        # -----------------------------
-        # Duplicate leave
-        # -----------------------------
-        overlap = LeaveRequest.objects.filter(
-            student=student,
-            from_date__lte=to_date,
-            to_date__gte=from_date
-        ).exclude(status="REJECTED")
-
-        if overlap.exists():
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Leave already exists for these dates."
-                },
-                status=400
-            )
-
-        # -----------------------------
-        # Save Leave
-        # -----------------------------
-        leave = LeaveRequest.objects.create(
-            student=student,
-            from_date=from_date,
-            to_date=to_date,
-            reason=reason,
-            status="PENDING"
+    if not student:
+        return JsonResponse(
+            {"status": "error", "message": "Not a student"},
+            status=403
         )
 
-        print("Leave Saved:", leave.id)
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse(
+            {"status": "error", "message": "Invalid JSON"},
+            status=400
+        )
 
-        # -----------------------------
-        # Notification (Optional)
-        # -----------------------------
-        try:
-            mentors = User.objects.filter(
-                groups__name="Mentor",
-                is_active=True
+    try:
+        from_date = datetime.strptime(data["from_date"], "%Y-%m-%d").date()
+        to_date = datetime.strptime(data["to_date"], "%Y-%m-%d").date()
+    except (KeyError, ValueError):
+        return JsonResponse(
+            {"status": "error", "message": "Invalid date format. Use YYYY-MM-DD."},
+            status=400
+        )
+
+    if from_date < date.today():
+        return JsonResponse(
+            {"status": "error", "message": "Past date not allowed"},
+            status=400
+        )
+
+    if from_date > to_date:
+        return JsonResponse(
+            {"status": "error", "message": "Invalid date range"},
+            status=400
+        )
+
+    overlap = LeaveRequest.objects.filter(
+        student=student,
+        from_date__lte=to_date,
+        to_date__gte=from_date,
+    ).exclude(status="REJECTED")
+
+    if overlap.exists():
+        return JsonResponse(
+            {"status": "error", "message": "Leave already exists for this period"},
+            status=400
+        )
+
+    reason = data.get("reason", "").strip()
+    if not reason:
+        return JsonResponse(
+            {"status": "error", "message": "Reason is required"},
+            status=400
+        )
+
+    # =====================
+    # SAVE FIRST (CRITICAL)
+    # =====================
+    leave = LeaveRequest.objects.create(
+        student=student,
+        from_date=from_date,
+        to_date=to_date,
+        reason=reason,
+        status="PENDING",
+    )
+
+    # =====================
+    # NOTIFICATIONS (SAFE)
+    # =====================
+    try:
+        recipients = User.objects.filter(groups__name="Mentor", is_active=True)
+
+        if recipients.exists():
+            send_notification(
+                title="New Leave Request",
+                message=f"{student.name} applied leave {from_date} to {to_date}",
+                notif_type="leave",
+                url=reverse("today_leaves"),
+                users=recipients
             )
 
-            if mentors.exists():
+            emails = list(
+                recipients.exclude(email="")
+                .values_list("email", flat=True)
+                .distinct()
+            )
+
+            if emails:
                 try:
-                    send_notification(
-                        title="New Leave Request",
-                        message=f"{student.name} applied leave from {from_date} to {to_date}",
-                        notif_type="leave",
-                        url=reverse("today_leaves"),
-                        users=mentors,
+                    send_mail(
+                        subject="New Leave Request",
+                        message=f"""
+Student: {student.name}
+From: {from_date}
+To: {to_date}
+Reason: {reason}
+""",
+                        from_email=None,
+                        recipient_list=emails,
+                        fail_silently=True,
                     )
                 except Exception as e:
-                    print("Notification Error:", e)
-
-                emails = list(
-                    mentors.exclude(email="")
-                    .values_list("email", flat=True)
-                    .distinct()
-                )
-
-                if emails:
-                    try:
-                        send_mail(
-                            subject="New Leave Request",
-                            message=f"""
-Student : {student.name}
-
-From : {from_date}
-
-To : {to_date}
-
-Reason :
-{reason}
-""",
-                            from_email=None,
-                            recipient_list=emails,
-                            fail_silently=True,
-                        )
-                    except Exception as e:
-                        print("Email Error:", e)
-
-        except Exception as e:
-            print("Notification Block Error:", e)
-
-        # -----------------------------
-        # Activity Log
-        # -----------------------------
-        try:
-            ActivityLog.objects.create(
-                user=request.user,
-                action=f"Applied leave from {from_date} to {to_date}",
-                ip_address=request.META.get("REMOTE_ADDR", "")
-            )
-        except Exception as e:
-            print("Activity Log Error:", e)
-
-        # -----------------------------
-        # Success
-        # -----------------------------
-        return JsonResponse(
-            {
-                "status": "success",
-                "message": "Leave applied successfully."
-            }
-        )
+                    print("Email error:", e)
 
     except Exception as e:
-        print("\n========== APPLY LEAVE ERROR ==========")
-        traceback.print_exc()
-        print("=======================================\n")
+        print("Notification block error:", e)
 
-        return JsonResponse(
-            {
-                "status": "error",
-                "message": str(e)
-            },
-            status=500
+    # =====================
+    # LOG (SAFE)
+    # =====================
+    try:
+        ActivityLog.objects.create(
+            user=request.user,
+            action=f"Applied leave {from_date} to {to_date}",
+            ip_address=request.META.get("REMOTE_ADDR", ""),
         )
+    except Exception as e:
+        print("Activity log error:", e)
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Leave applied successfully"
+    })
+
+
 
 @login_required
 @role_required("Mentor")
