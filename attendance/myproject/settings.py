@@ -11,6 +11,14 @@ from pathlib import Path
 from decouple import config
 import os
 import dj_database_url
+
+from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
 # Base Directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
