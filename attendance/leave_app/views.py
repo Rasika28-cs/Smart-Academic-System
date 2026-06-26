@@ -50,7 +50,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_GET, require_POST
-
+from django.core.mail import send_mail
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
@@ -551,6 +551,7 @@ def apply_leave_api(request):
         )
 
     with transaction.atomic():
+
         LeaveRequest.objects.create(
             student=student,
             from_date=from_date,
@@ -560,9 +561,14 @@ def apply_leave_api(request):
         )
 
         # Notify all mentors
-        recipients = User.objects.filter(groups__name="Mentor")
+        recipients = User.objects.filter(
+            groups__name="Mentor",
+            is_active=True
+        )
 
         if recipients.exists():
+
+            # In-app notification
             send_notification(
                 title="New Leave Request",
                 message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
@@ -571,6 +577,43 @@ def apply_leave_api(request):
                 users=recipients
             )
 
+            # Email notification
+            mentor_emails = list(
+                recipients.exclude(email="")
+                .values_list("email", flat=True)
+                .distinct()
+            )
+
+            if mentor_emails:
+                try:
+                    send_mail(
+                        subject="New Leave Request - Smart Academic Student System",
+                        message=f"""
+A new leave request has been submitted.
+
+Student Name : {student.name}
+Roll Number  : {student.roll_no}
+Register No  : {student.reg_no}
+
+Leave Period
+------------
+From : {from_date}
+To   : {to_date}
+
+Reason
+------
+{reason}
+
+Please log in to the Smart Academic Student System to review the request.
+""",
+                        from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                        recipient_list=mentor_emails,
+                        fail_silently=False,
+                    )
+
+                except Exception as e:
+                    print(f"Email sending failed: {e}")
+
     ActivityLog.objects.create(
         user=request.user,
         action=f"Applied leave {from_date} to {to_date}",
@@ -578,7 +621,6 @@ def apply_leave_api(request):
     )
 
     return JsonResponse({"status": "success"})
-
 
 @login_required
 @role_required("Mentor")

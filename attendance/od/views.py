@@ -8,7 +8,7 @@ from leave_app.models import Notification, Student
 from django.contrib.auth.models import User
 from .models import ODApplication
 from events.models import Event
-
+from django.core.mail import send_mail
 
 # ─────────────────────────────────────────────
 # OD STATUS
@@ -60,7 +60,10 @@ def apply_od(request, event_id):
     )
 
     # Notify staff
-    staff_users = User.objects.filter(is_staff=True)
+    staff_users = User.objects.filter(
+        is_staff=True,
+        is_active=True
+    )
 
     notif = Notification.objects.create(
         title="New OD Request",
@@ -71,8 +74,36 @@ def apply_od(request, event_id):
 
     notif.users.set(staff_users)
 
-    return redirect("event_list")
+    # Email notification
+    staff_emails = list(
+        staff_users.exclude(email="")
+        .values_list("email", flat=True)
+        .distinct()
+    )
 
+    if staff_emails:
+        send_mail(
+            subject="New OD Request - Smart Academic Student System",
+            message=f"""
+A new On-Duty (OD) request has been submitted.
+
+Student Username : {request.user.username}
+
+Event Details
+-------------
+Event Name : {event.event_name}
+Event Date : {event.event_date}
+
+Current Status : {status.upper()}
+
+Please log in to the Smart Academic Student System to review the request.
+""",
+            from_email=None,  # Uses DEFAULT_FROM_EMAIL
+            recipient_list=staff_emails,
+            fail_silently=True,
+        )
+
+    return redirect("event_list")
 
 # ─────────────────────────────────────────────
 # STAFF PANEL
