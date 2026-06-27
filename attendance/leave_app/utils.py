@@ -46,43 +46,35 @@ logger = logging.getLogger(__name__)
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
-def send_leave_email(mentor_emails, subject, message):
+def send_leave_email(student, from_date, to_date, reason):
     try:
-        response = resend.Emails.send({
-            "from": "Leave System <onboarding@resend.dev>",
-            "to": list(mentor_emails),
-            "subject": subject,
-            "html": f"<p>{message}</p>"
-        })
-
-        print("EMAIL SENT:", response)
-
-    except Exception as e:
-        print("Failed to send leave email")
-        print("ERROR:", str(e))
-    try:
+        # Get mentor emails
         mentor_emails = list(
-            User.objects.filter(groups__name="Mentor", is_active=True)
-            .exclude(email="")
+            User.objects.filter(groups__name="Mentor")
             .values_list("email", flat=True)
-            .distinct()
         )
 
         if not mentor_emails:
+            print("No mentor emails found")
             return
 
-        resend.Emails.send({
+        subject = "New Leave Request"
+
+        message = f"""
+        Student: {student.name}
+        From: {from_date}
+        To: {to_date}
+        Reason: {reason}
+        """
+
+        response = resend.Emails.send({
             "from": "Leave System <onboarding@resend.dev>",
             "to": mentor_emails,
-            "subject": "New Leave Request",
-            "html": f"""
-                <h2>New Leave Request</h2>
-                <p><b>Student:</b> {student.name}</p>
-                <p><b>From:</b> {from_date}</p>
-                <p><b>To:</b> {to_date}</p>
-                <p><b>Reason:</b> {reason}</p>
-            """
+            "subject": subject,
+            "html": f"<pre>{message}</pre>"
         })
 
-    except Exception:
-        logger.exception("Failed to send leave email")
+        print("Email sent:", response)
+
+    except Exception as e:
+        print("Leave email error:", e)
