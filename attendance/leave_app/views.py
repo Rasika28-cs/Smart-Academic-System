@@ -493,117 +493,286 @@ def is_student_on_leave(student: Student, check_date: date) -> bool:
 # 4. LEAVE APPLICATION API
 # ---------------------------------------------------------------------------
 @login_required
+
+
+
 @require_POST
+
+
+
 def apply_leave_api(request):
+
+
+
     student, err = _student_required(request)
+
+
+
     if err:
+
+
+
         return JsonResponse({"status": "error", "message": "Not a student"}, status=403)
 
+
+
     try:
+
+
+
         data = json.loads(request.body)
+
+
+
     except (json.JSONDecodeError, ValueError):
+
+
+
         return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
 
+
+
     try:
+
+
+
         from_date = datetime.strptime(data["from_date"], "%Y-%m-%d").date()
-        to_date   = datetime.strptime(data["to_date"],   "%Y-%m-%d").date()
+
+
+
+        to_date = datetime.strptime(data["to_date"], "%Y-%m-%d").date()
+
+
+
     except (KeyError, ValueError):
+
+
+
         return JsonResponse(
+
+
+
             {"status": "error", "message": "Invalid date format. Use YYYY-MM-DD."},
-            status=400,
+
+
+
+            status=400
+
+
+
         )
+
+
 
     if from_date < date.today():
-        return JsonResponse({"status": "error", "message": "Past date not allowed"}, status=400)
+
+
+
+        return JsonResponse(
+
+
+
+            {"status": "error", "message": "Past date not allowed"},
+
+
+
+            status=400
+
+
+
+        )
+
+
 
     if from_date > to_date:
-        return JsonResponse({"status": "error", "message": "Invalid date range"}, status=400)
+
+
+
+        return JsonResponse(
+
+
+
+            {"status": "error", "message": "Invalid date range"},
+
+
+
+            status=400
+
+
+
+        )
+
+
 
     overlap = LeaveRequest.objects.filter(
+
+
+
         student=student,
+
+
+
         from_date__lte=to_date,
+
+
+
         to_date__gte=from_date,
+
+
+
     ).exclude(status="REJECTED")
+
+
+
     if overlap.exists():
+
+
+
         return JsonResponse(
-            {"status": "error", "message": "A leave request already exists for this period"},
-            status=400,
+
+
+
+            {
+
+
+
+                "status": "error",
+
+
+
+                "message": "A leave request already exists for this period"
+
+
+
+            },
+
+
+
+            status=400
+
+
+
         )
+
+
 
     reason = data.get("reason", "").strip()
+
+
+
     if not reason:
-        return JsonResponse({"status": "error", "message": "Reason is required"}, status=400)
 
-    # ── 1. SAVE ──────────────────────────────────────────────────────────────
-    # Atomic block contains ONLY the DB write.
-    # send_notification is intentionally outside — a notification failure
-    # must never roll back the leave record.
+
+
+        return JsonResponse(
+
+
+
+            {"status": "error", "message": "Reason is required"},
+
+
+
+            status=400
+
+
+
+        )
+
+
+
     with transaction.atomic():
+
+
+
         LeaveRequest.objects.create(
+
+
+
             student=student,
+
+
+
             from_date=from_date,
+
+
+
             to_date=to_date,
+
+
+
             reason=reason,
+
+
+
             status="PENDING",
+
+
+
         )
 
-    # ── 2. IN-APP NOTIFICATION ───────────────────────────────────────────────
-    # Runs after commit. Wrapped so any failure is logged, not raised.
-    try:
-        recipients = User.objects.filter(groups__name="Mentor", is_active=True)
+
+
+        # Notify all mentors
+
+
+
+        recipients = User.objects.filter(groups__name="Mentor")
+
+
+
         if recipients.exists():
+
+
+
             send_notification(
+
+
+
                 title="New Leave Request",
-                message=(
-                    f"{student.name} submitted a leave request"
-                    f" from {from_date} to {to_date}."
-                ),
+
+
+
+                message=f"{student.name} submitted a leave request from {from_date} to {to_date}.",
+
+
+
                 notif_type="leave",
+
+
+
                 url=reverse("today_leaves"),
-                users=recipients,
-            )
-    except Exception as e:
-        print(f"[apply_leave] Notification error: {e}")
 
-    # ── 3. EMAIL ─────────────────────────────────────────────────────────────
-    # Separate try/except so an email failure never affects the response.
-    try:
-        mentor_emails = list(
-            User.objects
-            .filter(groups__name="Mentor", is_active=True)
-            .exclude(email="")
-            .values_list("email", flat=True)
-            .distinct()
-        )
-        if mentor_emails:
-            send_mail(
-                subject="New Leave Request",
-                message=(
-                    f"Student : {student.name}\n"
-                    f"From    : {from_date}\n"
-                    f"To      : {to_date}\n"
-                    f"Reason  : {reason}\n"
-                ),
-                from_email=None,          # uses DEFAULT_FROM_EMAIL from settings
-                recipient_list=mentor_emails,
-                fail_silently=False,      # let the except below catch real errors
-            )
-    except Exception as e:
-        print(f"[apply_leave] Email error: {e}")
 
-    # ── 4. ACTIVITY LOG ──────────────────────────────────────────────────────
-    try:
-        ActivityLog.objects.create(
-            user=request.user,
-            action=f"Applied leave {from_date} to {to_date}",
-            ip_address=request.META.get("REMOTE_ADDR", ""),
-        )
-    except Exception as e:
-        print(f"[apply_leave] ActivityLog error: {e}")
+
+                users=recipients
+
+
+
+            )
+
+
+
+    ActivityLog.objects.create(
+
+
+
+        user=request.user,
+
+
+
+        action=f"Applied leave {from_date} to {to_date}",
+
+
+
+        ip_address=request.META.get("REMOTE_ADDR", ""),
+
+
+
+    )
+
+
 
     return JsonResponse({"status": "success"})
-
-
 @login_required
 @role_required("Mentor")
 def mentor_dashboard(request):
