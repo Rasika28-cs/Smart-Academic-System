@@ -68,11 +68,11 @@ def send_leave_email(student, from_date, to_date, reason):
         """
 
         response = resend.Emails.send({
-            "from": "Leave System <onboarding@resend.dev>",
-            "to": mentor_emails,
-            "subject": subject,
-            "html": f"<pre>{message}</pre>"
-        })
+    "from": "Leave System <onboarding@resend.dev>",
+    "to": ["smartacademicsystemsas@gmail.com"],
+    "subject": "Leave Request",
+    "html": "<p>Test email working</p>"
+})
 
         print("Email sent:", response)
 
