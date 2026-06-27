@@ -573,7 +573,12 @@ def apply_leave_api(request):
 
     # Send email (never break API if email fails)
     try:
-        print("Reached email function")
+        send_leave_email(
+            student=student,
+            from_date=from_date,
+            to_date=to_date,
+            reason=reason,
+        )
     except Exception as e:
         print("Leave email error:", e)
 
