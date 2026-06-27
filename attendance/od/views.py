@@ -4,12 +4,13 @@ from django.views.decorators.http import require_POST
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 
-from leave_app.models import Notification, Student
+from attendance.leave_app.utils import send_notification
+from leave_app.models import ActivityLog, Notification, Student
 from django.contrib.auth.models import User
 from .models import ODApplication
 from events.models import Event
 from django.core.mail import send_mail
-
+from django.db import transaction
 # ─────────────────────────────────────────────
 # OD STATUS
 # ─────────────────────────────────────────────
@@ -32,98 +33,88 @@ def view_od_status(request):
 # ─────────────────────────────────────────────
 # APPLY OD
 # ─────────────────────────────────────────────
-@require_POST
 @login_required
+@require_POST
 def apply_od(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
-    # Prevent duplicate application
+    # ── DUPLICATE GUARD ───────────────────────────────────────────────────────
     if ODApplication.objects.filter(
         student=request.user,
         event=event,
     ).exists():
         return redirect("event_list")
 
+    # ── AUTO-APPROVE LOGIC ────────────────────────────────────────────────────
     approved_count = ODApplication.objects.filter(
         date=event.event_date,
         status="approved",
     ).count()
-
     status = "approved" if approved_count < 8 else "pending"
 
-    # =========================
-    # 1. CREATE OD (CRITICAL)
-    # =========================
-    od = ODApplication.objects.create(
-        student=request.user,
-        event=event,
-        date=event.event_date,
-        status=status,
-    )
-
-    # =========================
-    # 2. STAFF USERS
-    # =========================
-    staff_users = User.objects.filter(
-        is_staff=True,
-        is_active=True
-    )
-
-    # =========================
-    # 3. NOTIFICATION (SAFE BLOCK)
-    # =========================
-    try:
-        notif = Notification.objects.create(
-            title="New OD Request",
-            message=f"{request.user.username} applied for OD: {event.event_name}",
-            type="od",
-            url=reverse("staff_panel"),
+    # ── 1. SAVE (ATOMIC, ISOLATED) ────────────────────────────────────────────
+    # Notification and email are intentionally outside — a failure there
+    # must never roll back the OD record.
+    with transaction.atomic():
+        ODApplication.objects.create(
+            student=request.user,
+            event=event,
+            date=event.event_date,
+            status=status,
         )
-        notif.users.set(staff_users)
-    except Exception as e:
-        print("Notification Error:", e)
 
-    # =========================
-    # 4. EMAIL (NEVER BLOCK REQUEST)
-    # =========================
+    # ── 2. RECIPIENTS (QUERIED ONCE, REUSED BELOW) ───────────────────────────
+    staff_users = User.objects.filter(is_staff=True, is_active=True)
+
+    # ── 3. IN-APP NOTIFICATION ────────────────────────────────────────────────
+    try:
+        send_notification(
+            title="New OD Request",
+            message=(
+                f"{request.user.username} applied for OD: {event.event_name}"
+            ),
+            notif_type="od",
+            url=reverse("staff_panel"),
+            users=staff_users,
+        )
+    except Exception as e:
+        print(f"[apply_od] Notification error: {e}")
+
+    # ── 4. EMAIL ──────────────────────────────────────────────────────────────
     try:
         staff_emails = list(
             staff_users.exclude(email="")
             .values_list("email", flat=True)
             .distinct()
         )
-
         if staff_emails:
-            try:
-                send_mail(
-                    subject="New OD Request - Smart Academic System",
-                    message=f"""
-A new On-Duty (OD) request has been submitted.
-
-Student Username: {request.user.username}
-
-Event Name: {event.event_name}
-Event Date: {event.event_date}
-
-Status: {status.upper()}
-
-Please log in to review the request.
-""",
-                    from_email=None,
-                    recipient_list=staff_emails,
-                    fail_silently=True,
-                )
-            except Exception as e:
-                print("OD Email Error:", e)
-
+            send_mail(
+                subject="New OD Request - Smart Academic System",
+                message=(
+                    f"Student  : {request.user.username}\n"
+                    f"Event    : {event.event_name}\n"
+                    f"Date     : {event.event_date}\n"
+                    f"Status   : {status.upper()}\n\n"
+                    f"Please log in to review the request."
+                ),
+                from_email=None,
+                recipient_list=staff_emails,
+                fail_silently=False,  # real errors surface to the except log
+            )
     except Exception as e:
-        print("Email Block Error:", e)
+        print(f"[apply_od] Email error: {e}")
 
-    # =========================
-    # 5. RETURN SAFE RESPONSE
-    # =========================
+    # ── 5. ACTIVITY LOG ───────────────────────────────────────────────────────
+    try:
+        ActivityLog.objects.create(
+            user=request.user,
+            action=f"Applied OD for event '{event.event_name}' on {event.event_date}",
+            ip_address=request.META.get("REMOTE_ADDR", ""),
+        )
+    except Exception as e:
+        print(f"[apply_od] ActivityLog error: {e}")
+
     return redirect("event_list")
-
 # ─────────────────────────────────────────────
 # STAFF PANEL
 # ─────────────────────────────────────────────
