@@ -46,7 +46,20 @@ logger = logging.getLogger(__name__)
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
-def send_leave_email(student, from_date, to_date, reason):
+def send_leave_email(mentor_emails, subject, message):
+    try:
+        response = resend.Emails.send({
+            "from": "Leave System <onboarding@resend.dev>",
+            "to": list(mentor_emails),
+            "subject": subject,
+            "html": f"<p>{message}</p>"
+        })
+
+        print("EMAIL SENT:", response)
+
+    except Exception as e:
+        print("Failed to send leave email")
+        print("ERROR:", str(e))
     try:
         mentor_emails = list(
             User.objects.filter(groups__name="Mentor", is_active=True)
