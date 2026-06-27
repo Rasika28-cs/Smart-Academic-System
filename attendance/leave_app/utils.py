@@ -35,15 +35,15 @@ def send_notification(
     notif.users.add(*users)
 
     return notif
-
 import resend
+import os
 import logging
 from django.contrib.auth.models import User
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-resend.api_key = settings.RESEND_API_KEY
+# Set API key ONCE (safe for Render + local)
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
 def send_leave_email(student, from_date, to_date, reason):
@@ -71,5 +71,5 @@ def send_leave_email(student, from_date, to_date, reason):
             """
         })
 
-    except Exception as e:
-        logger.exception("Failed to send leave email: %s", str(e))
+    except Exception:
+        logger.exception("Failed to send leave email")

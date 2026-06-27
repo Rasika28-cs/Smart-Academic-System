@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 
 from pathlib import Path
 from decouple import config
-import os
+
 import dj_database_url
 
 from pathlib import Path
@@ -159,11 +159,10 @@ SECURE_HSTS_PRELOAD = not DEBUG
 ATTENDANCE_PENALTY = 3
 WHITENOISE_MANIFEST_STRICT = False
 
-import resend
-import os
 
 
-resend.api_key = os.environ.get("RESEND_API_KEY")
+# Resend API Key (read from Render / environment variables)
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
 
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
