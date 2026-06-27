@@ -1,3 +1,4 @@
+import traceback
 from typing import Iterable, Union
 from django.contrib.auth.models import User
 from .models import Notification
@@ -35,24 +36,16 @@ def send_notification(
 
     return notif
 
+
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 import logging
-import traceback
 
 logger = logging.getLogger(__name__)
-
 def send_leave_email(student, from_date, to_date, reason):
-    """
-    Sends leave email to all mentors.
-    Never raises — logger failures are also caught.
-    """
     try:
         mentor_emails = list(
-            User.objects.filter(
-                groups__name="Mentor",
-                is_active=True,
-            )
+            User.objects.filter(groups__name="Mentor", is_active=True)
             .exclude(email="")
             .values_list("email", flat=True)
             .distinct()
@@ -72,11 +65,8 @@ def send_leave_email(student, from_date, to_date, reason):
             recipient_list=mentor_emails,
             fail_silently=False,
         )
-    except Exception:
-        # Nested try: if logger itself crashes (e.g. broken FileHandler on Render),
-        # fall back to print() which always works on any platform.
+    except BaseException:           # ← catches SystemExit that kills except Exception
         try:
             logger.exception("Failed to send leave email")
         except Exception:
-            print("send_leave_email failed (logger also failed):")
             print(traceback.format_exc())
