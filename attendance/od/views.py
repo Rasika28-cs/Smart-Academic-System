@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 
-from attendance.leave_app.utils import send_notification
+from leave_app.utils import send_notification
 from leave_app.models import ActivityLog, Notification, Student
 from django.contrib.auth.models import User
 from .models import ODApplication
