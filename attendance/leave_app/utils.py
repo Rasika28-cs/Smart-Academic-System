@@ -36,12 +36,16 @@ def send_notification(
 
     return notif
 
-
-from django.core.mail import send_mail
-from django.contrib.auth.models import User
+import resend
 import logging
+from django.contrib.auth.models import User
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+resend.api_key = settings.RESEND_API_KEY
+
+
 def send_leave_email(student, from_date, to_date, reason):
     try:
         mentor_emails = list(
@@ -50,23 +54,22 @@ def send_leave_email(student, from_date, to_date, reason):
             .values_list("email", flat=True)
             .distinct()
         )
+
         if not mentor_emails:
             return
 
-        send_mail(
-            subject="New Leave Request",
-            message=(
-                f"Student : {student.name}\n"
-                f"From    : {from_date}\n"
-                f"To      : {to_date}\n"
-                f"Reason  : {reason}\n"
-            ),
-            from_email=None,
-            recipient_list=mentor_emails,
-            fail_silently=False,
-        )
-    except BaseException:           # ← catches SystemExit that kills except Exception
-        try:
-            logger.exception("Failed to send leave email")
-        except Exception:
-            print(traceback.format_exc())
+        resend.Emails.send({
+            "from": "Leave System <onboarding@resend.dev>",
+            "to": mentor_emails,
+            "subject": "New Leave Request",
+            "html": f"""
+                <h2>New Leave Request</h2>
+                <p><b>Student:</b> {student.name}</p>
+                <p><b>From:</b> {from_date}</p>
+                <p><b>To:</b> {to_date}</p>
+                <p><b>Reason:</b> {reason}</p>
+            """
+        })
+
+    except Exception as e:
+        logger.exception("Failed to send leave email: %s", str(e))
