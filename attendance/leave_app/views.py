@@ -54,7 +54,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 from .utils import send_notification, send_leave_email
-from .utils import send_notification
+
 # Local models
 from .models import (
     ActivityLog, Assignment, Attendance, DefaulterStudent,
@@ -573,12 +573,7 @@ def apply_leave_api(request):
 
     # Send email (never break API if email fails)
     try:
-        send_leave_email(
-            student=student,
-            from_date=from_date,
-            to_date=to_date,
-            reason=reason,
-        )
+        print("Reached email function")
     except Exception as e:
         print("Leave email error:", e)
 
