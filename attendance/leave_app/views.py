@@ -1940,11 +1940,18 @@ def create_timetable_entry(request):
 # 21. GRADE UPLOADS
 # ---------------------------------------------------------------------------
 
-
 @login_required
 @csrf_protect
 @role_required("Mentor")
 def upload_grades(request):
+
+    # Display the page when first opened
+    if request.method != "POST":
+        return render(request, "upload_grades.html")
+
+    # ----------------------------
+    # Handle form submission
+    # ----------------------------
     file = request.FILES.get("file")
 
     err = _validate_upload(file)
@@ -1980,10 +1987,7 @@ def upload_grades(request):
             request,
             "upload_grades.html",
             {
-                "error": (
-                    "Could not parse file. "
-                    "Check the format."
-                )
+                "error": "Could not parse file. Check the format."
             },
         )
 
@@ -2003,9 +2007,7 @@ def upload_grades(request):
             request,
             "upload_grades.html",
             {
-                "error": (
-                    "Register No column not found."
-                )
+                "error": "Register No column not found."
             },
         )
 
@@ -2018,24 +2020,19 @@ def upload_grades(request):
     with transaction.atomic():
 
         upload = GradeUpload.objects.create(
-    title=title,
-    semester=semester,
-    original_filename=file.name,
-    uploaded_by=request.user,
-)
+            title=title,
+            semester=semester,
+            original_filename=file.name,
+            uploaded_by=request.user,
+        )
 
         notified_student_ids = set()
 
         for _, row in df.iterrows():
 
-            reg_no = str(
-                row[reg_col]
-            ).strip()
+            reg_no = str(row[reg_col]).strip()
 
-            if (
-                not reg_no
-                or reg_no.lower() == "nan"
-            ):
+            if not reg_no or reg_no.lower() == "nan":
                 continue
 
             try:
@@ -2054,14 +2051,9 @@ def upload_grades(request):
 
             for subject_code in subject_columns:
 
-                grade = str(
-                    row[subject_code]
-                ).strip()
+                grade = str(row[subject_code]).strip()
 
-                if (
-                    grade
-                    and grade.lower() != "nan"
-                ):
+                if grade and grade.lower() != "nan":
                     StudentGrade.objects.update_or_create(
                         upload=upload,
                         student=student,
@@ -2078,20 +2070,13 @@ def upload_grades(request):
             ):
                 send_notification(
                     title="Grade Published",
-                    message=(
-                        f"Grades have been uploaded "
-                        f"for {title}."
-                    ),
+                    message=f"Grades have been uploaded for {title}.",
                     notif_type="grade",
-                    url=reverse(
-                        "student_grades"
-                    ),
+                    url=reverse("student_grades"),
                     users=[student.user],
                 )
 
-                notified_student_ids.add(
-                    student.id
-                )
+                notified_student_ids.add(student.id)
 
     logger.info(
         "upload_grades: %d students notified by %s",
@@ -2105,7 +2090,6 @@ def upload_grades(request):
     )
 
     return redirect("upload_grades")
-
 
 
 @login_required
