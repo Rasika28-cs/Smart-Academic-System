@@ -721,67 +721,36 @@ def review_leave(request, leave_id: int, action: str):
     return _redirect_after_review(user, leave)
 
 
-from collections import defaultdict
 from datetime import timedelta
 
 
 def _create_attendance_for_leave(leave: LeaveRequest) -> None:
     """
-    Create attendance records for approved leave.
-    Optimized to avoid timetable query per day.
+    Create attendance records for each approved leave date.
+    One attendance record per student per date.
     """
-
-    timetable_by_day = defaultdict(list)
-
-    timetable_rows = (
-        Timetable.objects
-        .filter(
-            batch=leave.student.batch,
-            department=leave.student.department,
-        )
-        .select_related("subject")
-    )
-
-    for row in timetable_rows:
-        timetable_by_day[row.day].append(row)
 
     curr = leave.from_date
 
     while curr <= leave.to_date:
 
-        day_name = curr.strftime("%a")
-        slots = timetable_by_day.get(day_name, [])
+        attendance, created = Attendance.objects.get_or_create(
+            student=leave.student,
+            date=curr,
+            defaults={"status": "Leave"},
+        )
 
-        if slots:
+        if not created and attendance.status != "Leave":
+            attendance.status = "Leave"
+            attendance.save(update_fields=["status"])
 
-            for slot in slots:
-
-                attendance, created = Attendance.objects.get_or_create(
-                    student=leave.student,
-                    subject=slot.subject,
-                    date=curr,
-                    defaults={"status": "Leave"},
-                )
-
-                if not created and attendance.status != "Leave":
-                    attendance.status = "Leave"
-                    attendance.save(update_fields=["status"])
-
-        else:
-
-            attendance, created = Attendance.objects.get_or_create(
-                student=leave.student,
-                subject=None,
-                date=curr,
-                defaults={"status": "Leave"},
-            )
-
-            if not created and attendance.status != "Leave":
-                attendance.status = "Leave"
-                attendance.save(update_fields=["status"])
+        LeaveAttendance.objects.get_or_create(
+            student=leave.student,
+            date=curr,
+            leave_request=leave,
+        )
 
         curr += timedelta(days=1)
-
 # ---------------------------------------------------------------------------
 # 7. ATTENDANCE MARKING
 # ---------------------------------------------------------------------------
