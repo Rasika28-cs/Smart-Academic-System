@@ -2092,7 +2092,7 @@
                         <div style="font-weight:600;">{{ g.student.name }}</div>
                       </div>
                     </td>
-                    <td style="color:var(--text-muted); font-weight: 500;">{{ grade.subject_code }}</td>
+                    <td style="color:var(--text-muted); font-weight: 500;">{{ g.subject_code }}</td>
                     <td>
                       {% if g.grade %}
                       <span class="badge badge-blue" style="font-size: 11px; font-weight: 800;">{{ g.grade }}</span>
@@ -2101,7 +2101,7 @@
                       {% endif %}
                     </td>
                     <td style="font-size:11px; color:var(--text-light); font-family: monospace;">
-                      Sem {{ grade.upload.semester }}</td>
+                      Sem {{ g.upload.semester }}</td>
                   </tr>
                   {% empty %}
                   <tr>
