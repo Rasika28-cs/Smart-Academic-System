@@ -1156,9 +1156,11 @@
     /* ── Dual Panel Row (Bottom Row) ── */
     .bottom-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
       gap: 20px;
       margin-bottom: 32px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      /* was: 1fr 1fr */
+
     }
 
     /* ── Section Title Labels ── */
@@ -1201,7 +1203,8 @@
     /* ── Responsive Viewports ── */
     @media (max-width: 1200px) {
       .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        /* was: repeat(2, 1fr) */
       }
 
       .charts-row {
@@ -1897,9 +1900,9 @@
             </div>
 
             <select name="sort" class="date-input">
-              <option value="high" {% if request.GET.sort=="high" or not request.GET.sort %}selected{% endif %}>Highest
+              <option value="high" {% if request.GET.sort == "high" or not request.GET.sort %}selected{% endif %}>Highest
                 Attendance First</option>
-              <option value="low" {% if request.GET.sort=="low" %}selected{% endif %}>Lowest Attendance First</option>
+              <option value="low" {% if request.GET.sort == "low" %}selected{% endif %}>Lowest Attendance First</option>
             </select>
 
             <button type="submit" class="btn btn-primary">Apply Filters</button>
