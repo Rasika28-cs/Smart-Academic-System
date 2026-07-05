@@ -1232,6 +1232,7 @@
       .main {
         margin-left: 0;
         width: 100%;
+        padding-top: 50px;
       }
 
       .menu-btn {
@@ -1247,8 +1248,11 @@
       }
 
       .topbar {
-        padding: 0 16px;
-        height: 60px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
       }
 
       .breadcrumb span:not(.breadcrumb-active) {
@@ -1383,7 +1387,8 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-logo">
         <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            style="width: 20px; height: 20px;">
             <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
             <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
           </svg>
@@ -1417,7 +1422,8 @@
 
       <a href="#performers" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
         Top Performers
       </a>
@@ -1444,7 +1450,8 @@
 
       <a href="#defaulters" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          <path
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         Defaulter Registry
       </a>
@@ -1490,7 +1497,7 @@
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          System Logout
+          Logout
         </a>
       </div>
     </aside>
@@ -1501,7 +1508,8 @@
       <!-- ── Sticky Top Header ── -->
       <header class="topbar">
         <div class="topbar-left">
-          <button type="button" class="menu-btn" onclick="toggleSidebar()" aria-label="Open Workspace Navigation" aria-expanded="false" aria-controls="sidebar">
+          <button type="button" class="menu-btn" onclick="toggleSidebar()" aria-label="Open Workspace Navigation"
+            aria-expanded="false" aria-controls="sidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -1517,7 +1525,8 @@
 
         <div class="topbar-right">
           <div class="topbar-dept">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              style="width: 14px; height: 14px;">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 8v4l3 3" />
             </svg>
@@ -1652,16 +1661,25 @@
                 <canvas id="donutChart"></canvas>
               </div>
               <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--green);">
-                  <span style="display:inline-flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:50%; background:var(--green);"></span>Present Check-ins</span>
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--green);">
+                  <span style="display:inline-flex; align-items:center; gap:8px;"><span
+                      style="width:10px; height:10px; border-radius:50%; background:var(--green);"></span>Present
+                    Check-ins</span>
                   <span>{{ present_count }}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--amber);">
-                  <span style="display:inline-flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:50%; background:var(--amber);"></span>Sanctioned Leave</span>
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--amber);">
+                  <span style="display:inline-flex; align-items:center; gap:8px;"><span
+                      style="width:10px; height:10px; border-radius:50%; background:var(--amber);"></span>Sanctioned
+                    Leave</span>
                   <span>{{ leave_count }}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--red);">
-                  <span style="display:inline-flex; align-items:center; gap:8px;"><span style="width:10px; height:10px; border-radius:50%; background:var(--red);"></span>Unexcused Absences</span>
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:600; color:var(--red);">
+                  <span style="display:inline-flex; align-items:center; gap:8px;"><span
+                      style="width:10px; height:10px; border-radius:50%; background:var(--red);"></span>Unexcused
+                    Absences</span>
                   <span>{{ absent_count }}</span>
                 </div>
               </div>
@@ -1722,17 +1740,19 @@
         <div class="card" style="border: 1px solid rgba(239, 68, 68, 0.2); background: #fffcfc;">
           <div class="card-header alert-header">
             <div>
-              <div class="card-title" style="color:var(--red); font-weight:800; font-size:16px;">Critical Attendance Warnings</div>
-              <div class="card-sub" style="color:#7f1d1d;">Immediate regulatory focus required: active candidates below the standard 75% threshold.</div>
+              <div class="card-title" style="color:var(--red); font-weight:800; font-size:16px;">Critical Attendance
+                Warnings</div>
+              <div class="card-sub" style="color:#7f1d1d;">Immediate regulatory focus required: active candidates below
+                the standard 75% threshold.</div>
             </div>
-            <span class="badge badge-red" style="padding: 6px 14px; font-weight: 800;">{{ below_75_count }} Defaulters Found</span>
+            <span class="badge badge-red" style="padding: 6px 14px; font-weight: 800;">{{ below_75_count }} Defaulters
+              Found</span>
           </div>
 
           {% if below_75_count > 0 %}
           <div class="alert-card-grid">
             {% for s in students %}
-            {% if s.perc < 75 %}
-            <div class="alert-item-card">
+            {% if s.perc < 75 %} <div class="alert-item-card">
               <div class="alert-student-profile">
                 <div class="alert-avatar">{{ s.name|slice:":2"|upper }}</div>
                 <div class="alert-student-details">
@@ -1743,415 +1763,430 @@
               <div class="alert-metric-row">
                 <span>Present Sessions: <strong>{{ s.p }}</strong> / {{ s.total }}</span>
                 <span>
-                  {% if s.perc < 70 %}
-                  <span class="badge badge-red alert-risk-label">⚠️ Critical (&lt;70%)</span>
-                  {% else %}
-                  <span class="badge badge-amber alert-risk-label">Warning (&lt;75%)</span>
-                  {% endif %}
+                  {% if s.perc < 70 %} <span class="badge badge-red alert-risk-label">⚠️ Critical (&lt;70%)</span>
+                {% else %}
+                <span class="badge badge-amber alert-risk-label">Warning (&lt;75%)</span>
+                {% endif %}
                 </span>
               </div>
               <div class="perf-bar-wrap">
                 <div class="perf-bar">
-                  <div class="perf-bar-fill" style="width: {{ s.perc|floatformat:0 }}%; background: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};"></div>
+                  <div class="perf-bar-fill"
+                    style="width: {{ s.perc|floatformat:0 }}%; background: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};">
+                  </div>
                 </div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
-                <span style="font-weight:700; color: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};">{{ s.perc|floatformat:1 }}% Attend Rate</span>
+                <span
+                  style="font-weight:700; color: {% if s.perc < 70 %}var(--red){% else %}var(--amber){% endif %};">{{
+                  s.perc|floatformat:1 }}% Attend Rate</span>
               </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-          </div>
-          {% else %}
-          <div class="empty" style="background:#f0fdf4; padding: 48px 20px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="width: 48px; height: 48px; margin-bottom: 12px;">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-            <strong style="color:#065f46; font-size:16px; font-family: var(--font-display);">Excellent Compliance</strong>
-            <p style="color:#047857; font-size:13px; margin-top:4px;">No records are currently falling below the 75% attendance threshold.</p>
           </div>
           {% endif %}
+          {% endfor %}
         </div>
-
-        <!-- ── Student Benchmarks ── -->
-        <div id="performers"></div>
-        <p class="section-label">🏆 Student Benchmarks</p>
-        <div class="performers-row">
-
-          <!-- Top Performers -->
-          <div class="card top" style="margin-bottom:0;">
-            <div class="card-header">
-              <div>
-                <div class="card-title" style="color:var(--green); font-size: 15px;">🏆 Outstanding Attendance</div>
-                <div class="card-sub">Top attendance performers in the department</div>
-              </div>
-            </div>
-            <div class="card-body">
-              {% for s in students|dictsortreversed:"perc"|slice:":5" %}
-              <div class="perf-item">
-                <div class="perf-rank">{{ forloop.counter }}</div>
-                <div class="perf-info">
-                  <div class="perf-name">{{ s.name }}</div>
-                  <div class="perf-roll">{{ s.roll_no }}</div>
-                  <div class="perf-bar-wrap">
-                    <div class="perf-bar">
-                      <div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
-              </div>
-              {% empty %}
-              <div class="empty">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                </svg>
-                No active records discovered
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <!-- Bottom Performers (Needs Attention) -->
-          <div class="card bottom" style="margin-bottom:0;">
-            <div class="card-header">
-              <div>
-                <div class="card-title" style="color:var(--red); font-size: 15px;">⚠️ Immediate Review Required</div>
-                <div class="card-sub">Critical low attendance records</div>
-              </div>
-            </div>
-            <div class="card-body">
-              {% for s in critical_students %}
-              <div class="perf-item">
-                <div class="perf-rank">{{ forloop.counter }}</div>
-                <div class="perf-info">
-                  <div class="perf-name">{{ s.name }}</div>
-                  <div class="perf-roll">{{ s.roll_no }}</div>
-                  <div class="perf-bar-wrap">
-                    <div class="perf-bar">
-                      <div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
-              </div>
-              {% empty %}
-              <div class="empty">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                Zero low-percentage warning incidents
-              </div>
-              {% endfor %}
-            </div>
-          </div>
+        {% else %}
+        <div class="empty" style="background:#f0fdf4; padding: 48px 20px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"
+            style="width: 48px; height: 48px; margin-bottom: 12px;">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <strong style="color:#065f46; font-size:16px; font-family: var(--font-display);">Excellent Compliance</strong>
+          <p style="color:#047857; font-size:13px; margin-top:4px;">No records are currently falling below the 75%
+            attendance threshold.</p>
         </div>
+        {% endif %}
+      </div>
 
-        <!-- ── Detailed Searchable Students Directory ── -->
-        <div id="students"></div>
-        <p class="section-label">📋 Master Students Directory</p>
-        <div class="table-container">
-          <div class="card-header" style="border-bottom: none;">
-            <div>
-              <div class="card-title">Student Ledger</div>
-              <div class="card-sub">Showing {{ total_students }} registered student{{ total_students|pluralize }}</div>
-            </div>
-          </div>
+      <!-- ── Student Benchmarks ── -->
+      <div id="performers"></div>
+      <p class="section-label">🏆 Student Benchmarks</p>
+      <div class="performers-row">
 
-          <div style="padding: 0 24px 24px;">
-            <form method="get" class="search-form">
-              <div class="search-input-container">
-                <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input class="search-input" type="text" name="search" placeholder="Query by student name or roll number…" value="{{ search_query }}" />
-              </div>
-
-              <select name="sort" class="date-input">
-                <option value="high" {% if request.GET.sort == "high" or not request.GET.sort %}selected{% endif %}>Highest Attendance First</option>
-                <option value="low" {% if request.GET.sort == "low" %}selected{% endif %}>Lowest Attendance First</option>
-              </select>
-
-              <button type="submit" class="btn btn-primary">Apply Filters</button>
-
-              {% if search_query %}
-              <a href="?" class="btn btn-ghost">Reset Filters</a>
-              {% endif %}
-            </form>
-          </div>
-
-          <div class="tbl-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 50px;">Rank</th>
-                  <th>Student Profile</th>
-                  <th>Roll Number</th>
-                  <th>Present</th>
-                  <th>Leave</th>
-                  <th>Absent</th>
-                  <th>Agg. Total</th>
-                  <th>Compliance Percent</th>
-                  <th>Incident Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for s in students %}
-                <tr>
-                  <td style="color: var(--text-light); font-weight: 700; text-align: center;">{{ forloop.counter }}</td>
-                  <td>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                      <div class="avatar" style="width: 32px; height: 32px; font-size:11px;">{{ s.name|slice:":2"|upper }}</div>
-                      <div style="font-weight:600;">{{ s.name }}</div>
-                    </div>
-                  </td>
-                  <td style="color:var(--text-muted); font-weight: 500;">{{ s.roll_no }}</td>
-                  <td><span style="color:var(--green); font-weight:700;">{{ s.p }}</span></td>
-                  <td><span style="color:var(--amber); font-weight:700;">{{ s.l }}</span></td>
-                  <td><span style="color:var(--red); font-weight:700;">{{ s.a }}</span></td>
-                  <td><strong style="color: var(--text); font-weight: 700;">{{ s.total }}</strong></td>
-                  <td>
-                    <div class="pct-cell">
-                      <div class="mini-bar">
-                        <div class="mini-fill"
-                          style="width:{{ s.perc|floatformat:0 }}%; background: {% if s.perc == 100 %}#10b981{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};">
-                        </div>
-                      </div>
-                      <span style="font-size:13px; font-weight:700; color:{% if s.perc == 100 %}#10b981{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};">
-                        {{ s.perc|floatformat:1 }}%
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    {% if s.perc == 100 %}
-                    <span class="badge badge-green" style="background:#e8fdf5; color:#10b981;">Perfect (100%)</span>
-                    {% elif s.perc >= 75 %}
-                    <span class="badge badge-green">Satisfactory</span>
-                    {% elif s.perc >= 70 %}
-                    <span class="badge badge-amber">Warning Advisory</span>
-                    {% else %}
-                    <span class="badge badge-red">Critical Risk</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="9">
-                    <div class="empty">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                      </svg>
-                      No records matched the current filtering criteria.
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div style="margin-top: 32px;"></div>
-
-        <!-- ── Daily Working Day Inquiry ── -->
-        <div id="daily"></div>
-        <p class="section-label">📅 Daily Attendance Ledger</p>
-        <div class="card">
+        <!-- Top Performers -->
+        <div class="card top" style="margin-bottom:0;">
           <div class="card-header">
             <div>
-              <div class="card-title">Check-in Ledger Verification</div>
-              <div class="card-sub">Investigate precise check-in timestamps and logs of a selective date</div>
+              <div class="card-title" style="color:var(--green); font-size: 15px;">🏆 Outstanding Attendance</div>
+              <div class="card-sub">Top attendance performers in the department</div>
             </div>
           </div>
           <div class="card-body">
-            <form method="get" class="search-form" style="margin-bottom:0;">
-              <input type="hidden" name="search" value="{{ search_query }}" />
-              <input type="hidden" name="sort" value="{{ request.GET.sort }}" />
-              <input class="date-input" type="date" name="date" value="{% if selected_date %}{{ selected_date|date:'Y-m-d' }}{% endif %}" />
-              <button type="submit" class="btn btn-primary">Query Log Ledger</button>
-              {% if selected_date %}
-              <a href="?" class="btn btn-ghost">Reset Query Date</a>
-              {% endif %}
-            </form>
+            {% for s in students|dictsortreversed:"perc"|slice:":5" %}
+            <div class="perf-item">
+              <div class="perf-rank">{{ forloop.counter }}</div>
+              <div class="perf-info">
+                <div class="perf-name">{{ s.name }}</div>
+                <div class="perf-roll">{{ s.roll_no }}</div>
+                <div class="perf-bar-wrap">
+                  <div class="perf-bar">
+                    <div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
+            </div>
+            {% empty %}
+            <div class="empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+              No active records discovered
+            </div>
+            {% endfor %}
           </div>
-
-          {% if selected_date %}
-          <div class="tbl-wrap" style="border-top: 1px solid var(--border-light);">
-            <table>
-              <thead>
-                <tr>
-                  <th>Student Profile Name</th>
-                  <th>Student Roll No.</th>
-                  <th>Attendance Verification Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for r in daily_records %}
-                <tr>
-                  <td>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                      <div class="avatar" style="width:30px; height:30px; font-size:11px;">{{ r.student.name|slice:":2"|upper }}</div>
-                      <div style="font-weight:600;">{{ r.student.name }}</div>
-                    </div>
-                  </td>
-                  <td style="color:var(--text-muted); font-weight: 500;">{{ r.student.roll_no }}</td>
-                  <td>
-                    {% if r.status == "Present" %}
-                    <span class="badge badge-green">Verified Present</span>
-                    {% elif r.status == "Leave" %}
-                    <span class="badge badge-amber">Authorized Leave</span>
-                    {% else %}
-                    <span class="badge badge-red">Unexcused Absence</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="3">
-                    <div class="empty">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
-                      No database records recorded on {{ selected_date }}.
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% endif %}
         </div>
 
-        <!-- ── Dual Administration Columns ── -->
-        <div class="bottom-row">
-
-          <!-- Defaulter Ledger -->
-          <div id="defaulters">
-            <p class="section-label" style="margin-top:0;">📂 Defaulter Registry</p>
-            <div class="card" style="height: calc(100% - 30px); margin-bottom: 0;">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">Defaulter Verification Directory</div>
-                  <div class="card-sub">Chronological safety logs</div>
-                </div>
-                <a href="{% url 'defaulter_report_pdf' %}" class="btn btn-danger" style="font-size:11px; padding: 6px 12px;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px; height:13px;">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  Export PDF
-                </a>
-              </div>
-              <div class="tbl-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Roll Number</th>
-                      <th>Class Year</th>
-                      <th>Branch</th>
-                      <th>Supervisor</th>
-                      <th>Remedial Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for d in defaulter_list %}
-                    <tr>
-                      <td style="font-weight:600;">{{ d.name }}</td>
-                      <td style="color:var(--text-muted); font-weight:500;">{{ d.roll_no }}</td>
-                      <td style="font-weight: 500;">Year {{ d.year }}</td>
-                      <td>
-                        <span class="badge badge-red" style="font-size:10px;">{{ d.department }}</span>
-                      </td>
-                      <td style="color: var(--text-muted);">{{ d.staff_incharge }}</td>
-                      <td style="font-weight: 600;">{{ d.action_taken }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="6">
-                        <div class="empty">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                          Perfect state. Zero registered records found.
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+        <!-- Bottom Performers (Needs Attention) -->
+        <div class="card bottom" style="margin-bottom:0;">
+          <div class="card-header">
+            <div>
+              <div class="card-title" style="color:var(--red); font-size: 15px;">⚠️ Immediate Review Required</div>
+              <div class="card-sub">Critical low attendance records</div>
             </div>
           </div>
-
-          <!-- Academic Grades Ledger -->
-          <div id="grades">
-            <p class="section-label" style="margin-top:0;">🎓 Grades Registry</p>
-            <div class="card" style="height: calc(100% - 30px); margin-bottom: 0;">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">Grading Timelines</div>
-                  <div class="card-sub">Recent 50 grades published</div>
+          <div class="card-body">
+            {% for s in critical_students %}
+            <div class="perf-item">
+              <div class="perf-rank">{{ forloop.counter }}</div>
+              <div class="perf-info">
+                <div class="perf-name">{{ s.name }}</div>
+                <div class="perf-roll">{{ s.roll_no }}</div>
+                <div class="perf-bar-wrap">
+                  <div class="perf-bar">
+                    <div class="perf-bar-fill" style="width:{{ s.perc|floatformat:0 }}%"></div>
+                  </div>
                 </div>
               </div>
-              <div class="tbl-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Student Profile</th>
-                      <th>Academics Subject</th>
-                      <th>Letter Grade</th>
-                      <th>Internal Transact. ID</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for g in recent_grades %}
-                    <tr>
-                      <td>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                          <div class="avatar" style="width:26px; height:26px; font-size:10px;">{{ g.student.name|slice:":2"|upper }}</div>
-                          <div style="font-weight:600;">{{ g.student.name }}</div>
-                        </div>
-                      </td>
-                      <td style="color:var(--text-muted); font-weight: 500;">{{ g.subject|default:"—" }}</td>
-                      <td>
-                        {% if g.grade %}
-                        <span class="badge badge-blue" style="font-size: 11px; font-weight: 800;">{{ g.grade }}</span>
-                        {% else %}
-                        <span style="color: var(--text-light)">—</span>
-                        {% endif %}
-                      </td>
-                      <td style="font-size:11px; color:var(--text-light); font-family: monospace;">#{{ g.upload.id|default:"—" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                      <td colspan="4">
-                        <div class="empty">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          </svg>
-                          No digital reports published.
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
+              <div class="perf-pct">{{ s.perc|floatformat:1 }}%</div>
+            </div>
+            {% empty %}
+            <div class="empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Zero low-percentage warning incidents
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Detailed Searchable Students Directory ── -->
+      <div id="students"></div>
+      <p class="section-label">📋 Master Students Directory</p>
+      <div class="table-container">
+        <div class="card-header" style="border-bottom: none;">
+          <div>
+            <div class="card-title">Student Ledger</div>
+            <div class="card-sub">Showing {{ total_students }} registered student{{ total_students|pluralize }}</div>
+          </div>
+        </div>
+
+        <div style="padding: 0 24px 24px;">
+          <form method="get" class="search-form">
+            <div class="search-input-container">
+              <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input class="search-input" type="text" name="search" placeholder="Query by student name or roll number…"
+                value="{{ search_query }}" />
+            </div>
+
+            <select name="sort" class="date-input">
+              <option value="high" {% if request.GET.sort=="high" or not request.GET.sort %}selected{% endif %}>Highest
+                Attendance First</option>
+              <option value="low" {% if request.GET.sort=="low" %}selected{% endif %}>Lowest Attendance First</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+
+            {% if search_query %}
+            <a href="?" class="btn btn-ghost">Reset Filters</a>
+            {% endif %}
+          </form>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 50px;">Rank</th>
+                <th>Student Profile</th>
+                <th>Roll Number</th>
+                <th>Present</th>
+                <th>Leave</th>
+                <th>Absent</th>
+                <th>Agg. Total</th>
+                <th>Compliance Percent</th>
+                <th>Incident Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students %}
+              <tr>
+                <td style="color: var(--text-light); font-weight: 700; text-align: center;">{{ forloop.counter }}</td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="avatar" style="width: 32px; height: 32px; font-size:11px;">{{ s.name|slice:":2"|upper }}
+                    </div>
+                    <div style="font-weight:600;">{{ s.name }}</div>
+                  </div>
+                </td>
+                <td style="color:var(--text-muted); font-weight: 500;">{{ s.roll_no }}</td>
+                <td><span style="color:var(--green); font-weight:700;">{{ s.p }}</span></td>
+                <td><span style="color:var(--amber); font-weight:700;">{{ s.l }}</span></td>
+                <td><span style="color:var(--red); font-weight:700;">{{ s.a }}</span></td>
+                <td><strong style="color: var(--text); font-weight: 700;">{{ s.total }}</strong></td>
+                <td>
+                  <div class="pct-cell">
+                    <div class="mini-bar">
+                      <div class="mini-fill"
+                        style="width:{{ s.perc|floatformat:0 }}%; background: {% if s.perc == 100 %}#10b981{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};">
+                      </div>
+                    </div>
+                    <span
+                      style="font-size:13px; font-weight:700; color:{% if s.perc == 100 %}#10b981{% elif s.perc >= 75 %}var(--green){% elif s.perc >= 70 %}var(--amber){% else %}var(--red){% endif %};">
+                      {{ s.perc|floatformat:1 }}%
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  {% if s.perc == 100 %}
+                  <span class="badge badge-green" style="background:#e8fdf5; color:#10b981;">Perfect (100%)</span>
+                  {% elif s.perc >= 75 %}
+                  <span class="badge badge-green">Satisfactory</span>
+                  {% elif s.perc >= 70 %}
+                  <span class="badge badge-amber">Warning Advisory</span>
+                  {% else %}
+                  <span class="badge badge-red">Critical Risk</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="9">
+                  <div class="empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    No records matched the current filtering criteria.
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-top: 32px;"></div>
+
+      <!-- ── Daily Working Day Inquiry ── -->
+      <div id="daily"></div>
+      <p class="section-label">📅 Daily Attendance Ledger</p>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Check-in Ledger Verification</div>
+            <div class="card-sub">Investigate precise check-in timestamps and logs of a selective date</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="get" class="search-form" style="margin-bottom:0;">
+            <input type="hidden" name="search" value="{{ search_query }}" />
+            <input type="hidden" name="sort" value="{{ request.GET.sort }}" />
+            <input class="date-input" type="date" name="date"
+              value="{% if selected_date %}{{ selected_date|date:'Y-m-d' }}{% endif %}" />
+            <button type="submit" class="btn btn-primary">Query Log Ledger</button>
+            {% if selected_date %}
+            <a href="?" class="btn btn-ghost">Reset Query Date</a>
+            {% endif %}
+          </form>
+        </div>
+
+        {% if selected_date %}
+        <div class="tbl-wrap" style="border-top: 1px solid var(--border-light);">
+          <table>
+            <thead>
+              <tr>
+                <th>Student Profile Name</th>
+                <th>Student Roll No.</th>
+                <th>Attendance Verification Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in daily_records %}
+              <tr>
+                <td>
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="avatar" style="width:30px; height:30px; font-size:11px;">{{
+                      r.student.name|slice:":2"|upper }}</div>
+                    <div style="font-weight:600;">{{ r.student.name }}</div>
+                  </div>
+                </td>
+                <td style="color:var(--text-muted); font-weight: 500;">{{ r.student.roll_no }}</td>
+                <td>
+                  {% if r.status == "Present" %}
+                  <span class="badge badge-green">Verified Present</span>
+                  {% elif r.status == "Leave" %}
+                  <span class="badge badge-amber">Authorized Leave</span>
+                  {% else %}
+                  <span class="badge badge-red">Unexcused Absence</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3">
+                  <div class="empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    No database records recorded on {{ selected_date }}.
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- ── Dual Administration Columns ── -->
+      <div class="bottom-row">
+
+        <!-- Defaulter Ledger -->
+        <div id="defaulters">
+          <p class="section-label" style="margin-top:0;">📂 Defaulter Registry</p>
+          <div class="card" style="height: calc(100% - 30px); margin-bottom: 0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Defaulter Verification Directory</div>
+                <div class="card-sub">Chronological safety logs</div>
               </div>
+              <a href="{% url 'defaulter_report_pdf' %}" class="btn btn-danger"
+                style="font-size:11px; padding: 6px 12px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="width:13px; height:13px;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export PDF
+              </a>
+            </div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Roll Number</th>
+                    <th>Class Year</th>
+                    <th>Branch</th>
+                    <th>Supervisor</th>
+                    <th>Remedial Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for d in defaulter_list %}
+                  <tr>
+                    <td style="font-weight:600;">{{ d.name }}</td>
+                    <td style="color:var(--text-muted); font-weight:500;">{{ d.roll_no }}</td>
+                    <td style="font-weight: 500;">Year {{ d.year }}</td>
+                    <td>
+                      <span class="badge badge-red" style="font-size:10px;">{{ d.department }}</span>
+                    </td>
+                    <td style="color: var(--text-muted);">{{ d.staff_incharge }}</td>
+                    <td style="font-weight: 600;">{{ d.action_taken }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="6">
+                      <div class="empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Perfect state. Zero registered records found.
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
           </div>
+        </div>
 
+        <!-- Academic Grades Ledger -->
+        <div id="grades">
+          <p class="section-label" style="margin-top:0;">🎓 Grades Registry</p>
+          <div class="card" style="height: calc(100% - 30px); margin-bottom: 0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Grading Timelines</div>
+                <div class="card-sub">Recent 50 grades published</div>
+              </div>
+            </div>
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student Profile</th>
+                    <th>Academics Subject</th>
+                    <th>Letter Grade</th>
+                    <th>Internal Transact. ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for g in recent_grades %}
+                  <tr>
+                    <td>
+                      <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="avatar" style="width:26px; height:26px; font-size:10px;">{{
+                          g.student.name|slice:":2"|upper }}</div>
+                        <div style="font-weight:600;">{{ g.student.name }}</div>
+                      </div>
+                    </td>
+                    <td style="color:var(--text-muted); font-weight: 500;">{{ g.subject|default:"—" }}</td>
+                    <td>
+                      {% if g.grade %}
+                      <span class="badge badge-blue" style="font-size: 11px; font-weight: 800;">{{ g.grade }}</span>
+                      {% else %}
+                      <span style="color: var(--text-light)">—</span>
+                      {% endif %}
+                    </td>
+                    <td style="font-size:11px; color:var(--text-light); font-family: monospace;">#{{
+                      g.upload.id|default:"—" }}</td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="4">
+                      <div class="empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        </svg>
+                        No digital reports published.
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
       </div>
+
     </div>
+  </div>
 
   </div>
 
@@ -2178,90 +2213,91 @@
       Chart.defaults.color = '#71717a';
 
       // ── Chronological Present timeline Chart ──
-      const trendLabels = {{ trend_labels|default:"[]"|safe }};
-      const trendValues = {{ trend_values|default:"[]"|safe }};
-      const trendCanvas = document.getElementById('trendChart');
+      const trendLabels = {{ trend_labels|default: "[]" | safe
+    }};
+    const trendValues = {{ trend_values|default: "[]" | safe }};
+    const trendCanvas = document.getElementById('trendChart');
 
-      if (trendCanvas) {
-        const trendCtx = trendCanvas.getContext('2d');
-        const gradientFill = trendCtx.createLinearGradient(0, 0, 0, 240);
-        gradientFill.addColorStop(0, 'rgba(79, 70, 229, 0.18)');
-        gradientFill.addColorStop(1, 'rgba(79, 70, 229, 0.00)');
+    if (trendCanvas) {
+      const trendCtx = trendCanvas.getContext('2d');
+      const gradientFill = trendCtx.createLinearGradient(0, 0, 0, 240);
+      gradientFill.addColorStop(0, 'rgba(79, 70, 229, 0.18)');
+      gradientFill.addColorStop(1, 'rgba(79, 70, 229, 0.00)');
 
-        new Chart(trendCtx, {
-          type: 'line',
-          data: {
-            labels: trendLabels,
-            datasets: [{
-              data: trendValues,
-              borderColor: '#4f46e5',
-              borderWidth: 2.5,
-              backgroundColor: gradientFill,
-              fill: true,
-              tension: 0.38,
-              pointBackgroundColor: '#4f46e5',
-              pointHoverBackgroundColor: '#4f46e5',
-              pointRadius: 3.5,
-              pointHoverRadius: 6,
-            }]
+      new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: trendLabels,
+          datasets: [{
+            data: trendValues,
+            borderColor: '#4f46e5',
+            borderWidth: 2.5,
+            backgroundColor: gradientFill,
+            fill: true,
+            tension: 0.38,
+            pointBackgroundColor: '#4f46e5',
+            pointHoverBackgroundColor: '#4f46e5',
+            pointRadius: 3.5,
+            pointHoverRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#09090b',
+              titleColor: '#ffffff',
+              bodyColor: '#a1a1aa',
+              padding: 12,
+              cornerRadius: 8,
+              boxPadding: 4,
+              callbacks: { label: ctx => `  ${ctx.parsed.y} Students Present` }
+            }
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: '#09090b',
-                titleColor: '#ffffff',
-                bodyColor: '#a1a1aa',
-                padding: 12,
-                cornerRadius: 8,
-                boxPadding: 4,
-                callbacks: { label: ctx => `  ${ctx.parsed.y} Students Present` }
-              }
-            },
-            scales: {
-              x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } },
-              y: { grid: { color: '#f4f4f5' }, ticks: { precision: 0 }, beginAtZero: true }
+          scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } },
+            y: { grid: { color: '#f4f4f5' }, ticks: { precision: 0 }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // ── Attendance Distribution Ratio Pie ──
+    const distData = {{ dist_data|default: "[0,0,0]" | safe }};
+    const donutCanvas = document.getElementById('donutChart');
+
+    if (donutCanvas) {
+      const donutCtx = donutCanvas.getContext('2d');
+      new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Present', 'Leave', 'Absent'],
+          datasets: [{
+            data: distData,
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+            borderWidth: 0,
+            hoverOffset: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#09090b',
+              titleColor: '#ffffff',
+              bodyColor: '#a1a1aa',
+              padding: 12,
+              cornerRadius: 8,
             }
           }
-        });
-      }
-
-      // ── Attendance Distribution Ratio Pie ──
-      const distData = {{ dist_data|default:"[0,0,0]"|safe }};
-      const donutCanvas = document.getElementById('donutChart');
-
-      if (donutCanvas) {
-        const donutCtx = donutCanvas.getContext('2d');
-        new Chart(donutCtx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Present', 'Leave', 'Absent'],
-            datasets: [{
-              data: distData,
-              backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-              borderWidth: 0,
-              hoverOffset: 6,
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '72%',
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: '#09090b',
-                titleColor: '#ffffff',
-                bodyColor: '#a1a1aa',
-                padding: 12,
-                cornerRadius: 8,
-              }
-            }
-          }
-        });
-      }
+        }
+      });
+    }
     } catch (err) {
       console.error('Chart rendering failed:', err);
     }
