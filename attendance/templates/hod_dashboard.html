@@ -2077,9 +2077,9 @@
                 <thead>
                   <tr>
                     <th>Student Profile</th>
-                    <th>Academics Subject</th>
-                    <th>Letter Grade</th>
-                    <th>Internal Transact. ID</th>
+                    <th>Subject Code</th>
+                    <th>Grade</th>
+                    <th>Semester</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2092,7 +2092,7 @@
                         <div style="font-weight:600;">{{ g.student.name }}</div>
                       </div>
                     </td>
-                    <td style="color:var(--text-muted); font-weight: 500;">{{ g.subject|default:"—" }}</td>
+                    <td style="color:var(--text-muted); font-weight: 500;">{{ grade.subject_code }}</td>
                     <td>
                       {% if g.grade %}
                       <span class="badge badge-blue" style="font-size: 11px; font-weight: 800;">{{ g.grade }}</span>
@@ -2101,7 +2101,7 @@
                       {% endif %}
                     </td>
                     <td style="font-size:11px; color:var(--text-light); font-family: monospace;">
-                      #{{ g.upload.id|default:"—" }}</td>
+                      Sem {{ grade.upload.semester }}</td>
                   </tr>
                   {% empty %}
                   <tr>
