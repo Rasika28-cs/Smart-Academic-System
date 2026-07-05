@@ -253,9 +253,32 @@ class ParentProfile(models.Model):
 class GradeUpload(models.Model):
     title = models.CharField(max_length=150)
     semester = models.IntegerField()
-    uploaded_file = models.FileField(upload_to='grades/')
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    # Optional: We don't store the Excel file anymore.
+    uploaded_file = models.FileField(
+        upload_to="grades/",
+        null=True,
+        blank=True,
+    )
+
+    # Store metadata instead
+    original_filename = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    total_students = models.PositiveIntegerField(
+        default=0,
+    )
+
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True,
+    )
 
     def __str__(self):
         return self.title

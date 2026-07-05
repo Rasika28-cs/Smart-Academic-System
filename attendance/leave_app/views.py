@@ -2018,11 +2018,11 @@ def upload_grades(request):
     with transaction.atomic():
 
         upload = GradeUpload.objects.create(
-            title=title,
-            semester=semester,
-            uploaded_file=file,
-            uploaded_by=request.user,
-        )
+    title=title,
+    semester=semester,
+    original_filename=file.name,
+    uploaded_by=request.user,
+)
 
         notified_student_ids = set()
 
