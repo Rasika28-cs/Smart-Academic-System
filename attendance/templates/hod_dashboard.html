@@ -2144,9 +2144,9 @@
       Chart.defaults.font.size = 12;
       Chart.defaults.color = '#71717a';
 
-      const trendLabels = {{ trend_labels|default: "[]" | safe
-    }};
-    const trendValues = {{ trend_values|default: "[]" | safe }};
+      const trendLabels = {{ trend_labels|default:"[]"|safe }};
+    const trendValues = {{ trend_values|default:"[]"|safe }};
+
     const trendCanvas = document.getElementById('trendChart');
 
     if (trendCanvas) {
@@ -2195,7 +2195,7 @@
       });
     }
 
-    const distData = {{ dist_data|default: "[0,0,0]" | safe }};
+    const distData = {{ dist_data|default:"[0,0,0]"|safe }};
     const donutCanvas = document.getElementById('donutChart');
 
     if (donutCanvas) {
