@@ -6,7 +6,8 @@
 ![Status](https://img.shields.io/badge/Status-Active%20Development-brightgreen)
 
 A full-featured **Django web application** for managing student attendance, leave requests, on-duty (OD) applications, assignments, grades, timetables, and departmental information for an academic institution. The system supports multiple user roles — **Student, Mentor/Teacher, Class Representative (CR), HOD (Head of Department), and Parent** — each with a dedicated dashboard and permission-scoped views.
-
+🚀 **Launch the application:**
+https://smart-academic-system-0n02.onrender.com/
 ---
 
 ## 📖 Table of Contents
@@ -149,51 +150,6 @@ The project follows Django's standard **Model–View–Template (MVT)** pattern 
 - pip
 - (Optional) PostgreSQL if not using the default SQLite database
 
-### Steps
-
-```bash
-# 1. Clone the repository
-git clone <your-repository-url>
-cd attendance
-
-# 2. Create and activate a virtual environment
-python -m venv venv
-source venv/bin/activate      # On Windows: venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Create a .env file in the project root (same folder as manage.py)
-```
-
-Create a `.env` file with the required environment variables:
-
-```env
-SECRET_KEY=your-django-secret-key
-DEBUG=True
-DATABASE_URL=sqlite:///db.sqlite3
-```
-
-> `DATABASE_URL` is optional — if omitted, the app falls back to a local `db.sqlite3` file automatically.
-
-```bash
-# 5. Apply database migrations
-python manage.py migrate
-
-# 6. Create an admin/superuser account
-python manage.py createsuperuser
-
-# 7. Collect static files (required for WhiteNoise in production)
-python manage.py collectstatic
-
-# 8. Run the development server
-python manage.py runserver
-```
-
-The application will be available at `http://127.0.0.1:8000/`.
-
----
-
 ## 🚀 Usage
 
 - **Home / Login:** Visit `/` to reach the landing page, then log in at `/login/`.
@@ -254,18 +210,6 @@ attendance/
 ```
 
 ---
-
-## 🖼️ Screenshots
-
-> Screenshots are not included in this repository. Add images to a `docs/screenshots/` folder and update the paths below.
-
-| Login Page | Student Dashboard | HOD Dashboard |
-|---|---|---|
-| ![Login Page](docs/screenshots/login.png) | ![Student Dashboard](docs/screenshots/student_dashboard.png) | ![HOD Dashboard](docs/screenshots/hod_dashboard.png) |
-
-| Attendance Marking | Leave Review | Defaulter Report (PDF) |
-|---|---|---|
-| ![Attendance](docs/screenshots/mark_attendance.png) | ![Leave Review](docs/screenshots/leave_status.png) | ![Defaulter PDF](docs/screenshots/defaulter_report.png) |
 
 ---
 
@@ -337,29 +281,16 @@ Based on unused dependencies already present in `requirements.txt`, natural next
 - Adding automated tests (current `tests.py` files in each app are placeholders).
 - Removing duplicate/legacy template directories (`myproject/templates/` vs root `templates/`) for maintainability.
 
----
 
-## 🤝 Contributing
-
-Contributions are welcome. To contribute:
-
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/your-feature-name`.
-3. Commit your changes: `git commit -m "Add your feature"`.
-4. Push to your branch: `git push origin feature/your-feature-name`.
-5. Open a Pull Request describing your changes.
-
-Please avoid committing sensitive files such as `.env`, `db.sqlite3`, and media uploads.
-
----
-
-## 📄 License
-
-No license file is currently included in this repository. Until one is added, all rights are reserved by the author. Consider adding an [MIT](https://choosealicense.com/licenses/mit/) or other open-source license if you intend to share or accept contributions to this project.
-
----
 
 ## 👤 Author
 
-**Project maintained by the repository owner.**
-Feel free to update this section with your name, GitHub profile, and contact information.
+### Rasika
+
+* **GitHub:** https://github.com/Rasika28-cs
+* **Repository:** https://github.com/Rasika28-cs/Smart-Academic-System/tree/main
+
+### Aashigasree
+
+* **GitHub:** https://github.com/Aashigasree
+* **Repository:** https://github.com/Rasika28-cs/Smart-Academic-System/tree/main
